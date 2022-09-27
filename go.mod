@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/phuslu/log v1.0.81
 	github.com/pkg/errors v0.9.1
+	github.com/spf13/cast v1.5.0
 	github.com/stretchr/testify v1.8.0
 	github.com/tiaotiao/mapstruct v0.0.0-20170819235540-950894f801ed
 	go.uber.org/atomic v1.10.0
