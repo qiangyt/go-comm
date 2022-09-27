@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/cast"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
@@ -17,14 +18,14 @@ import (
 
 var errUnsupportedOS = errors.New("unsupported OS")
 
-func VarsToPair(vars map[string]string) []string {
+func VarsToPair[T any](vars map[string]T) []string {
 	if len(vars) == 0 {
 		return nil
 	}
 
 	r := make([]string, 0, len(vars))
 	for k, v := range vars {
-		r = append(r, fmt.Sprintf("%s=%s", k, v))
+		r = append(r, k+"="+cast.ToString(v))
 	}
 	return r
 }
@@ -36,7 +37,7 @@ func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (
 	return interp.DefaultOpenHandler()(ctx, path, flag, perm)
 }
 
-func RunGoShellCommand(dir string, cmd string) string {
+func RunGoShellCommand[T any](vars map[string]T, dir string, cmd string) string {
 	var err error
 
 	var sf *syntax.File
@@ -46,7 +47,7 @@ func RunGoShellCommand(dir string, cmd string) string {
 
 	out := strings.Builder{}
 
-	environ := os.Environ()
+	environ := append(os.Environ(), EnvironList(vars)...)
 
 	opts := []interp.RunnerOption{
 		interp.Params("-e"),
@@ -71,16 +72,16 @@ func RunGoShellCommand(dir string, cmd string) string {
 	return out.String()
 }
 
-func RunShellCommand(dir string, sh string, cmd string) string {
+func RunShellCommand[T any](vars map[string]T, dir string, sh string, cmd string) string {
 	if len(sh) == 0 || sh == "gosh" {
-		return RunGoShellCommand(dir, cmd)
+		return RunGoShellCommand(vars, dir, cmd)
 	}
 
 	switch DefaultOSType() {
 	case Windows:
 		panic(errUnsupportedOS)
 	case Linux, Darwin:
-		return RunCommandWithoutInput(dir, sh, cmd)
+		return RunCommandWithoutInput(vars, dir, sh, cmd)
 	default:
 		panic(errUnsupportedOS)
 	}
@@ -94,34 +95,34 @@ func RunShellScriptFile(afs afero.Fs, url string, credentials ufs.Credentials, t
 	return RunShellCommand(dir, sh, scriptContent)
 }*/
 
-func RunAdminCommand(adminPassword string, dir string, cmd string) string {
+func RunAdminCommand[T any](vars map[string]T, adminPassword string, dir string, cmd string) string {
 	switch DefaultOSType() {
 	case Windows:
 		panic(errUnsupportedOS)
 	case Linux:
-		return RunSudoCommand(adminPassword, dir, cmd)
+		return RunSudoCommand(vars, adminPassword, dir, cmd)
 	case Darwin:
-		return RunAppleScript(adminPassword, dir, cmd)
+		return RunAppleScript(vars, adminPassword, dir, cmd)
 	default:
 		panic(errUnsupportedOS)
 	}
 }
 
-func RunUserCommand(dir string, cmd string) string {
+func RunUserCommand[T any](vars map[string]T, dir string, cmd string) string {
 	switch DefaultOSType() {
 	case Windows:
 		panic(errUnsupportedOS)
 	case Linux:
-		return RunCommandWithoutInput(dir, "sh", cmd)
+		return RunCommandWithoutInput(vars, dir, "sh", cmd)
 	case Darwin:
-		return RunCommandWithoutInput(dir, "open", cmd)
+		return RunCommandWithoutInput(vars, dir, "open", cmd)
 	default:
 		panic(errUnsupportedOS)
 	}
 }
 
 // RunApplacript 运行 applacript
-func RunAppleScript(adminPassword string, dir string, script string) string {
+func RunAppleScript[T any](vars map[string]T, adminPassword string, dir string, script string) string {
 	subArgs := []string{fmt.Sprintf(`do shell script "%s"`, script)}
 
 	if len(adminPassword) > 0 {
@@ -129,25 +130,26 @@ func RunAppleScript(adminPassword string, dir string, script string) string {
 	}
 	subArgs = append(subArgs, "with administrator privileges")
 
-	return RunCommandWithoutInput(dir, "osascript", "-e", strings.Join(subArgs, " "))
+	return RunCommandWithoutInput(vars, dir, "osascript", "-e", strings.Join(subArgs, " "))
 }
 
-func RunSudoCommand(sudoerPassword string, dir string, command string) string {
+func RunSudoCommand[T any](vars map[string]T, sudoerPassword string, dir string, command string) string {
 	if len(sudoerPassword) > 0 {
-		return RunCommandWithInput(dir, "sudo", "sh", command)(sudoerPassword)
+		return RunCommandWithInput(vars, dir, "sudo", "sh", command)(sudoerPassword)
 	}
 
-	return RunCommandWithoutInput(dir, "sudo", "sh", command)
+	return RunCommandWithoutInput(vars, dir, "sudo", "sh", command)
 }
 
-func newExecCommand(dir string, cmd string, args ...string) *exec.Cmd {
+func newExecCommand[T any](vars map[string]T, dir string, cmd string, args ...string) *exec.Cmd {
 	r := exec.Command(cmd, args...)
+	r.Env = EnvironList(vars)
 	r.Dir = dir
 	return r
 }
 
-func RunCommandWithoutInput(dir string, cmd string, args ...string) string {
-	_cmd := newExecCommand(dir, cmd, args...)
+func RunCommandWithoutInput[T any](vars map[string]T, dir string, cmd string, args ...string) string {
+	_cmd := newExecCommand(vars, dir, cmd, args...)
 	b, err := _cmd.Output()
 	if err != nil {
 		cli := strings.Join(append([]string{cmd}, args...), " ")
@@ -157,11 +159,11 @@ func RunCommandWithoutInput(dir string, cmd string, args ...string) string {
 	return strings.TrimSpace(string(b))
 }
 
-func RunCommandWithInput(dir string, cmd string, args ...string) func(...string) string {
+func RunCommandWithInput[T any](vars map[string]T, dir string, cmd string, args ...string) func(...string) string {
 	return func(input ...string) string {
 		cli := cmd + " " + strings.Join(args, " ")
 
-		_cmd := newExecCommand(dir, cmd, args...)
+		_cmd := newExecCommand(vars, dir, cmd, args...)
 
 		stdin, err := _cmd.StdinPipe()
 		if err != nil {

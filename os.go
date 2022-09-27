@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	plog "github.com/phuslu/log"
 	"github.com/pkg/errors"
+	"github.com/spf13/cast"
 )
 
 // OSType ...
@@ -76,7 +77,7 @@ func IsDarwin() bool {
 	return DefaultOSType() == Darwin
 }
 
-func EnvironMap(overrides map[string]string) map[string]string {
+func EnvironMap[T any](overrides map[string]T) map[string]string {
 	envs := JoinedLines(os.Environ()...)
 	r, err := godotenv.Unmarshal(envs)
 	if err != nil {
@@ -85,22 +86,23 @@ func EnvironMap(overrides map[string]string) map[string]string {
 
 	if len(overrides) > 0 {
 		for k, v := range overrides {
-			r[k] = v
+			r[k] = cast.ToString(v)
 		}
 	}
 	return r
 }
 
-func EnvironList(overrides map[string]string) []string {
+func EnvironList[T any](overrides map[string]T) []string {
 	envs := EnvironMap(overrides)
+
 	r := make([]string, 0, len(envs)+len(overrides))
 	for k, v := range envs {
-		r = append(r, k+"="+v)
+		r = append(r, k+"="+cast.ToString(v))
 	}
 	return r
 }
 
-func EnvSubst(input string, env map[string]string) string {
+func EnvSubst[T any](input string, env map[string]T) string {
 	restr := parse.Restrictions{NoUnset: false, NoEmpty: false}
 	parser := parse.New("tmp", EnvironList(EnvironMap(env)), &restr)
 
@@ -112,7 +114,7 @@ func EnvSubst(input string, env map[string]string) string {
 	return r
 }
 
-func EnvSubstSlice(inputs []string, env map[string]string) []string {
+func EnvSubstSlice[T any](inputs []string, env map[string]T) []string {
 	r := make([]string, 0, len(inputs))
 	for _, s := range inputs {
 		r = append(r, EnvSubst(s, env))
