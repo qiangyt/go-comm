@@ -60,7 +60,7 @@ func Test_RunGoShellCommand_happy(t *testing.T) {
 		"YOU": "fastgh",
 	}
 
-	output := comm.RunGoShellCommand(vars, "", "echo 'vars\n\nkey=value'\n")
+	output := comm.RunGoShellCommand(vars, "", "echo '$vars$\n\nkey=value'\n")
 	a.Equal(comm.COMMAND_OUTPUT_KIND_VARS, output.Kind)
 	a.Equal("value", output.Vars["key"])
 
@@ -80,7 +80,7 @@ func Test_RunGoShellCommand_gosh(t *testing.T) {
 	a.Equal(comm.COMMAND_OUTPUT_KIND_TEXT, output.Kind)
 	a.Equal("Hi fastgh\n", output.Text)
 
-	output = comm.RunShellCommand(vars, "", "gosh", "echo 'json\n\ntrue'")
+	output = comm.RunShellCommand(vars, "", "gosh", "echo '$json$\n\ntrue'")
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, output.Kind)
 	a.Equal(true, output.Json)
 }
@@ -88,7 +88,7 @@ func Test_RunGoShellCommand_gosh(t *testing.T) {
 func Test_ParseCommandOutput_json(t *testing.T) {
 	a := require.New(t)
 
-	text := `json
+	text := `$json$
 
 12`
 	r := comm.ParseCommandOutput(text)
@@ -97,7 +97,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	a.Equal(12, cast.ToInt(r.Json))
 	a.Len(r.Vars, 0)
 
-	text = `json
+	text = `$json$
 
 "12"`
 	r = comm.ParseCommandOutput(text)
@@ -105,7 +105,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal("12", r.Json)
 
-	text = `json
+	text = `$json$
 
 ""`
 	r = comm.ParseCommandOutput(text)
@@ -114,7 +114,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	a.Equal("", r.Json)
 	a.Len(r.Vars, 0)
 
-	text = `json
+	text = `$json$
 
 ["12"]`
 	r = comm.ParseCommandOutput(text)
@@ -123,7 +123,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	a.Equal([]any{"12"}, r.Json)
 	a.Len(r.Vars, 0)
 
-	text = `json
+	text = `$json$
 
 true`
 	r = comm.ParseCommandOutput(text)
@@ -132,7 +132,7 @@ true`
 	a.Equal(true, r.Json)
 	a.Len(r.Vars, 0)
 
-	text = `json
+	text = `$json$
 
 {"key": "value"}`
 	r = comm.ParseCommandOutput(text)
@@ -141,7 +141,7 @@ true`
 	a.Equal(map[string]any{"key": "value"}, r.Json)
 	a.Len(r.Vars, 0)
 
-	text = `json
+	text = `$json$
 
 xyz`
 	a.Panics(func() { comm.ParseCommandOutput(text) }, "invalid json: xyz")
@@ -150,7 +150,7 @@ xyz`
 func Test_ParseCommandOutput_vars(t *testing.T) {
 	a := require.New(t)
 
-	text := `vars
+	text := `$vars$
 
 Key=Value`
 	r := comm.ParseCommandOutput(text)

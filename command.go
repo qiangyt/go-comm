@@ -37,8 +37,8 @@ type CommandOutput = *CommandOutputT
 func ParseCommandOutput(outputText string) CommandOutput {
 	r := &CommandOutputT{Kind: COMMAND_OUTPUT_KIND_TEXT, Text: outputText}
 
-	if strings.HasPrefix(outputText, "json\n\n") {
-		jsonBody := outputText[len("json\n\n"):]
+	if strings.HasPrefix(outputText, "$json$\n\n") {
+		jsonBody := outputText[len("$json$\n\n"):]
 
 		err := json.Unmarshal([]byte(jsonBody), &r.Json)
 		if err != nil {
@@ -49,8 +49,8 @@ func ParseCommandOutput(outputText string) CommandOutput {
 		return r
 	}
 
-	if strings.HasPrefix(outputText, "vars\n\n") {
-		varsBody := outputText[len("vars\n\n"):]
+	if strings.HasPrefix(outputText, "$vars$\n\n") {
+		varsBody := outputText[len("$vars$\n\n"):]
 
 		r.Vars = Text2Vars(varsBody)
 		r.Kind = COMMAND_OUTPUT_KIND_VARS
