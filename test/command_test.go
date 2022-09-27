@@ -11,9 +11,9 @@ func Test_VarsToPair_happy(t *testing.T) {
 	a := require.New(t)
 
 	a.Nil(comm.VarsToPair(nil))
-	a.Nil(comm.VarsToPair(map[string]string{}))
+	a.Nil(comm.VarsToPair(map[string]any{}))
 
-	vars := map[string]string{
+	vars := map[string]any{
 		"k1": "v1",
 		"k2": "v2",
 	}
@@ -30,20 +30,28 @@ func Test_VarsToPair_happy(t *testing.T) {
 func Test_RunGoShellCommand_happy(t *testing.T) {
 	a := require.New(t)
 
-	output := comm.RunGoShellCommand("", "echo hello")
+	vars := map[string]any{
+		"YOU": "fastgh",
+	}
+
+	output := comm.RunGoShellCommand(vars, "", "echo hello")
 	a.Equal("hello\n", output)
 
 	a.Panics(func() {
-		comm.RunGoShellCommand("", "fail.sh")
+		comm.RunGoShellCommand(vars, "", "fail.sh")
 	})
 }
 
 func Test_RunGoShellCommand_gosh(t *testing.T) {
 	a := require.New(t)
 
-	output := comm.RunShellCommand("", "", "echo default")
-	a.Equal("default\n", output)
+	vars := map[string]any{
+		"YOU": "fastgh",
+	}
 
-	output = comm.RunShellCommand("", "gosh", "echo gosh")
+	output := comm.RunShellCommand(vars, "", "", "echo Hi ${YOU}")
+	a.Equal("Hi fastgh\n", output)
+
+	output = comm.RunShellCommand(vars, "", "gosh", "echo gosh")
 	a.Equal("gosh\n", output)
 }

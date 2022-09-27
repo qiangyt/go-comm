@@ -77,7 +77,7 @@ func IsDarwin() bool {
 	return DefaultOSType() == Darwin
 }
 
-func EnvironMap[T any](overrides map[string]T) map[string]string {
+func EnvironMap(overrides map[string]any) map[string]string {
 	envs := JoinedLines(os.Environ()...)
 	r, err := godotenv.Unmarshal(envs)
 	if err != nil {
@@ -92,7 +92,7 @@ func EnvironMap[T any](overrides map[string]T) map[string]string {
 	return r
 }
 
-func EnvironList[T any](overrides map[string]T) []string {
+func EnvironList(overrides map[string]any) []string {
 	envs := EnvironMap(overrides)
 
 	r := make([]string, 0, len(envs)+len(overrides))
@@ -102,9 +102,9 @@ func EnvironList[T any](overrides map[string]T) []string {
 	return r
 }
 
-func EnvSubst[T any](input string, env map[string]T) string {
+func EnvSubst(input string, env map[string]any) string {
 	restr := parse.Restrictions{NoUnset: false, NoEmpty: false}
-	parser := parse.New("tmp", EnvironList(EnvironMap(env)), &restr)
+	parser := parse.New("tmp", EnvironList(DowncastMap(EnvironMap(env))), &restr)
 
 	var r string
 	var err error
@@ -114,7 +114,7 @@ func EnvSubst[T any](input string, env map[string]T) string {
 	return r
 }
 
-func EnvSubstSlice[T any](inputs []string, env map[string]T) []string {
+func EnvSubstSlice(inputs []string, env map[string]any) []string {
 	r := make([]string, 0, len(inputs))
 	for _, s := range inputs {
 		r = append(r, EnvSubst(s, env))

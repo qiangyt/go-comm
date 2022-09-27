@@ -14,7 +14,7 @@ func Test_EnvironMap_happy(t *testing.T) {
 	a.True(len(actual) > 0)
 	a.True(len(actual["PATH"]) > 0)
 
-	overrides := map[string]string{
+	overrides := map[string]any{
 		"k1":   "v1",
 		"k2":   "v2",
 		"PATH": "overrided_path",

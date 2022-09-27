@@ -21,6 +21,14 @@ func Slice2Map[V any](arr []V, keyFunc func(v V) string) map[string]V {
 	return r
 }
 
+func DowncastMap[V any](m map[string]V) map[string]any {
+	r := map[string]any{}
+	for k, v := range m {
+		r[k] = v
+	}
+	return r
+}
+
 /*TODO
 func SliceString[T any](a []T) string {
 	if a == nil {
