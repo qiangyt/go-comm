@@ -2,6 +2,7 @@ package comm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,49 @@ import (
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
 )
+
+type CommandOutputKind byte
+
+const (
+	COMMAND_OUTPUT_KIND_TEXT CommandOutputKind = iota
+	COMMAND_OUTPUT_KIND_VARS
+	COMMAND_OUTPUT_KIND_JSON
+)
+
+type CommandOutputT struct {
+	Kind CommandOutputKind
+	Vars map[string]any
+	Text string
+	Json any
+}
+
+type CommandOutput = *CommandOutputT
+
+func ParseCommandOutput(outputText string) CommandOutput {
+	r := &CommandOutputT{Kind: COMMAND_OUTPUT_KIND_TEXT, Text: outputText}
+
+	if strings.HasPrefix(outputText, "json\n\n") {
+		jsonBody := outputText[len("json\n\n"):]
+
+		err := json.Unmarshal([]byte(jsonBody), &r.Json)
+		if err != nil {
+			panic(errors.New("invalid json: " + jsonBody))
+		}
+
+		r.Kind = COMMAND_OUTPUT_KIND_JSON
+		return r
+	}
+
+	if strings.HasPrefix(outputText, "vars\n\n") {
+		varsBody := outputText[len("vars\n\n"):]
+
+		r.Vars = Text2Vars(varsBody)
+		r.Kind = COMMAND_OUTPUT_KIND_VARS
+		return r
+	}
+
+	return r
+}
 
 var errUnsupportedOS = errors.New("unsupported OS")
 
@@ -64,7 +108,7 @@ func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (
 	return interp.DefaultOpenHandler()(ctx, path, flag, perm)
 }
 
-func RunGoShellCommand(vars map[string]any, dir string, cmd string) string {
+func RunGoShellCommand(vars map[string]any, dir string, cmd string) CommandOutput {
 	var err error
 
 	var sf *syntax.File
@@ -96,10 +140,10 @@ func RunGoShellCommand(vars map[string]any, dir string, cmd string) string {
 		panic(errors.Wrapf(err, "failed to run command: \n%s", cmd))
 	}
 
-	return out.String()
+	return ParseCommandOutput(out.String())
 }
 
-func RunShellCommand(vars map[string]any, dir string, sh string, cmd string) string {
+func RunShellCommand(vars map[string]any, dir string, sh string, cmd string) CommandOutput {
 	if len(sh) == 0 || sh == "gosh" {
 		return RunGoShellCommand(vars, dir, cmd)
 	}
@@ -122,7 +166,7 @@ func RunShellScriptFile(afs afero.Fs, url string, credentials ufs.Credentials, t
 	return RunShellCommand(dir, sh, scriptContent)
 }*/
 
-func RunAdminCommand(vars map[string]any, adminPassword string, dir string, cmd string) string {
+func RunAdminCommand(vars map[string]any, adminPassword string, dir string, cmd string) CommandOutput {
 	switch DefaultOSType() {
 	case Windows:
 		panic(errUnsupportedOS)
@@ -135,7 +179,7 @@ func RunAdminCommand(vars map[string]any, adminPassword string, dir string, cmd 
 	}
 }
 
-func RunUserCommand(vars map[string]any, dir string, cmd string) string {
+func RunUserCommand(vars map[string]any, dir string, cmd string) CommandOutput {
 	switch DefaultOSType() {
 	case Windows:
 		panic(errUnsupportedOS)
@@ -149,7 +193,7 @@ func RunUserCommand(vars map[string]any, dir string, cmd string) string {
 }
 
 // RunApplacript 运行 applacript
-func RunAppleScript(vars map[string]any, adminPassword string, dir string, script string) string {
+func RunAppleScript(vars map[string]any, adminPassword string, dir string, script string) CommandOutput {
 	subArgs := []string{fmt.Sprintf(`do shell script "%s"`, script)}
 
 	if len(adminPassword) > 0 {
@@ -160,7 +204,7 @@ func RunAppleScript(vars map[string]any, adminPassword string, dir string, scrip
 	return RunCommandWithoutInput(vars, dir, "osascript", "-e", strings.Join(subArgs, " "))
 }
 
-func RunSudoCommand(vars map[string]any, sudoerPassword string, dir string, command string) string {
+func RunSudoCommand(vars map[string]any, sudoerPassword string, dir string, command string) CommandOutput {
 	if len(sudoerPassword) > 0 {
 		return RunCommandWithInput(vars, dir, "sudo", "sh", command)(sudoerPassword)
 	}
@@ -175,7 +219,7 @@ func newExecCommand(vars map[string]any, dir string, cmd string, args ...string)
 	return r
 }
 
-func RunCommandWithoutInput(vars map[string]any, dir string, cmd string, args ...string) string {
+func RunCommandWithoutInput(vars map[string]any, dir string, cmd string, args ...string) CommandOutput {
 	_cmd := newExecCommand(vars, dir, cmd, args...)
 	b, err := _cmd.Output()
 	if err != nil {
@@ -183,11 +227,11 @@ func RunCommandWithoutInput(vars map[string]any, dir string, cmd string, args ..
 		panic(errors.Wrapf(err, "failed to get output for command '%s'", cli))
 	}
 
-	return strings.TrimSpace(string(b))
+	return ParseCommandOutput(cast.ToString(b))
 }
 
-func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...string) func(...string) string {
-	return func(input ...string) string {
+func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...string) func(...string) CommandOutput {
+	return func(input ...string) CommandOutput {
 		cli := cmd + " " + strings.Join(args, " ")
 
 		_cmd := newExecCommand(vars, dir, cmd, args...)
@@ -212,6 +256,6 @@ func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...st
 			panic(errors.Wrapf(err, "failed to get output for command '%s'", cli))
 		}
 
-		return strings.TrimSpace(string(b))
+		return ParseCommandOutput(cast.ToString(b))
 	}
 }

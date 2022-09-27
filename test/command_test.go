@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/fastgh/go-comm"
+	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,8 +60,9 @@ func Test_RunGoShellCommand_happy(t *testing.T) {
 		"YOU": "fastgh",
 	}
 
-	output := comm.RunGoShellCommand(vars, "", "echo hello")
-	a.Equal("hello\n", output)
+	output := comm.RunGoShellCommand(vars, "", "echo 'vars\n\nkey=value'\n")
+	a.Equal(comm.COMMAND_OUTPUT_KIND_VARS, output.Kind)
+	a.Equal("value", output.Vars["key"])
 
 	a.Panics(func() {
 		comm.RunGoShellCommand(vars, "", "fail.sh")
@@ -75,8 +77,98 @@ func Test_RunGoShellCommand_gosh(t *testing.T) {
 	}
 
 	output := comm.RunShellCommand(vars, "", "", "echo Hi ${YOU}")
-	a.Equal("Hi fastgh\n", output)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_TEXT, output.Kind)
+	a.Equal("Hi fastgh\n", output.Text)
 
-	output = comm.RunShellCommand(vars, "", "gosh", "echo gosh")
-	a.Equal("gosh\n", output)
+	output = comm.RunShellCommand(vars, "", "gosh", "echo 'json\n\ntrue'")
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, output.Kind)
+	a.Equal(true, output.Json)
+}
+
+func Test_ParseCommandOutput_json(t *testing.T) {
+	a := require.New(t)
+
+	text := `json
+
+12`
+	r := comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
+	a.Equal(12, cast.ToInt(r.Json))
+	a.Len(r.Vars, 0)
+
+	text = `json
+
+"12"`
+	r = comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
+	a.Equal("12", r.Json)
+
+	text = `json
+
+""`
+	r = comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
+	a.Equal("", r.Json)
+	a.Len(r.Vars, 0)
+
+	text = `json
+
+["12"]`
+	r = comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
+	a.Equal([]any{"12"}, r.Json)
+	a.Len(r.Vars, 0)
+
+	text = `json
+
+true`
+	r = comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
+	a.Equal(true, r.Json)
+	a.Len(r.Vars, 0)
+
+	text = `json
+
+{"key": "value"}`
+	r = comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
+	a.Equal(map[string]any{"key": "value"}, r.Json)
+	a.Len(r.Vars, 0)
+
+	text = `json
+
+xyz`
+	a.Panics(func() { comm.ParseCommandOutput(text) }, "invalid json: xyz")
+}
+
+func Test_ParseCommandOutput_vars(t *testing.T) {
+	a := require.New(t)
+
+	text := `vars
+
+Key=Value`
+	r := comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_VARS, r.Kind)
+	a.Len(r.Vars, 1)
+	a.Equal("Value", r.Vars["Key"])
+	a.Nil(r.Json)
+
+}
+
+func Test_ParseCommandOutput_text(t *testing.T) {
+	a := require.New(t)
+
+	text := "something"
+	r := comm.ParseCommandOutput(text)
+	a.Equal(text, r.Text)
+	a.Equal(comm.COMMAND_OUTPUT_KIND_TEXT, r.Kind)
+	a.Len(r.Vars, 0)
+	a.Nil(r.Json)
 }
