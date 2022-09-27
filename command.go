@@ -18,7 +18,7 @@ import (
 
 var errUnsupportedOS = errors.New("unsupported OS")
 
-func VarsToPair(vars map[string]any) []string {
+func Vars2Pair(vars map[string]any) []string {
 	if len(vars) == 0 {
 		return nil
 	}
@@ -26,6 +26,33 @@ func VarsToPair(vars map[string]any) []string {
 	r := make([]string, 0, len(vars))
 	for k, v := range vars {
 		r = append(r, k+"="+cast.ToString(v))
+	}
+	return r
+}
+
+func Text2Vars(text string) map[string]any {
+	pairs := Text2Lines(text)
+	return Pair2Vars(pairs)
+}
+
+func Pair2Vars(pairs []string) map[string]any {
+	if len(pairs) == 0 {
+		return map[string]any{}
+	}
+
+	r := map[string]any{}
+	for _, pair := range pairs {
+		pair = strings.TrimLeft(pair, "\t \r")
+		pos := strings.IndexByte(pair, '=')
+		if pos <= 0 {
+			continue
+		}
+		k := pair[:pos]
+		if pos == len(pair)-1 {
+			r[k] = ""
+		} else {
+			r[k] = pair[pos+1:]
+		}
 	}
 	return r
 }

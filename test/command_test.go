@@ -7,17 +7,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_VarsToPair_happy(t *testing.T) {
+func Test_Vars2Pair_happy(t *testing.T) {
 	a := require.New(t)
 
-	a.Nil(comm.VarsToPair(nil))
-	a.Nil(comm.VarsToPair(map[string]any{}))
+	a.Nil(comm.Vars2Pair(nil))
+	a.Nil(comm.Vars2Pair(map[string]any{}))
 
 	vars := map[string]any{
 		"k1": "v1",
 		"k2": "v2",
 	}
-	pairs := comm.VarsToPair(vars)
+	pairs := comm.Vars2Pair(vars)
 	a.Len(pairs, 2)
 
 	if pairs[0] == "k1=v1" {
@@ -25,6 +25,31 @@ func Test_VarsToPair_happy(t *testing.T) {
 	} else {
 		a.Equal("k1=v1", pairs[1])
 	}
+}
+
+func Test_Text2Vars_happy(t *testing.T) {
+	a := require.New(t)
+
+	m := comm.Text2Vars(`
+L1
+L2=
+L3=V3
+
+=
+=V6
+
+      L8=V8
+L9= V9
+L10=V10-1,V10-2
+L11=V11    `)
+
+	a.Len(m, 6)
+	a.Equal(m["L2"], "")
+	a.Equal(m["L3"], "V3")
+	a.Equal(m["L8"], "V8")
+	a.Equal(m["L9"], " V9")
+	a.Equal(m["L10"], "V10-1,V10-2")
+	a.Equal(m["L11"], "V11    ")
 }
 
 func Test_RunGoShellCommand_happy(t *testing.T) {
