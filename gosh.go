@@ -27,7 +27,7 @@ func RunGoShellCommand(vars map[string]any, dir string, cmd string) CommandOutpu
 	opts := []interp.RunnerOption{
 		interp.Params("-e"),
 		interp.Env(expand.ListEnviron(environ...)),
-		interp.ExecHandler(interp.DefaultExecHandler(6 * time.Second)),
+		interp.ExecHandler(GoshExecHandler(6 * time.Second)),
 		interp.OpenHandler(openHandler),
 		interp.StdIO(nil, &out, &out),
 	}
