@@ -59,7 +59,6 @@ func Test_SubstVars_noLocalVars(t *testing.T) {
 	a.Len(actualVars, 2)
 	a.Equal("v0", actualVars["k0"])
 	a.Equal("vParent", actualVars["k"])
-
 }
 
 func Test_SubstVars_hasDifferentLocalVars(t *testing.T) {

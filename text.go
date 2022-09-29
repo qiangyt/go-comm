@@ -3,7 +3,6 @@ package comm
 import (
 	"io"
 	"strings"
-
 	"text/template"
 
 	"github.com/pkg/errors"

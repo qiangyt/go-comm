@@ -19,9 +19,11 @@ type LoggerT struct {
 	lumberjackLogger *lumberjack.Logger
 }
 
-type Logger = *LoggerT
-type LogEntry = *plog.Entry
-type LogContext = LogEntry
+type (
+	Logger     = *LoggerT
+	LogEntry   = *plog.Entry
+	LogContext = LogEntry
+)
 
 var TraceId atomic.Int64
 

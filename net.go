@@ -35,7 +35,7 @@ func BroadcastInterfaces(dump bool) []net.Interface {
 		}
 
 		if dump {
-			//TODO: single log
+			// TODO: single log
 			fmt.Printf("candidate interface: %s\n", netIf.Name)
 		}
 
@@ -46,7 +46,7 @@ func BroadcastInterfaces(dump bool) []net.Interface {
 }
 
 func BroadcastIpWithInterface(intf net.Interface) net.IP {
-	//intf.MulticastAddrs()
+	// intf.MulticastAddrs()
 	addrs, err := intf.Addrs()
 	if err != nil {
 		panic(errors.Wrapf(err, "failed to get addresses for interface: %s", intf.Name))
