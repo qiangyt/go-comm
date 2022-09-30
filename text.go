@@ -9,30 +9,60 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func RenderWithTemplate(w io.Writer, name string, tmpl string, data map[string]any) {
+func RenderWithTemplateP(w io.Writer, name string, tmpl string, data map[string]any) {
+	err := RenderWithTemplate(w, name, tmpl, data)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func RenderWithTemplate(w io.Writer, name string, tmpl string, data map[string]any) error {
 	t, err := template.New(name).Parse(tmpl)
 	if err != nil {
-		panic(errors.Wrapf(err, "failed to parse template %s: %s", name, tmpl))
+		return errors.Wrapf(err, "failed to parse template %s: %s", name, tmpl)
 	}
 
 	err = t.Execute(w, data)
 	if err != nil {
-		panic(errors.Wrapf(err, "failed to render template %s: %v", name, data))
+		return errors.Wrapf(err, "failed to render template %s: %v", name, data)
 	}
+	return nil
 }
 
-func RenderAsTemplateArray(tmplArray []string, data map[string]any) []string {
-	r := make([]string, 0, len(tmplArray))
-	for _, tmpl := range tmplArray {
-		r = append(r, RenderAsTemplate(tmpl, data))
+func RenderAsTemplateArrayP(tmplArray []string, data map[string]any) []string {
+	r, err := RenderAsTemplateArray(tmplArray, data)
+	if err != nil {
+		panic(err)
 	}
 	return r
 }
 
-func RenderAsTemplate(tmpl string, data map[string]any) string {
+func RenderAsTemplateArray(tmplArray []string, data map[string]any) ([]string, error) {
+	r := make([]string, 0, len(tmplArray))
+	for _, tmpl := range tmplArray {
+		txt, err := RenderAsTemplate(tmpl, data)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, txt)
+	}
+	return r, nil
+}
+
+func RenderAsTemplateP(tmpl string, data map[string]any) string {
+	r, err := RenderAsTemplate(tmpl, data)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func RenderAsTemplate(tmpl string, data map[string]any) (string, error) {
 	output := &strings.Builder{}
-	RenderWithTemplate(output, "", tmpl, data)
-	return output.String()
+	if err := RenderWithTemplate(output, "", tmpl, data); err != nil {
+		return "", err
+	}
+	return output.String(), nil
 }
 
 func JoinedLines(lines ...string) string {
@@ -43,19 +73,35 @@ func JoinedLinesAsBytes(lines ...string) []byte {
 	return []byte(JoinedLines(lines...))
 }
 
-func ToYaml(hint string, me any) string {
+func ToYamlP(hint string, me any) string {
+	r, err := ToYaml(hint, me)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func ToYaml(hint string, me any) (string, error) {
 	r, err := yaml.Marshal(me)
 	if err != nil {
 		if len(hint) > 0 {
-			panic(errors.Wrapf(err, "failed to marshal %s to yaml", hint))
+			return "", errors.Wrapf(err, "failed to marshal %s to yaml", hint)
 		} else {
-			panic(errors.Wrapf(err, "failed to marshal to yaml"))
+			return "", errors.Wrapf(err, "failed to marshal to yaml")
 		}
 	}
-	return string(r)
+	return string(r), nil
 }
 
-func SubstVars(m map[string]any, parentVars map[string]any, keysToSkip ...string) map[string]any {
+func SubstVarsP(m map[string]any, parentVars map[string]any, keysToSkip ...string) map[string]any {
+	r, err := SubstVars(m, parentVars, keysToSkip...)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func SubstVars(m map[string]any, parentVars map[string]any, keysToSkip ...string) (map[string]any, error) {
 	newVars := map[string]any{}
 
 	// copy parent vars, it could be overwritten by local vars
@@ -98,12 +144,18 @@ func SubstVars(m map[string]any, parentVars map[string]any, keysToSkip ...string
 		}
 	}
 
-	yamlNoVars := ToYaml("", mapNoVars)
-	yamlNoVars = RenderAsTemplate(yamlNoVars, newVars)
+	yamlNoVars, err := ToYaml("", mapNoVars)
+	if err != nil {
+		return nil, err
+	}
+	yamlNoVars, err = RenderAsTemplate(yamlNoVars, newVars)
+	if err != nil {
+		return nil, err
+	}
 
 	r := map[string]any{}
 	if err := yaml.Unmarshal([]byte(yamlNoVars), &r); err != nil {
-		panic(errors.Wrapf(err, "failed to parse yaml: %s", yamlNoVars))
+		return nil, errors.Wrapf(err, "failed to parse yaml: %s", yamlNoVars)
 	}
 	r["vars"] = newVars
 
@@ -114,7 +166,7 @@ func SubstVars(m map[string]any, parentVars map[string]any, keysToSkip ...string
 		}
 	}
 
-	return r
+	return r, nil
 }
 
 func TextLine2Array(line string) []string {

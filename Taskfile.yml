@@ -37,10 +37,13 @@ tasks:
     desc: build
     cmds:
       - task: format
-      - go build -trimpath .
+      - GOOS=darwin go build -trimpath .
+      - GOOS=linux go build -trimpath .
+      - GOOS=windows go build -trimpath .
 
   default:
     desc: run test cases then create coverage report (./coverage.html)
     cmds:
       - go test ./... -covermode=count -coverprofile=coverage.out gcflags=all=-l -timeout 3s
       - go tool cover -html=./coverage.out -o ./coverage.html
+

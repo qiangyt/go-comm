@@ -9,8 +9,16 @@ func StructToMap(src any) map[string]any {
 	return mapstruct.Struct2Map(src)
 }
 
-func Map2Struct(src map[string]any, dest any) {
-	if err := mapstruct.Map2Struct(src, dest); err != nil {
-		panic(errors.Wrap(err, "failed to convert map to struct"))
+func Map2StructP(src map[string]any, dest any) {
+	err := Map2Struct(src, dest)
+	if err != nil {
+		panic(err)
 	}
+}
+
+func Map2Struct(src map[string]any, dest any) error {
+	if err := mapstruct.Map2Struct(src, dest); err != nil {
+		return errors.Wrap(err, "failed to convert map to struct")
+	}
+	return nil
 }

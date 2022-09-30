@@ -71,11 +71,19 @@ func (me Logger) Error(err any) LogEntry {
 	return r
 }
 
+func NewLoggerP(console io.Writer, config LoggerConfig, fileName string) Logger {
+	r, err := NewLogger(console, config, fileName)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 // / verbose: log to console if true
-func NewLogger(console io.Writer, config LoggerConfig, fileName string) Logger {
+func NewLogger(console io.Writer, config LoggerConfig, fileName string) (Logger, error) {
 	logD := filepath.Dir(fileName)
 	if err := os.MkdirAll(logD, os.ModePerm); err != nil {
-		panic(errors.Wrapf(err, "failed to create directory: %s", logD))
+		return nil, errors.Wrapf(err, "failed to create directory: %s", logD)
 	}
 
 	// we use lumberjack instead of phuslu/log/FileWritter as said by phuslu/log that:
@@ -114,7 +122,7 @@ func NewLogger(console io.Writer, config LoggerConfig, fileName string) Logger {
 		},
 		parent:           nil,
 		lumberjackLogger: lumberjackLogger,
-	}
+	}, nil
 }
 
 func NewDiscardLogger() Logger {

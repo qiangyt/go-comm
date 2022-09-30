@@ -8,18 +8,30 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Hostname() string {
-	r, err := os.Hostname()
+func HostnameP() string {
+	r, err := Hostname()
 	if err != nil {
 		panic(errors.Wrapf(err, "failed to get hostname"))
 	}
 	return r
 }
 
-func BroadcastInterfaces(dump bool) []net.Interface {
+func Hostname() (string, error) {
+	return os.Hostname()
+}
+
+func BroadcastInterfacesP(dump bool) []net.Interface {
+	r, err := BroadcastInterfaces(dump)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func BroadcastInterfaces(dump bool) ([]net.Interface, error) {
 	netIfs, err := net.Interfaces()
 	if err != nil {
-		panic(errors.Wrap(err, "failed to get network interfaces"))
+		return nil, errors.Wrap(err, "failed to get network interfaces")
 	}
 
 	r := make([]net.Interface, 0, len(netIfs))
@@ -42,42 +54,58 @@ func BroadcastInterfaces(dump bool) []net.Interface {
 		r = append(r, netIf)
 	}
 
+	return r, nil
+}
+
+func BroadcastIpWithInterfaceP(intf net.Interface) net.IP {
+	r, err := BroadcastIpWithInterface(intf)
+	if err != nil {
+		panic(err)
+	}
 	return r
 }
 
-func BroadcastIpWithInterface(intf net.Interface) net.IP {
+func BroadcastIpWithInterface(intf net.Interface) (net.IP, error) {
 	// intf.MulticastAddrs()
 	addrs, err := intf.Addrs()
 	if err != nil {
-		panic(errors.Wrapf(err, "failed to get addresses for interface: %s", intf.Name))
+		return nil, errors.Wrapf(err, "failed to get addresses for interface: %s", intf.Name)
 	}
 
 	for _, addr := range addrs {
 		if ipAddr, isIpAddr := addr.(*net.IPNet); isIpAddr {
 			ip := ipAddr.IP
 			if !ip.IsLoopback() && ip.To4() != nil {
-				return ip
+				return ip, nil
 			}
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
-func ResolveBroadcastIp(interfaces []net.Interface, interfaceName string) (localIp net.IP, broadcastIp net.IP) {
+func ResolveBroadcastIpP(interfaces []net.Interface, interfaceName string) (net.IP, net.IP) {
+	localIp, broadcastIp, err := ResolveBroadcastIp(interfaces, interfaceName)
+	if err != nil {
+		panic(err)
+	}
+	return localIp, broadcastIp
+}
+
+func ResolveBroadcastIp(interfaces []net.Interface, interfaceName string) (net.IP, net.IP, error) {
 	for _, intF := range interfaces {
 		if intF.Name == interfaceName {
-			localIp = BroadcastIpWithInterface(intF)
+			localIp, err := BroadcastIpWithInterface(intF)
 			if localIp == nil {
-				panic(fmt.Errorf("cannot get a broadcast ip for interface %s", interfaceName))
+				return nil, nil, errors.Wrapf(err, "cannot get a broadcast ip for interface %s", interfaceName)
 			}
 
-			broadcastIp = make(net.IP, len(localIp))
+			broadcastIp := make(net.IP, len(localIp))
 			copy(broadcastIp, localIp)
 			broadcastIp[len(broadcastIp)-1] = 255
-			return
+			return localIp, broadcastIp, nil
 		}
 	}
 
-	panic(fmt.Errorf("interface %s is not found, or down, or not supports broadcast", interfaceName))
+	return nil, nil, fmt.Errorf("interface %s is not found, or down, or not supports broadcast", interfaceName)
 }

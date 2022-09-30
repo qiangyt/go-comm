@@ -14,6 +14,8 @@ import (
 	"mvdan.cc/sh/v3/interp"
 )
 
+type FnInput func() string
+
 type CommandOutputKind byte
 
 const (
@@ -31,7 +33,15 @@ type CommandOutputT struct {
 
 type CommandOutput = *CommandOutputT
 
-func ParseCommandOutput(outputText string) CommandOutput {
+func ParseCommandOutputP(outputText string) CommandOutput {
+	r, err := ParseCommandOutput(outputText)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func ParseCommandOutput(outputText string) (CommandOutput, error) {
 	r := &CommandOutputT{Kind: COMMAND_OUTPUT_KIND_TEXT, Text: outputText}
 
 	if strings.HasPrefix(outputText, "$json$\n\n") {
@@ -39,11 +49,11 @@ func ParseCommandOutput(outputText string) CommandOutput {
 
 		err := json.Unmarshal([]byte(jsonBody), &r.Json)
 		if err != nil {
-			panic(errors.New("invalid json: " + jsonBody))
+			return nil, errors.Wrapf(err, "invalid json: %s"+jsonBody)
 		}
 
 		r.Kind = COMMAND_OUTPUT_KIND_JSON
-		return r
+		return r, nil
 	}
 
 	if strings.HasPrefix(outputText, "$vars$\n\n") {
@@ -51,13 +61,10 @@ func ParseCommandOutput(outputText string) CommandOutput {
 
 		r.Vars = Text2Vars(varsBody)
 		r.Kind = COMMAND_OUTPUT_KIND_VARS
-		return r
 	}
 
-	return r
+	return r, nil
 }
-
-var errUnsupportedOS = errors.New("unsupported OS")
 
 func Vars2Pair(vars map[string]any) []string {
 	if len(vars) == 0 {
@@ -105,19 +112,31 @@ func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (
 	return interp.DefaultOpenHandler()(ctx, path, flag, perm)
 }
 
-func RunShellCommand(vars map[string]any, dir string, sh string, cmd string) CommandOutput {
+func RunShellCommandP(vars map[string]any, dir string, sh string, cmd string, passwordInput FnInput) CommandOutput {
+	r, err := RunShellCommand(vars, dir, sh, cmd, passwordInput)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func RunShellCommand(vars map[string]any, dir string, sh string, cmd string, passwordInput FnInput) (CommandOutput, error) {
 	if len(sh) == 0 || sh == "gosh" {
-		return RunGoShellCommand(vars, dir, cmd)
+		return RunGoshCommand(vars, dir, cmd, passwordInput)
 	}
 
-	switch DefaultOSType() {
-	case Windows:
-		panic(errUnsupportedOS)
-	case Linux, Darwin:
-		return RunCommandWithoutInput(vars, dir, sh, cmd)
-	default:
-		panic(errUnsupportedOS)
+	if IsSudoCommand(cmd) {
+		return RunSudoCommand(vars, dir, cmd, passwordInput)
 	}
+	return RunUserCommand(vars, dir, cmd)
+}
+
+func RunUserCommandP(vars map[string]any, dir string, cmd string) CommandOutput {
+	r, err := RunUserCommand(vars, dir, cmd)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 /*
@@ -128,79 +147,52 @@ func RunShellScriptFile(afs afero.Fs, url string, credentials ufs.Credentials, t
 	return RunShellCommand(dir, sh, scriptContent)
 }*/
 
-func RunAdminCommand(vars map[string]any, adminPassword string, dir string, cmd string) CommandOutput {
-	switch DefaultOSType() {
-	case Windows:
-		panic(errUnsupportedOS)
-	case Linux:
-		return RunSudoCommand(vars, adminPassword, dir, cmd)
-	case Darwin:
-		return RunAppleScript(vars, adminPassword, dir, cmd)
-	default:
-		panic(errUnsupportedOS)
-	}
-}
-
-func RunUserCommand(vars map[string]any, dir string, cmd string) CommandOutput {
-	switch DefaultOSType() {
-	case Windows:
-		panic(errUnsupportedOS)
-	case Linux:
-		return RunCommandWithoutInput(vars, dir, "sh", cmd)
-	case Darwin:
-		return RunCommandWithoutInput(vars, dir, "open", cmd)
-	default:
-		panic(errUnsupportedOS)
-	}
-}
-
-// RunApplacript 运行 applacript
-func RunAppleScript(vars map[string]any, adminPassword string, dir string, script string) CommandOutput {
-	subArgs := []string{fmt.Sprintf(`do shell script "%s"`, script)}
-
-	if len(adminPassword) > 0 {
-		subArgs = append(subArgs, fmt.Sprintf(`password "%s"`, adminPassword))
-	}
-	subArgs = append(subArgs, "with administrator privileges")
-
-	return RunCommandWithoutInput(vars, dir, "osascript", "-e", strings.Join(subArgs, " "))
-}
-
-func RunSudoCommand(vars map[string]any, sudoerPassword string, dir string, command string) CommandOutput {
-	if len(sudoerPassword) > 0 {
-		return RunCommandWithInput(vars, dir, "sudo", "sh", command)(sudoerPassword)
-	}
-
-	return RunCommandWithoutInput(vars, dir, "sudo", "sh", command)
-}
-
-func newExecCommand(vars map[string]any, dir string, cmd string, args ...string) *exec.Cmd {
+func newExecCommand(vars map[string]any, dir string, cmd string, args ...string) (*exec.Cmd, error) {
 	r := exec.Command(cmd, args...)
-	r.Env = EnvironList(vars)
+	env, err := EnvironList(vars)
+	if err != nil {
+		return nil, err
+	}
+	r.Env = env
 	r.Dir = dir
+	return r, nil
+}
+
+func RunCommandNoInputP(vars map[string]any, dir string, cmd string, args ...string) CommandOutput {
+	r, err := RunCommandNoInput(vars, dir, cmd, args...)
+	if err != nil {
+		panic(err)
+	}
 	return r
 }
 
-func RunCommandWithoutInput(vars map[string]any, dir string, cmd string, args ...string) CommandOutput {
-	_cmd := newExecCommand(vars, dir, cmd, args...)
+func RunCommandNoInput(vars map[string]any, dir string, cmd string, args ...string) (CommandOutput, error) {
+	_cmd, err := newExecCommand(vars, dir, cmd, args...)
+	if err != nil {
+		return nil, err
+	}
+
 	b, err := _cmd.Output()
 	if err != nil {
 		cli := strings.Join(append([]string{cmd}, args...), " ")
-		panic(errors.Wrapf(err, "failed to get output for command '%s'", cli))
+		return nil, errors.Wrapf(err, "failed to get output for command '%s'", cli)
 	}
 
 	return ParseCommandOutput(cast.ToString(b))
 }
 
-func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...string) func(...string) CommandOutput {
-	return func(input ...string) CommandOutput {
+func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...string) func(...string) (CommandOutput, error) {
+	return func(input ...string) (CommandOutput, error) {
 		cli := cmd + " " + strings.Join(args, " ")
 
-		_cmd := newExecCommand(vars, dir, cmd, args...)
+		_cmd, err := newExecCommand(vars, dir, cmd, args...)
+		if err != nil {
+			return nil, err
+		}
 
 		stdin, err := _cmd.StdinPipe()
 		if err != nil {
-			panic(errors.Wrapf(err, "failed to open stdin for command '%s'", cli))
+			return nil, errors.Wrapf(err, "failed to open stdin for command '%s'", cli)
 		}
 		defer func() {
 			if stdin != nil {
@@ -209,15 +201,37 @@ func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...st
 			}
 		}()
 
-		io.WriteString(stdin, strings.Join(input, " "))
+		_, err = io.WriteString(stdin, strings.Join(input, " "))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to write something to stdin")
+		}
 		stdin.Close()
 		stdin = nil
 
 		b, err := _cmd.Output()
 		if err != nil {
-			panic(errors.Wrapf(err, "failed to get output for command '%s'", cli))
+			return nil, errors.Wrapf(err, "failed to get output for command '%s'", cli)
 		}
 
 		return ParseCommandOutput(cast.ToString(b))
 	}
+}
+
+func IsSudoCommand(cmd string) bool {
+	return strings.HasPrefix(cmd, "sudo ")
+}
+
+func InputSudoCommandP(passwordInput FnInput) io.Reader {
+	r, err := InputSudoCommand(passwordInput)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func InputSudoCommand(passwordInput FnInput) (io.Reader, error) {
+	if passwordInput == nil {
+		return nil, fmt.Errorf("requires password input")
+	}
+	return strings.NewReader(passwordInput()), nil
 }

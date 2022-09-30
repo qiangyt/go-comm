@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,75 +12,31 @@ import (
 	"github.com/spf13/cast"
 )
 
-// OSType ...
-type OSType int
-
-const (
-	// AllOSType ...
-	AllOSType OSType = iota
-
-	// Windows ...
-	Windows
-
-	// Darwin ...
-	Darwin
-
-	// Linux ...
-	Linux
-)
-
-// ParseOSType ...
-func ParseOSType(s string) OSType {
-	if s == "all" {
-		return AllOSType
-	}
-	if s == "windows" {
-		return Windows
-	}
-	if s == "darwin" {
-		return Darwin
-	}
-	if s == "linux" {
-		return Linux
-	}
-	panic(fmt.Errorf("unknown OS type: '%s'", s))
-}
-
-// BuildOSType ...
-func BuildOSType(i int) OSType {
-	if int(AllOSType) == i {
-		return AllOSType
-	}
-	if int(Windows) == i {
-		return Windows
-	}
-	if int(Darwin) == i {
-		return Darwin
-	}
-	if int(Linux) == i {
-		return Linux
-	}
-	panic(fmt.Errorf("unknown OS type: '%v'", i))
-}
-
-// DefaultOSType ...
-func DefaultOSType() OSType {
-	return ParseOSType(runtime.GOOS)
-}
-
 func IsWindows() bool {
-	return DefaultOSType() == Windows
+	return runtime.GOOS == "windows"
 }
 
 func IsDarwin() bool {
-	return DefaultOSType() == Darwin
+	return runtime.GOOS == "darwin"
 }
 
-func EnvironMap(overrides map[string]any) map[string]string {
+func IsLinux() bool {
+	return runtime.GOOS == "linux"
+}
+
+func EnvironMapP(overrides map[string]any) map[string]string {
+	r, err := EnvironMap(overrides)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func EnvironMap(overrides map[string]any) (map[string]string, error) {
 	envs := JoinedLines(os.Environ()...)
 	r, err := godotenv.Unmarshal(envs)
 	if err != nil {
-		panic(errors.Wrapf(err, "failed to parse OS environments"))
+		return nil, errors.Wrapf(err, "failed to parse OS environments")
 	}
 
 	if len(overrides) > 0 {
@@ -89,59 +44,114 @@ func EnvironMap(overrides map[string]any) map[string]string {
 			r[k] = cast.ToString(v)
 		}
 	}
+	return r, nil
+}
+
+func EnvironListP(overrides map[string]any) []string {
+	r, err := EnvironList(overrides)
+	if err != nil {
+		panic(err)
+	}
 	return r
 }
 
-func EnvironList(overrides map[string]any) []string {
-	envs := EnvironMap(overrides)
+func EnvironList(overrides map[string]any) ([]string, error) {
+	envs, err := EnvironMap(overrides)
+	if err != nil {
+		return nil, err
+	}
 
 	r := make([]string, 0, len(envs)+len(overrides))
 	for k, v := range envs {
 		r = append(r, k+"="+cast.ToString(v))
 	}
-	return r
+	return r, nil
 }
 
-func EnvSubst(input string, env map[string]any) string {
-	restr := parse.Restrictions{NoUnset: false, NoEmpty: false}
-	parser := parse.New("tmp", EnvironList(DowncastMap(EnvironMap(env))), &restr)
-
-	var r string
-	var err error
-	if r, err = parser.Parse(input); err != nil {
-		panic(errors.Wrapf(err, "failed to envsubst the text: %s", input))
+func EnvSubstP(input string, env map[string]any) string {
+	r, err := EnvSubst(input, env)
+	if err != nil {
+		panic(err)
 	}
 	return r
 }
 
-func EnvSubstSlice(inputs []string, env map[string]any) []string {
+func EnvSubst(input string, env map[string]any) (string, error) {
+	restr := parse.Restrictions{NoUnset: false, NoEmpty: false}
+
+	envMap, err := EnvironMap(env)
+	if err != nil {
+		return "", err
+	}
+	envList, err := EnvironList(DowncastMap(envMap))
+	if err != nil {
+		return "", err
+	}
+
+	parser := parse.New("tmp", envList, &restr)
+	r, err := parser.Parse(input)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to envsubst the text: %s", input)
+	}
+	return r, nil
+}
+
+func EnvSubstSliceP(inputs []string, env map[string]any) []string {
+	r, err := EnvSubstSlice(inputs, env)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func EnvSubstSlice(inputs []string, env map[string]any) ([]string, error) {
 	r := make([]string, 0, len(inputs))
 	for _, s := range inputs {
-		r = append(r, EnvSubst(s, env))
+		substed, err := EnvSubst(s, env)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, substed)
 	}
-	return r
+	return r, nil
 }
 
 func IsTerminal() bool {
 	return plog.IsTerminal(os.Stdout.Fd())
 }
 
-func Executable() string {
-	r, err := os.Executable()
+func ExecutableP() string {
+	r, err := Executable()
 	if err != nil {
-		panic(errors.Wrap(err, "failed to get the path name of the executable file"))
-	}
-	r, err = filepath.EvalSymlinks(r)
-	if err != nil {
-		panic(errors.Wrapf(err, "failed to evaluate the symbol linke of the executable file: %s", r))
+		panic(err)
 	}
 	return r
 }
 
-func WorkingDirectory() string {
-	r, err := os.Getwd()
+func Executable() (string, error) {
+	r, err := os.Executable()
 	if err != nil {
-		panic(errors.Wrap(err, "failed to get working directory"))
+		return "", errors.Wrap(err, "failed to get the path name of the executable file")
+	}
+	r, err = filepath.EvalSymlinks(r)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to evaluate the symbol linke of the executable file: %s", r)
+	}
+	return r, nil
+}
+
+func WorkingDirectoryP() string {
+	r, err := WorkingDirectory()
+	if err != nil {
+		panic(err)
 	}
 	return r
+}
+
+func WorkingDirectory() (string, error) {
+	r, err := os.Getwd()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get working directory")
+	}
+	return r, nil
 }

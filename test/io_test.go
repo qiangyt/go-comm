@@ -11,8 +11,8 @@ import (
 func Test_ReadText_happy(t *testing.T) {
 	a := require.New(t)
 
-	a.Equal("", comm.ReadText(strings.NewReader("")))
-	a.Equal("xyz", comm.ReadText(strings.NewReader("xyz")))
+	a.Equal("", comm.ReadTextP(strings.NewReader("")))
+	a.Equal("xyz", comm.ReadTextP(strings.NewReader("xyz")))
 }
 
 func Test_ReadLines_happy(t *testing.T) {

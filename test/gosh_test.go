@@ -7,34 +7,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_RunGoShellCommand_happy(t *testing.T) {
+func Test_RunGoshCommand_happy(t *testing.T) {
 	a := require.New(t)
 
 	vars := map[string]any{
 		"YOU": "fastgh",
 	}
 
-	output := comm.RunGoShellCommand(vars, "", "echo '$vars$\n\nkey=value'\n")
+	output := comm.RunGoshCommandP(vars, "", "echo '$vars$\n\nkey=value'\n", nil)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_VARS, output.Kind)
 	a.Equal("value", output.Vars["key"])
 
 	a.Panics(func() {
-		comm.RunGoShellCommand(vars, "", "fail.sh")
+		comm.RunGoshCommandP(vars, "", "fail.sh", nil)
 	})
 }
 
-func Test_RunGoShellCommand_gosh(t *testing.T) {
+func Test_RunShellCommand_gosh(t *testing.T) {
 	a := require.New(t)
 
 	vars := map[string]any{
 		"YOU": "fastgh",
 	}
 
-	output := comm.RunShellCommand(vars, "", "", "echo Hi ${YOU}")
+	output := comm.RunShellCommandP(vars, "", "", "echo Hi ${YOU}", nil)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_TEXT, output.Kind)
 	a.Equal("Hi fastgh\n", output.Text)
 
-	output = comm.RunShellCommand(vars, "", "gosh", "echo '$json$\n\ntrue'")
+	output = comm.RunShellCommandP(vars, "", "gosh", "echo '$json$\n\ntrue'", nil)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, output.Kind)
 	a.Equal(true, output.Json)
 }

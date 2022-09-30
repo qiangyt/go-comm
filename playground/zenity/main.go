@@ -1,7 +1,17 @@
 package main
 
-import "github.com/fastgh/go-comm"
+import (
+	"fmt"
+
+	"github.com/fastgh/go-comm"
+)
 
 func main() {
-	comm.RunGoShellCommand(map[string]any{}, "", "zenity --info Hello")
+	// comm.RunGoshCommand(map[string]any{}, "", "zenity --info Hello", nil)
+	defer func() {
+		if x := recover(); x != nil {
+			fmt.Printf("%+v", x)
+		}
+	}()
+	comm.RunGoshCommandP(map[string]any{}, "", "gosh echo '$json$\n\ntrue'", nil)
 }

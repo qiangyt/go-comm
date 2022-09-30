@@ -15,7 +15,7 @@ func Test_RenderAsTemplate_happy(t *testing.T) {
 		"x1": "A",
 		"x2": "B",
 	}
-	actual := comm.RenderAsTemplate("begin {{.x1}} {{.x2}} end", data)
+	actual := comm.RenderAsTemplateP("begin {{.x1}} {{.x2}} end", data)
 
 	a.Equal("begin A B end", actual)
 }
@@ -28,7 +28,7 @@ func Test_RenderWithTemplate_happy(t *testing.T) {
 		"x1": "A",
 		"x2": "B",
 	}
-	comm.RenderWithTemplate(&actual, "test", "begin {{.x1}} {{.x2}} end", data)
+	comm.RenderWithTemplateP(&actual, "test", "begin {{.x1}} {{.x2}} end", data)
 
 	a.Equal("begin A B end", actual.String())
 }
@@ -49,7 +49,7 @@ func Test_SubstVars_noLocalVars(t *testing.T) {
 		"k":  "vParent",
 	}
 
-	actualMap := comm.SubstVars(map[string]any{
+	actualMap := comm.SubstVarsP(map[string]any{
 		"template": "prefix-{{.k0}}-{{.k}}-suffix",
 	}, vars)
 	a.Len(actualMap, 2)
@@ -69,7 +69,7 @@ func Test_SubstVars_hasDifferentLocalVars(t *testing.T) {
 		"k":  "vParent",
 	}
 
-	actualMap := comm.SubstVars(map[string]any{
+	actualMap := comm.SubstVarsP(map[string]any{
 		"vars": map[string]any{
 			"k1": "v1",
 		},
@@ -93,7 +93,7 @@ func Test_SubstVars_hasOverwrittenLocalVars(t *testing.T) {
 		"k":  "vParent",
 	}
 	// has overwritten local vars
-	actualMap := comm.SubstVars(map[string]any{
+	actualMap := comm.SubstVarsP(map[string]any{
 		"vars": map[string]any{
 			"k":  "vChild",
 			"k1": "v1",
@@ -118,7 +118,7 @@ func Test_SubstVars_skip(t *testing.T) {
 		"k":  "vParent",
 	}
 	// has overwritten local vars
-	actualMap := comm.SubstVars(map[string]any{
+	actualMap := comm.SubstVarsP(map[string]any{
 		"vars": map[string]any{
 			"k":  "vChild",
 			"k1": "v1",

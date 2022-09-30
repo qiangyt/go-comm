@@ -59,7 +59,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	text := `$json$
 
 12`
-	r := comm.ParseCommandOutput(text)
+	r := comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal(12, cast.ToInt(r.Json))
@@ -68,7 +68,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	text = `$json$
 
 "12"`
-	r = comm.ParseCommandOutput(text)
+	r = comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal("12", r.Json)
@@ -76,7 +76,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	text = `$json$
 
 ""`
-	r = comm.ParseCommandOutput(text)
+	r = comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal("", r.Json)
@@ -85,7 +85,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	text = `$json$
 
 ["12"]`
-	r = comm.ParseCommandOutput(text)
+	r = comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal([]any{"12"}, r.Json)
@@ -94,7 +94,7 @@ func Test_ParseCommandOutput_json(t *testing.T) {
 	text = `$json$
 
 true`
-	r = comm.ParseCommandOutput(text)
+	r = comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal(true, r.Json)
@@ -103,7 +103,7 @@ true`
 	text = `$json$
 
 {"key": "value"}`
-	r = comm.ParseCommandOutput(text)
+	r = comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, r.Kind)
 	a.Equal(map[string]any{"key": "value"}, r.Json)
@@ -112,7 +112,7 @@ true`
 	text = `$json$
 
 xyz`
-	a.Panics(func() { comm.ParseCommandOutput(text) }, "invalid json: xyz")
+	a.Panics(func() { comm.ParseCommandOutputP(text) }, "invalid json: xyz")
 }
 
 func Test_ParseCommandOutput_vars(t *testing.T) {
@@ -121,7 +121,7 @@ func Test_ParseCommandOutput_vars(t *testing.T) {
 	text := `$vars$
 
 Key=Value`
-	r := comm.ParseCommandOutput(text)
+	r := comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_VARS, r.Kind)
 	a.Len(r.Vars, 1)
@@ -133,7 +133,7 @@ func Test_ParseCommandOutput_text(t *testing.T) {
 	a := require.New(t)
 
 	text := "something"
-	r := comm.ParseCommandOutput(text)
+	r := comm.ParseCommandOutputP(text)
 	a.Equal(text, r.Text)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_TEXT, r.Kind)
 	a.Len(r.Vars, 0)

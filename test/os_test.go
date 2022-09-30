@@ -10,7 +10,7 @@ import (
 func Test_EnvironMap_happy(t *testing.T) {
 	a := require.New(t)
 
-	actual := comm.EnvironMap(nil)
+	actual := comm.EnvironMapP(nil)
 	a.True(len(actual) > 0)
 	a.True(len(actual["PATH"]) > 0)
 
@@ -20,7 +20,7 @@ func Test_EnvironMap_happy(t *testing.T) {
 		"PATH": "overrided_path",
 	}
 
-	actual = comm.EnvironMap(overrides)
+	actual = comm.EnvironMapP(overrides)
 	a.Equal("v1", actual["k1"])
 	a.Equal("v2", actual["k2"])
 	a.Equal("overrided_path", actual["PATH"])

@@ -2,6 +2,7 @@ package comm
 
 import (
 	"context"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -12,24 +13,44 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
-func RunGoShellCommand(vars map[string]any, dir string, cmd string) CommandOutput {
+func RunGoshCommandP(vars map[string]any, dir string, cmd string, passwordInput FnInput) CommandOutput {
+	r, err := RunGoshCommand(vars, dir, cmd, passwordInput)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func RunGoshCommand(vars map[string]any, dir string, cmd string, passwordInput FnInput) (CommandOutput, error) {
 	var err error
 
 	var sf *syntax.File
 	if sf, err = syntax.NewParser().Parse(strings.NewReader(cmd), ""); err != nil {
-		panic(errors.Wrapf(err, "failed to parse command: \n%s", cmd))
+		return nil, errors.Wrapf(err, "failed to parse command: \n%s", cmd)
+	}
+
+	var stdin io.Reader
+	if IsSudoCommand(cmd) {
+		stdin, err = InputSudoCommand(passwordInput)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	out := strings.Builder{}
 
-	environ := append(os.Environ(), EnvironList(vars)...)
+	envList, err := EnvironList(vars)
+	if err != nil {
+		return nil, err
+	}
+	environ := append(os.Environ(), envList...)
 
 	opts := []interp.RunnerOption{
 		interp.Params("-e"),
 		interp.Env(expand.ListEnviron(environ...)),
 		interp.ExecHandler(GoshExecHandler(6 * time.Second)),
 		interp.OpenHandler(openHandler),
-		interp.StdIO(nil, &out, &out),
+		interp.StdIO(stdin, &out, &out),
 	}
 	if len(dir) > 0 {
 		opts = append(opts, interp.Dir(dir))
@@ -37,11 +58,11 @@ func RunGoShellCommand(vars map[string]any, dir string, cmd string) CommandOutpu
 
 	var runner *interp.Runner
 	if runner, err = interp.New(opts...); err != nil {
-		panic(errors.Wrapf(err, "failed to create runner for command: \n%s", cmd))
+		return nil, errors.Wrapf(err, "failed to create runner for command: \n%s", cmd)
 	}
 
 	if err = runner.Run(context.TODO(), sf); err != nil {
-		panic(errors.Wrapf(err, "failed to run command: \n%s", cmd))
+		return nil, errors.Wrapf(err, "failed to run command: \n%s", cmd)
 	}
 
 	return ParseCommandOutput(out.String())
