@@ -1,4 +1,4 @@
-module github.com/fastgh/go-comm
+module github.com/fastgh/go-comm/v2
 
 go 1.18
 
