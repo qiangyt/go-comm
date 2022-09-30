@@ -12,8 +12,8 @@ github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f h1:OGqDDftRTwrvUoL6pO
 github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f/go.mod h1:Dv9D0NUlAsaQcGQZa5kc5mqR9ua72SmA8VXi4cd+cBw=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
-github.com/fastgh/go-event v1.0.1 h1:twBTv3Afky5oVfqh2jecgi5cqYntETBERcSF4TUpNYM=
-github.com/fastgh/go-event v1.0.1/go.mod h1:0Be7ISA2hgolyBwb9mOc21jLmoxWXsREAivyY189EW4=
+github.com/fastgh/go-event v1.0.4 h1:1k3L3OCfk56Az/AziwboiF8Wv29L2O65z6t8ylteIUM=
+github.com/fastgh/go-event v1.0.4/go.mod h1:0Be7ISA2hgolyBwb9mOc21jLmoxWXsREAivyY189EW4=
 github.com/frankban/quicktest v1.14.3 h1:FJKSZTDHjyhriyC81FLQ0LY93eSai0ZyR/ZIkd3ZUKE=
 github.com/google/go-cmp v0.5.7 h1:81/ik6ipDQS2aGcBfIN5dHDB36BwrStyeAQquSYCV4o=
 github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=

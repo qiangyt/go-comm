@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fastgh/go-comm"
+	"github.com/fastgh/go-comm/v2"
 	"github.com/stretchr/testify/require"
 )
 

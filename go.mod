@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/a8m/envsubst v1.3.0
 	github.com/emirpasic/gods v1.18.1
-	github.com/fastgh/go-event v1.0.1
+	github.com/fastgh/go-event v1.0.4
 	github.com/joho/godotenv v1.4.0
 	github.com/ncruces/zenity v0.9.0
 	github.com/phuslu/log v1.0.81

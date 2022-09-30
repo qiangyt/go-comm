@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/fastgh/go-comm"
+	"github.com/fastgh/go-comm/v2"
 )
 
 func main() {
