@@ -22,19 +22,17 @@ func RunGoshCommandP(vars map[string]any, dir string, cmd string, passwordInput 
 }
 
 func RunGoshCommand(vars map[string]any, dir string, cmd string, passwordInput FnInput) (CommandOutput, error) {
-	var err error
-
 	var stdin io.Reader
 	if IsSudoCommand(cmd) {
-		stdin, err = InputSudoCommand(passwordInput)
-		if err != nil {
-			return nil, err
+		password := InputSudoPassword(passwordInput)
+		if len(password) > 0 {
+			stdin = strings.NewReader(password + "\n")
+			cmd = InstrumentSudoCommand(cmd)
 		}
-		cmd = InstrumentSudoCommand(cmd)
 	}
 
-	var sf *syntax.File
-	if sf, err = syntax.NewParser().Parse(strings.NewReader(cmd), ""); err != nil {
+	sf, err := syntax.NewParser().Parse(strings.NewReader(cmd), "")
+	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse command: \n%s", cmd)
 	}
 

@@ -3,7 +3,6 @@ package comm
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -183,6 +182,10 @@ func RunCommandNoInput(vars map[string]any, dir string, cmd string, args ...stri
 
 func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...string) func(...string) (CommandOutput, error) {
 	return func(input ...string) (CommandOutput, error) {
+		if IsSudoCommand(cmd) && len(input) > 0 {
+			cmd = InstrumentSudoCommand(cmd)
+		}
+
 		cli := cmd + " " + strings.Join(args, " ")
 
 		_cmd, err := newExecCommand(vars, dir, cmd, args...)
@@ -221,21 +224,16 @@ func IsSudoCommand(cmd string) bool {
 	return strings.HasPrefix(cmd, "sudo ")
 }
 
-func InputSudoCommandP(passwordInput FnInput) io.Reader {
-	r, err := InputSudoCommand(passwordInput)
-	if err != nil {
-		panic(err)
+func InputSudoPassword(passwordInput FnInput) string {
+	if passwordInput == nil {
+		return ""
+	}
+
+	r := passwordInput()
+	if len(r) == 0 {
+		return ""
 	}
 	return r
-}
-
-func InputSudoCommand(passwordInput FnInput) (io.Reader, error) {
-	if passwordInput == nil {
-		return nil, fmt.Errorf("requires password input")
-	}
-
-	password := passwordInput() + "\n"
-	return strings.NewReader(password), nil
 }
 
 func InstrumentSudoCommand(cmd string) string {

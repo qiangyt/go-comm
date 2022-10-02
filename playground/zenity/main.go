@@ -13,5 +13,5 @@ func main() {
 			fmt.Printf("%+v", x)
 		}
 	}()
-	comm.RunGoshCommandP(map[string]any{}, "", "gosh echo '$json$\n\ntrue'", nil)
+	comm.RunShellCommandP(map[string]any{}, "", "bash", "sudo echo hi", func() string { return "changeit" })
 }
