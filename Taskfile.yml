@@ -44,6 +44,6 @@ tasks:
   default:
     desc: run test cases then create coverage report (./coverage.html)
     cmds:
-      - go test ./... -covermode=count -coverprofile=coverage.out gcflags=all=-l -timeout 3s
+      - go test ./... -covermode=count -coverprofile=coverage.out gcflags=all=-l -timeout 3s github.com/fastgh/go-comm/v2/test
       - go tool cover -html=./coverage.out -o ./coverage.html
 
