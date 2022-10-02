@@ -233,5 +233,20 @@ func InputSudoCommand(passwordInput FnInput) (io.Reader, error) {
 	if passwordInput == nil {
 		return nil, fmt.Errorf("requires password input")
 	}
-	return strings.NewReader(passwordInput()), nil
+
+	password := passwordInput() + "\n"
+	return strings.NewReader(password), nil
+}
+
+func InstrumentSudoCommand(cmd string) string {
+	if !IsSudoCommand(cmd) {
+		return cmd
+	}
+
+	if strings.Contains(cmd, "-S") || strings.Contains(cmd, "--stdin") {
+		return cmd
+	}
+
+	noSudoCmd := cmd[len("sudo "):]
+	return "sudo --stdin " + noSudoCmd
 }
