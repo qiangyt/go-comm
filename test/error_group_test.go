@@ -34,7 +34,7 @@ func Test_ErrorGroup_Merge_happy(t *testing.T) {
 	g2 := comm.NewErrorGroup(false)
 	g2.Add(errors.New("ERROR 2"))
 
-	g1.AddGroup(g2)
+	g1.AddAll(g2)
 
 	a.True(g1.HasError())
 	a.Equal(`2 errors totally:
