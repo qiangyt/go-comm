@@ -43,6 +43,6 @@ func (me ErrorGroup) Add(err error) {
 	me.ellors = append(me.ellors, err)
 }
 
-func (me ErrorGroup) AddGroup(that ErrorGroup) {
+func (me ErrorGroup) AddAll(that ErrorGroup) {
 	me.ellors = append(me.ellors, that.ellors...)
 }
