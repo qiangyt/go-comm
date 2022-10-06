@@ -15,8 +15,8 @@ func Test_OrderedMap_happy(t *testing.T) {
 	a.Len(m.Keys(), 0)
 	a.Len(m.Values(), 0)
 
-	m.Set("k1", "v1")
-	m.Set("k2", "v2")
+	m.Put("k1", "v1")
+	m.Put("k2", "v2")
 
 	a.Equal(2, m.Len())
 	a.Len(m.Keys(), 2)
@@ -52,7 +52,7 @@ func Test_OrderedMap_json(t *testing.T) {
 	a := require.New(t)
 
 	m := comm.NewOrderedMap("")
-	m.Set("k1", "v1")
+	m.Put("k1", "v1")
 
 	json, err := m.MarshalJSON()
 	a.Nil(err)
@@ -64,4 +64,28 @@ func Test_OrderedMap_json(t *testing.T) {
 	err = m2.UnmarshalJSON(json)
 	a.Nil(err)
 	a.Equal(m, m2)
+}
+
+func Test_OrderedMap_putAll(t *testing.T) {
+	a := require.New(t)
+
+	type Element struct {
+		Name  string
+		Value string
+	}
+
+	m := comm.NewOrderedMap[*Element](nil)
+	m.PutAll(func(elt *Element) string {
+		return elt.Name
+	}, []*Element{
+		&Element{Name: "n1", Value: "v1"},
+		&Element{Name: "n2", Value: "v2"},
+	})
+
+	a.Equal(2, m.Len())
+	a.Len(m.Keys(), 2)
+	a.Len(m.Values(), 2)
+
+	a.Equal("v1", m.Get("n1").Value)
+	a.Equal("v2", m.Get("n2").Value)
 }

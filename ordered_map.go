@@ -49,8 +49,15 @@ func (me *OrderedMap[K]) Len() int {
 	return len(me.backend.Keys())
 }
 
-func (me *OrderedMap[K]) Set(key string, value K) {
+func (me *OrderedMap[K]) Put(key string, value K) {
 	me.backend.Set(key, value)
+}
+
+func (me *OrderedMap[K]) PutAll(nameResolver func(v K) string, values []K) {
+	for _, value := range values {
+		k := nameResolver(value)
+		me.Put(k, value)
+	}
 }
 
 func (me *OrderedMap[K]) Delete(key string) {
