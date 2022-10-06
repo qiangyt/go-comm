@@ -53,6 +53,14 @@ func (me *OrderedMap[K]) Put(key string, value K) {
 	me.backend.Set(key, value)
 }
 
+func (me *OrderedMap[K]) PutIfAbsent(key string, value K) bool {
+	if !me.Has(key) {
+		me.Put(key, value)
+		return true
+	}
+	return false
+}
+
 func (me *OrderedMap[K]) PutAll(nameResolver func(v K) string, values []K) {
 	for _, value := range values {
 		k := nameResolver(value)

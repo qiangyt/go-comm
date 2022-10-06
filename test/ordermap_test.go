@@ -89,3 +89,13 @@ func Test_OrderedMap_putAll(t *testing.T) {
 	a.Equal("v1", m.Get("n1").Value)
 	a.Equal("v2", m.Get("n2").Value)
 }
+
+func Test_OrderedMap_putIfAbsent(t *testing.T) {
+	a := require.New(t)
+
+	m := comm.NewOrderedMap("")
+	a.True(m.PutIfAbsent("n", "v"))
+	a.False(m.PutIfAbsent("n", "v-changed"))
+
+	a.Equal("v", m.Get("n"))
+}
