@@ -99,3 +99,25 @@ func Test_OrderedMap_putIfAbsent(t *testing.T) {
 
 	a.Equal("v", m.Get("n"))
 }
+
+func Test_OrderedMap_sort(t *testing.T) {
+	a := require.New(t)
+
+	m := comm.NewOrderedMap("")
+	m.Put("k1", "v1")
+	m.Put("k2", "v2")
+
+	m.SortByKey(false)
+	a.Equal(2, m.Len())
+	a.Equal("k1", m.Keys()[0])
+	a.Equal("v1", m.Values()[0])
+	a.Equal("k2", m.Keys()[1])
+	a.Equal("v2", m.Values()[1])
+
+	m.SortByKey(true)
+	a.Equal(2, m.Len())
+	a.Equal("k2", m.Keys()[0])
+	a.Equal("v2", m.Values()[0])
+	a.Equal("k1", m.Keys()[1])
+	a.Equal("v1", m.Values()[1])
+}

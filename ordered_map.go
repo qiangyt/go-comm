@@ -1,6 +1,8 @@
 package comm
 
 import (
+	"strings"
+
 	"github.com/iancoleman/orderedmap"
 )
 
@@ -110,4 +112,14 @@ func (me *OrderedMap[K]) UnmarshalJSON(bytes []byte) error {
 
 func (me *OrderedMap[K]) MarshalJSON() ([]byte, error) {
 	return me.backend.MarshalJSON()
+}
+
+func (me *OrderedMap[K]) SortByKey(revert bool) {
+	me.backend.Sort(func(a *orderedmap.Pair, b *orderedmap.Pair) bool {
+		r := strings.Compare(a.Key(), b.Key())
+		if revert {
+			return r > 0
+		}
+		return r < 0
+	})
 }
