@@ -18,7 +18,8 @@ type FnInput func() string
 type CommandOutputKind byte
 
 const (
-	COMMAND_OUTPUT_KIND_TEXT CommandOutputKind = iota
+	_ CommandOutputKind = iota
+	COMMAND_OUTPUT_KIND_TEXT
 	COMMAND_OUTPUT_KIND_VARS
 	COMMAND_OUTPUT_KIND_JSON
 )
@@ -48,7 +49,7 @@ func ParseCommandOutput(outputText string) (CommandOutput, error) {
 
 		err := json.Unmarshal([]byte(jsonBody), &r.Json)
 		if err != nil {
-			return nil, errors.Wrapf(err, "invalid json: %s"+jsonBody)
+			return nil, errors.Wrapf(err, "json: %s"+jsonBody)
 		}
 
 		r.Kind = COMMAND_OUTPUT_KIND_JSON
@@ -174,7 +175,7 @@ func RunCommandNoInput(vars map[string]any, dir string, cmd string, args ...stri
 	b, err := _cmd.Output()
 	if err != nil {
 		cli := strings.Join(append([]string{cmd}, args...), " ")
-		return nil, errors.Wrapf(err, "failed to get output for command '%s'", cli)
+		return nil, errors.Wrapf(err, "get output for command '%s'", cli)
 	}
 
 	return ParseCommandOutput(cast.ToString(b))
@@ -195,7 +196,7 @@ func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...st
 
 		stdin, err := _cmd.StdinPipe()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to open stdin for command '%s'", cli)
+			return nil, errors.Wrapf(err, "open stdin for command '%s'", cli)
 		}
 		defer func() {
 			if stdin != nil {
@@ -206,14 +207,14 @@ func RunCommandWithInput(vars map[string]any, dir string, cmd string, args ...st
 
 		_, err = io.WriteString(stdin, strings.Join(input, " "))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to write something to stdin")
+			return nil, errors.Wrap(err, "write something to stdin")
 		}
 		stdin.Close()
 		stdin = nil
 
 		b, err := _cmd.Output()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get output for command '%s'", cli)
+			return nil, errors.Wrapf(err, "get output for command '%s'", cli)
 		}
 
 		return ParseCommandOutput(cast.ToString(b))

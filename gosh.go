@@ -33,7 +33,7 @@ func RunGoshCommand(vars map[string]any, dir string, cmd string, passwordInput F
 
 	sf, err := syntax.NewParser().Parse(strings.NewReader(cmd), "")
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse command: \n%s", cmd)
+		return nil, errors.Wrapf(err, "parse command: \n%s", cmd)
 	}
 
 	out := strings.Builder{}
@@ -57,11 +57,11 @@ func RunGoshCommand(vars map[string]any, dir string, cmd string, passwordInput F
 
 	var runner *interp.Runner
 	if runner, err = interp.New(opts...); err != nil {
-		return nil, errors.Wrapf(err, "failed to create runner for command: \n%s", cmd)
+		return nil, errors.Wrapf(err, "create runner for command: \n%s", cmd)
 	}
 
 	if err = runner.Run(context.TODO(), sf); err != nil {
-		return nil, errors.Wrapf(err, "failed to run command: \n%s", cmd)
+		return nil, errors.Wrapf(err, "run command: \n%s", cmd)
 	}
 
 	return ParseCommandOutput(out.String())

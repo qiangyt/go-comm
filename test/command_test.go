@@ -112,7 +112,7 @@ true`
 	text = `$json$
 
 xyz`
-	a.Panics(func() { comm.ParseCommandOutputP(text) }, "invalid json: xyz")
+	a.Panics(func() { comm.ParseCommandOutputP(text) }, "json: xyz")
 }
 
 func Test_ParseCommandOutput_vars(t *testing.T) {
