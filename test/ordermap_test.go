@@ -78,8 +78,8 @@ func Test_OrderedMap_putAll(t *testing.T) {
 	m.PutAll(func(elt *Element) string {
 		return elt.Name
 	}, []*Element{
-		&Element{Name: "n1", Value: "v1"},
-		&Element{Name: "n2", Value: "v2"},
+		{Name: "n1", Value: "v1"},
+		{Name: "n2", Value: "v2"},
 	})
 
 	a.Equal(2, m.Len())

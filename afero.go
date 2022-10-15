@@ -389,13 +389,11 @@ func ExpandHomePath(path string) (string, error) {
 }
 
 func UserHomeDirP() string {
-
 	r, err := UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
 	return r
-
 }
 
 func UserHomeDir() (string, error) {

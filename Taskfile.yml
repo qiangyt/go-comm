@@ -3,7 +3,7 @@ version: '3'
 env:
   VERSION:
     sh: git describe --tags --always # or: git log -n 1 --format=%h
-  PROJECT_PKG: github.com/fastgh/go-comm
+  PROJECT_PKG: github.com/fastgh/go-comm/v2
 
 includes:
   base: tasks/base.yml
@@ -68,6 +68,10 @@ tasks:
   default:
     desc: run test cases then create coverage report (./coverage.html)
     cmds:
+      - task: patch
+      - task: gen
+      - task: build
+      - task: lint
       - go test ./... -covermode=count -coverprofile=coverage.out gcflags=all=-l -timeout 3s github.com/fastgh/go-comm/v2/test
       - go tool cover -html=./coverage.out -o ./coverage.html
 
