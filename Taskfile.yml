@@ -3,6 +3,10 @@ version: '3'
 env:
   VERSION:
     sh: git describe --tags --always # or: git log -n 1 --format=%h
+  PROJECT_PKG: github.com/fastgh/go-comm
+
+includes:
+  base: tasks/base.yml
 
 output: prefixed
 
@@ -22,6 +26,7 @@ tasks:
       - go mod download
       - go mod tidy
       - go mod vendor
+      - task: patch
 
   lint:
     desc: Runs golangci-lint
@@ -42,6 +47,23 @@ tasks:
       - GOOS=darwin go build -trimpath .
       - GOOS=linux go build -trimpath .
       - GOOS=windows go build -trimpath .
+
+  gen:
+    desc: generates go source files
+    cmds:
+      - task: base:mockgen
+        vars:
+          MOCK_DEST_FILE: mock_file_test.go
+          MOCK_INTERFACE: File
+
+  patch:
+    desc: fix 3rd-party library defects
+    cmds:
+      - task: base:cp
+        vars:
+          SRC: patch/go-universal-network-adapter/httpDownloader.go
+          TARGET: vendor/github.com/goodsru/go-universal-network-adapter/services/downloader/http
+
 
   default:
     desc: run test cases then create coverage report (./coverage.html)
