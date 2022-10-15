@@ -1,6 +1,7 @@
 package comm
 
 import (
+	"github.com/divideandconquer/go-merge/merge"
 	"github.com/emirpasic/gods/sets/hashset"
 )
 
@@ -57,4 +58,13 @@ func SliceEquals[T comparable](a []T, b []T) bool {
 	}
 
 	return true
+}
+
+func MergeMap(bases ...map[string]any) map[string]any {
+	r := map[string]any{}
+	for _, base := range bases {
+		r = merge.Merge(r, base).(map[string]any)
+	}
+
+	return r
 }

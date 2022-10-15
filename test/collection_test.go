@@ -30,3 +30,37 @@ func Test_Slice2Map_happy(t *testing.T) {
 		},
 		comm.Slice2Map([]string{"1", "2"}, func(i string) string { return i + "k" }))
 }
+
+func Test_MergeMap_happy(t *testing.T) {
+	a := require.New(t)
+
+	mapA := map[string]any{
+		"key-A-1": "value-A-1",
+		"key-A-2": "value-A-2",
+		"key-A-3": map[string]any{
+			"key-A-3-1": "value-A-3-1",
+			"key-A-3-2": "value-A-3-2",
+		},
+	}
+	mapB := map[string]any{
+		"key-B-1": "value-B-1",
+		"key-A-2": "value-B-2",
+		"key-A-3": map[string]any{
+			"key-B-3-1": "value-B-3-1",
+			"key-A-3-2": "value-B-3-2",
+		},
+	}
+
+	r := comm.MergeMap(mapA, mapB)
+	a.Len(r, 4)
+
+	a.Equal(r["key-A-1"], "value-A-1")
+	a.Equal(r["key-A-2"], "value-B-2")
+	a.Equal(r["key-B-1"], "value-B-1")
+
+	A3 := r["key-A-3"].(map[string]any)
+	a.Len(A3, 3)
+	a.Equal(A3["key-A-3-1"], "value-A-3-1")
+	a.Equal(A3["key-A-3-2"], "value-B-3-2")
+	a.Equal(A3["key-B-3-1"], "value-B-3-1")
+}

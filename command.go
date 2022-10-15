@@ -140,10 +140,10 @@ func RunUserCommandP(vars map[string]any, dir string, cmd string) CommandOutput 
 }
 
 /*
-func RunShellScriptFile(afs afero.Fs, url string, credentials ufs.Credentials, timeout time.Duration,
+func RunShellScriptFile(afs afero.Fs, url string, credentials comm.Credentials, timeout time.Duration,
 	dir string, sh string) string {
 
-	scriptContent := ufs.DownloadText(afs, url, credentials, timeout)
+	scriptContent := comm.DownloadText(afs, url, credentials, timeout)
 	return RunShellCommand(dir, sh, scriptContent)
 }*/
 
