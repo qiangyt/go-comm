@@ -4,14 +4,14 @@
 //
 // The TL;DR is that you make a .env file that looks something like
 //
-// 		SOME_ENV_VAR=somevalue
+//	SOME_ENV_VAR=somevalue
 //
 // and then in your go code you can call
 //
-// 		godotenv.Load()
+//	godotenv.Load()
 //
 // and all the env vars declared in .env will be available through os.Getenv("SOME_ENV_VAR")
-package godotenv
+package comm
 
 import (
 	"bufio"
@@ -24,6 +24,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
@@ -32,18 +34,18 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 //
 // Call this function as close as possible to the start of your program (ideally in main)
 //
-// If you call Load without any args it will default to loading .env in the current path
+// # If you call Load without any args it will default to loading .env in the current path
 //
 // You can otherwise tell it which files to load (there can be more than one) like
 //
-//		godotenv.Load("fileone", "filetwo")
+//	godotenv.Load("fileone", "filetwo")
 //
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
-func Load(filenames ...string) (err error) {
-	filenames = filenamesOrDefault(filenames)
+func LoadEnv(fs afero.Fs, filenames ...string) (err error) {
+	filenames = envFilenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, false)
+		err = loadEnvFile(fs, filename, false)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -55,18 +57,18 @@ func Load(filenames ...string) (err error) {
 //
 // Call this function as close as possible to the start of your program (ideally in main)
 //
-// If you call Overload without any args it will default to loading .env in the current path
+// # If you call Overload without any args it will default to loading .env in the current path
 //
 // You can otherwise tell it which files to load (there can be more than one) like
 //
-//		godotenv.Overload("fileone", "filetwo")
+//	godotenv.Overload("fileone", "filetwo")
 //
 // It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefilly set all vars.
-func Overload(filenames ...string) (err error) {
-	filenames = filenamesOrDefault(filenames)
+func OverloadEnv(fs afero.Fs, filenames ...string) (err error) {
+	filenames = envFilenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, true)
+		err = loadEnvFile(fs, filename, true)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -76,12 +78,12 @@ func Overload(filenames ...string) (err error) {
 
 // Read all env (with same file loading semantics as Load) but return values as
 // a map rather than automatically writing values into env
-func Read(filenames ...string) (envMap map[string]string, err error) {
-	filenames = filenamesOrDefault(filenames)
+func ReadEnv(fs afero.Fs, filenames ...string) (envMap map[string]string, err error) {
+	filenames = envFilenamesOrDefault(filenames)
 	envMap = make(map[string]string)
 
 	for _, filename := range filenames {
-		individualEnvMap, individualErr := readFile(filename)
+		individualEnvMap, individualErr := readEnvFile(fs, filename)
 
 		if individualErr != nil {
 			err = individualErr
@@ -97,7 +99,7 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 }
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
-func Parse(r io.Reader) (envMap map[string]string, err error) {
+func ParseEnv(r io.Reader) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
 
 	var lines []string
@@ -111,9 +113,9 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	}
 
 	for _, fullLine := range lines {
-		if !isIgnoredLine(fullLine) {
+		if !isIgnoredEnvLine(fullLine) {
 			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
+			key, value, err = parseEnvLine(fullLine, envMap)
 
 			if err != nil {
 				return
@@ -124,9 +126,9 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
-//Unmarshal reads an env file from a string, returning a map of keys and values.
-func Unmarshal(str string) (envMap map[string]string, err error) {
-	return Parse(strings.NewReader(str))
+// Unmarshal reads an env file from a string, returning a map of keys and values.
+func UnmarshalEnv(str string) (envMap map[string]string, err error) {
+	return ParseEnv(strings.NewReader(str))
 }
 
 // Exec loads env vars from the specified filenames (empty map falls back to default)
@@ -136,8 +138,8 @@ func Unmarshal(str string) (envMap map[string]string, err error) {
 //
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()` or `Read()` and the `os/exec` package yourself.
-func Exec(filenames []string, cmd string, cmdArgs []string) error {
-	Load(filenames...)
+func ExecEnv(fs afero.Fs, filenames []string, cmd string, cmdArgs []string) error {
+	LoadEnv(fs, filenames...)
 
 	command := exec.Command(cmd, cmdArgs...)
 	command.Stdin = os.Stdin
@@ -147,12 +149,12 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 }
 
 // Write serializes the given environment and writes it to a file
-func Write(envMap map[string]string, filename string) error {
-	content, err := Marshal(envMap)
+func WriteEnv(fs afero.Fs, envMap map[string]string, filename string) error {
+	content, err := MarshalEnv(envMap)
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(filename)
+	file, err := fs.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -167,28 +169,28 @@ func Write(envMap map[string]string, filename string) error {
 
 // Marshal outputs the given environment as a dotenv-formatted environment file.
 // Each line is in the format: KEY="VALUE" where VALUE is backslash-escaped.
-func Marshal(envMap map[string]string) (string, error) {
+func MarshalEnv(envMap map[string]string) (string, error) {
 	lines := make([]string, 0, len(envMap))
 	for k, v := range envMap {
 		if d, err := strconv.Atoi(v); err == nil {
 			lines = append(lines, fmt.Sprintf(`%s=%d`, k, d))
 		} else {
-			lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
+			lines = append(lines, fmt.Sprintf(`%s="%s"`, k, envDoubleQuoteEscape(v)))
 		}
 	}
 	sort.Strings(lines)
 	return strings.Join(lines, "\n"), nil
 }
 
-func filenamesOrDefault(filenames []string) []string {
+func envFilenamesOrDefault(filenames []string) []string {
 	if len(filenames) == 0 {
 		return []string{".env"}
 	}
 	return filenames
 }
 
-func loadFile(filename string, overload bool) error {
-	envMap, err := readFile(filename)
+func loadEnvFile(fs afero.Fs, filename string, overload bool) error {
+	envMap, err := readEnvFile(fs, filename)
 	if err != nil {
 		return err
 	}
@@ -209,19 +211,19 @@ func loadFile(filename string, overload bool) error {
 	return nil
 }
 
-func readFile(filename string) (envMap map[string]string, err error) {
-	file, err := os.Open(filename)
+func readEnvFile(fs afero.Fs, filename string) (envMap map[string]string, err error) {
+	file, err := fs.Open(filename)
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	return Parse(file)
+	return ParseEnv(file)
 }
 
-var exportRegex = regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
+var envExportRegex = regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 
-func parseLine(line string, envMap map[string]string) (key string, value string, err error) {
+func parseEnvLine(line string, envMap map[string]string) (key string, value string, err error) {
 	if len(line) == 0 {
 		err = errors.New("zero length string")
 		return
@@ -259,41 +261,39 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 
 	if len(splitString) != 2 {
-		err = errors.New("Can't separate key from value")
+		err = errors.New("can't separate key from value")
 		return
 	}
 
 	// Parse the key
 	key = splitString[0]
-	if strings.HasPrefix(key, "export") {
-		key = strings.TrimPrefix(key, "export")
-	}
+	key = strings.TrimPrefix(key, "export")
 	key = strings.TrimSpace(key)
 
-	key = exportRegex.ReplaceAllString(splitString[0], "$1")
+	key = envExportRegex.ReplaceAllString(key, "$1")
 
 	// Parse the value
-	value = parseValue(splitString[1], envMap)
+	value = parseEnvValue(splitString[1], envMap)
 	return
 }
 
 var (
-	singleQuotesRegex  = regexp.MustCompile(`\A'(.*)'\z`)
-	doubleQuotesRegex  = regexp.MustCompile(`\A"(.*)"\z`)
-	escapeRegex        = regexp.MustCompile(`\\.`)
-	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
+	envSingleQuotesRegex  = regexp.MustCompile(`\A'(.*)'\z`)
+	envDoubleQuotesRegex  = regexp.MustCompile(`\A"(.*)"\z`)
+	envEscapeRegex        = regexp.MustCompile(`\\.`)
+	envUnescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
 )
 
-func parseValue(value string, envMap map[string]string) string {
+func parseEnvValue(value string, envMap map[string]string) string {
 
 	// trim
 	value = strings.Trim(value, " ")
 
 	// check if we've got quoted values or possible escapes
 	if len(value) > 1 {
-		singleQuotes := singleQuotesRegex.FindStringSubmatch(value)
+		singleQuotes := envSingleQuotesRegex.FindStringSubmatch(value)
 
-		doubleQuotes := doubleQuotesRegex.FindStringSubmatch(value)
+		doubleQuotes := envDoubleQuotesRegex.FindStringSubmatch(value)
 
 		if singleQuotes != nil || doubleQuotes != nil {
 			// pull the quotes off the edges
@@ -302,7 +302,7 @@ func parseValue(value string, envMap map[string]string) string {
 
 		if doubleQuotes != nil {
 			// expand newlines
-			value = escapeRegex.ReplaceAllStringFunc(value, func(match string) string {
+			value = envEscapeRegex.ReplaceAllStringFunc(value, func(match string) string {
 				c := strings.TrimPrefix(match, `\`)
 				switch c {
 				case "n":
@@ -314,22 +314,22 @@ func parseValue(value string, envMap map[string]string) string {
 				}
 			})
 			// unescape characters
-			value = unescapeCharsRegex.ReplaceAllString(value, "$1")
+			value = envUnescapeCharsRegex.ReplaceAllString(value, "$1")
 		}
 
 		if singleQuotes == nil {
-			value = expandVariables(value, envMap)
+			value = envExpandVariables(value, envMap)
 		}
 	}
 
 	return value
 }
 
-var expandVarRegex = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+var envExpandVarRegex = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
 
-func expandVariables(v string, m map[string]string) string {
-	return expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
-		submatch := expandVarRegex.FindStringSubmatch(s)
+func envExpandVariables(v string, m map[string]string) string {
+	return envExpandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
+		submatch := envExpandVarRegex.FindStringSubmatch(s)
 
 		if submatch == nil {
 			return s
@@ -343,12 +343,12 @@ func expandVariables(v string, m map[string]string) string {
 	})
 }
 
-func isIgnoredLine(line string) bool {
+func isIgnoredEnvLine(line string) bool {
 	trimmedLine := strings.TrimSpace(line)
 	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
 }
 
-func doubleQuoteEscape(line string) string {
+func envDoubleQuoteEscape(line string) string {
 	for _, c := range doubleQuoteSpecialChars {
 		toReplace := "\\" + string(c)
 		if c == '\n' {

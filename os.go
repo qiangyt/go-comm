@@ -6,7 +6,6 @@ import (
 	"runtime"
 
 	"github.com/a8m/envsubst/parse"
-	"github.com/joho/godotenv"
 	plog "github.com/phuslu/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cast"
@@ -34,7 +33,7 @@ func EnvironMapP(overrides map[string]any) map[string]string {
 
 func EnvironMap(overrides map[string]any) (map[string]string, error) {
 	envs := JoinedLines(os.Environ()...)
-	r, err := godotenv.Unmarshal(envs)
+	r, err := UnmarshalEnv(envs)
 	if err != nil {
 		return nil, errors.Wrapf(err, "parse OS environments")
 	}

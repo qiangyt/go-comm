@@ -10,7 +10,6 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/goodsru/go-universal-network-adapter v1.1.2
 	github.com/iancoleman/orderedmap v0.2.0
-	github.com/joho/godotenv v1.4.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/ncruces/zenity v0.9.0
