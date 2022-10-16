@@ -107,6 +107,18 @@ func DecodeWithYaml[T any](yamlText string, cfgcfg *ConfigConfig, result *T, dev
 		return nil, err
 	}
 
+	return DecodeWithMap(input, cfgcfg, result, devault)
+}
+
+func DecodeWithMapP[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) *T {
+	r, err := DecodeWithMap(input, cfgcfg, result, devault)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, error) {
 	backend := MergeMap(devault, input)
 
 	ms := cfgcfg.ToMapstruct()
