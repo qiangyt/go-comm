@@ -137,6 +137,10 @@ func NewDiscardLogger() Logger {
 	}
 }
 
+func IsDiscardLogger(logger Logger) bool {
+	return logger.Logger.Writer.(plog.IOWriter).Writer == io.Discard
+}
+
 type EventLoggerT struct {
 	target Logger
 }
