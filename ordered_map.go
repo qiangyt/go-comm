@@ -3,6 +3,7 @@ package comm
 import (
 	"strings"
 
+	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/iancoleman/orderedmap"
 )
 
@@ -74,8 +75,12 @@ func (me *OrderedMap[K]) Delete(key string) {
 	me.backend.Delete(key)
 }
 
-func (me *OrderedMap[K]) Keys() []string {
-	return me.backend.Keys()
+func (me *OrderedMap[K]) Keys() *hashset.Set {
+	r := hashset.New()
+	for k := range me.backend.Keys() {
+		r.Add(k)
+	}
+	return r
 }
 
 func (me *OrderedMap[K]) Values() []K {
