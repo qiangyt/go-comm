@@ -8,6 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_Set2Strings_happy(t *testing.T) {
+	a := require.New(t)
+
+	strs := comm.Set2Strings(hashset.New("A", "A", "B"))
+	a.Len(strs, 2)
+
+	a.Equal("A", strs[0])
+	a.Equal("B", strs[1])
+}
+
 func Test_Slice2Set_happy(t *testing.T) {
 	a := require.New(t)
 

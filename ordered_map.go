@@ -77,7 +77,7 @@ func (me *OrderedMap[K]) Delete(key string) {
 
 func (me *OrderedMap[K]) Keys() *hashset.Set {
 	r := hashset.New()
-	for k := range me.backend.Keys() {
+	for _, k := range me.backend.Keys() {
 		r.Add(k)
 	}
 	return r

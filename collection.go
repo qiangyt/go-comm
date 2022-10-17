@@ -5,6 +5,14 @@ import (
 	"github.com/emirpasic/gods/sets/hashset"
 )
 
+func Set2Strings(set *hashset.Set) []string {
+	r := make([]string, 0, set.Size())
+	for _, v := range set.Values() {
+		r = append(r, v.(string))
+	}
+	return r
+}
+
 func Slice2Set[T comparable](arr ...T) *hashset.Set {
 	r := hashset.New()
 	for _, a := range arr {

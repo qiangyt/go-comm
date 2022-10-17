@@ -109,15 +109,15 @@ func Test_OrderedMap_sort(t *testing.T) {
 
 	m.SortByKey(false)
 	a.Equal(2, m.Len())
-	a.Equal("k1", m.Keys()[0])
+	a.True(m.Keys().Contains("k1"))
+	a.True(m.Keys().Contains("k2"))
 	a.Equal("v1", m.Values()[0])
-	a.Equal("k2", m.Keys()[1])
 	a.Equal("v2", m.Values()[1])
 
 	m.SortByKey(true)
 	a.Equal(2, m.Len())
-	a.Equal("k2", m.Keys()[0])
+	a.True(m.Keys().Contains("k1"))
+	a.True(m.Keys().Contains("k2"))
 	a.Equal("v2", m.Values()[0])
-	a.Equal("k1", m.Keys()[1])
 	a.Equal("v1", m.Values()[1])
 }
