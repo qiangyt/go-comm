@@ -8,7 +8,7 @@ require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/fastgh/go-event v1.0.4
 	github.com/golang/mock v1.4.4
-	github.com/goodsru/go-universal-network-adapter v1.1.2
+	github.com/goodsru/go-universal-network-adapter v1.1.3-0.20221018065357-179acf84a4df
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0

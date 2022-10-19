@@ -83,7 +83,7 @@ github.com/fastgh/go-event/loggers/phuslu
 # github.com/golang/mock v1.4.4
 ## explicit; go 1.11
 github.com/golang/mock/gomock
-# github.com/goodsru/go-universal-network-adapter v1.1.2
+# github.com/goodsru/go-universal-network-adapter v1.1.3-0.20221018065357-179acf84a4df
 ## explicit; go 1.15
 github.com/goodsru/go-universal-network-adapter/contracts
 github.com/goodsru/go-universal-network-adapter/models
