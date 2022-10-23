@@ -58,7 +58,6 @@ tasks:
   default:
     desc: run test cases then create coverage report (./coverage.html)
     cmds:
-      - task: patch
       - task: gen
       - task: build
       - task: lint

@@ -68,10 +68,10 @@ func SliceEquals[T comparable](a []T, b []T) bool {
 	return true
 }
 
-func MergeMap(bases ...map[string]any) map[string]any {
-	r := map[string]any{}
+func MergeMap[T any](bases ...map[string]T) map[string]T {
+	r := map[string]T{}
 	for _, base := range bases {
-		r = merge.Merge(r, base).(map[string]any)
+		r = merge.Merge(r, base).(map[string]T)
 	}
 
 	return r

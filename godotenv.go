@@ -139,7 +139,9 @@ func UnmarshalEnv(str string) (envMap map[string]string, err error) {
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()` or `Read()` and the `os/exec` package yourself.
 func ExecEnv(fs afero.Fs, filenames []string, cmd string, cmdArgs []string) error {
-	LoadEnv(fs, filenames...)
+	if err := LoadEnv(fs, filenames...); err != nil {
+		return err
+	}
 
 	command := exec.Command(cmd, cmdArgs...)
 	command.Stdin = os.Stdin
@@ -163,8 +165,7 @@ func WriteEnv(fs afero.Fs, envMap map[string]string, filename string) error {
 	if err != nil {
 		return err
 	}
-	file.Sync()
-	return err
+	return file.Sync()
 }
 
 // Marshal outputs the given environment as a dotenv-formatted environment file.
@@ -256,7 +257,7 @@ func parseEnvLine(line string, envMap map[string]string) (key string, value stri
 	firstColon := strings.Index(line, ":")
 	splitString := strings.SplitN(line, "=", 2)
 	if firstColon != -1 && (firstColon < firstEquals || firstEquals == -1) {
-		//this is a yaml-style line
+		// this is a yaml-style line
 		splitString = strings.SplitN(line, ":", 2)
 	}
 
@@ -285,7 +286,6 @@ var (
 )
 
 func parseEnvValue(value string, envMap map[string]string) string {
-
 	// trim
 	value = strings.Trim(value, " ")
 
