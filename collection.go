@@ -76,3 +76,7 @@ func MergeMap[T any](bases ...map[string]T) map[string]T {
 
 	return r
 }
+
+func DeepCopyMap[T any](that map[string]T) map[string]T {
+	return merge.Merge(map[string]T{}, that).(map[string]T)
+}
