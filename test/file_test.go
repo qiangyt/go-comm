@@ -105,13 +105,25 @@ func Test_DownloadText_Remote(t *testing.T) {
 	a.True(comm.HasFallbackFile(fallbackDir, afs, url))
 }
 
-func Test_YamlFileToMap_happy(t *testing.T) {
+func Test_MapFromYamlFileP_happy(t *testing.T) {
 	a := require.New(t)
 	fs := afero.NewMemMapFs()
 
 	comm.WriteFileTextP(fs, "test.yaml", `k: v`)
 
 	configMap := comm.MapFromYamlFileP(fs, "test.yaml", false)
+
+	a.Len(configMap, 1)
+	a.Equal("v", configMap["k"])
+}
+
+func Test_MapFromJsonFileP_happy(t *testing.T) {
+	a := require.New(t)
+	fs := afero.NewMemMapFs()
+
+	comm.WriteFileTextP(fs, "test.json", `{"k": "v"}`)
+
+	configMap := comm.MapFromJsonFileP(fs, "test.json", false)
 
 	a.Len(configMap, 1)
 	a.Equal("v", configMap["k"])
