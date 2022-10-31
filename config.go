@@ -5,6 +5,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+type ConfigMetadata = mapstructure.Metadata
+
 // Derived from mapstructure.DecodeConfig
 type ConfigConfig struct {
 	// If ErrorUnused is true, then it is an error for there to exist
@@ -53,6 +55,8 @@ type ConfigConfig struct {
 	// IgnoreUntaggedFields ignores all struct fields without explicit
 	// TagName, comparable to `mapstructure:"-"` as default behaviour.
 	IgnoreUntaggedFields bool
+
+	Metadata ConfigMetadata
 }
 
 func StrictConfigConfig() *ConfigConfig {
@@ -63,6 +67,7 @@ func StrictConfigConfig() *ConfigConfig {
 		WeaklyTypedInput:     false,
 		Squash:               false,
 		IgnoreUntaggedFields: true,
+		Metadata:             ConfigMetadata{},
 	}
 }
 
@@ -74,6 +79,7 @@ func DynamicConfigConfig() *ConfigConfig {
 		WeaklyTypedInput:     true,
 		Squash:               true,
 		IgnoreUntaggedFields: true,
+		Metadata:             ConfigMetadata{},
 	}
 }
 
@@ -85,7 +91,7 @@ func (me *ConfigConfig) ToMapstruct() *mapstructure.DecoderConfig {
 		ZeroFields:           me.ZeroFields,
 		WeaklyTypedInput:     me.WeaklyTypedInput,
 		Squash:               me.Squash,
-		Metadata:             nil,
+		Metadata:             &me.Metadata,
 		Result:               nil,
 		TagName:              "",
 		IgnoreUntaggedFields: me.IgnoreUntaggedFields,
@@ -93,32 +99,32 @@ func (me *ConfigConfig) ToMapstruct() *mapstructure.DecoderConfig {
 	}
 }
 
-func DecodeWithYamlP[T any](yamlText string, cfgcfg *ConfigConfig, result *T, devault map[string]any) *T {
-	r, err := DecodeWithYaml(yamlText, cfgcfg, result, devault)
+func DecodeWithYamlP[T any](yamlText string, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata) {
+	r, m, err := DecodeWithYaml(yamlText, cfgcfg, result, devault)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return r, m
 }
 
-func DecodeWithYaml[T any](yamlText string, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, error) {
+func DecodeWithYaml[T any](yamlText string, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata, error) {
 	input, err := MapFromYaml(yamlText, false)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	return DecodeWithMap(input, cfgcfg, result, devault)
 }
 
-func DecodeWithMapP[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) *T {
-	r, err := DecodeWithMap(input, cfgcfg, result, devault)
+func DecodeWithMapP[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata) {
+	r, m, err := DecodeWithMap(input, cfgcfg, result, devault)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return r, m
 }
 
-func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, error) {
+func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata, error) {
 	backend := MergeMap(devault, input)
 
 	ms := cfgcfg.ToMapstruct()
@@ -127,12 +133,12 @@ func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T,
 	decoder, err := mapstructure.NewDecoder(ms)
 	// TODO: for better user-friendly error message, use DecoderConfig{Metadata} to find Unset
 	if err != nil {
-		return nil, errors.Wrap(err, "create mapstructure decoder")
+		return nil, &cfgcfg.Metadata, errors.Wrap(err, "create mapstructure decoder")
 	}
 
 	if err = decoder.Decode(backend); err != nil {
-		return nil, errors.Wrapf(err, "decode map: %v", backend)
+		return nil, &cfgcfg.Metadata, errors.Wrapf(err, "decode map: %v", backend)
 	}
 
-	return result, nil
+	return result, &cfgcfg.Metadata, nil
 }
