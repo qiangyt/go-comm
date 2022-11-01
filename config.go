@@ -144,7 +144,7 @@ func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T,
 }
 
 func GetMapValue[T any](m map[string]any, key string, devault func() T) T {
-	if i, has := m["key"]; has {
+	if i, has := m[key]; has {
 		return i.(T)
 	}
 

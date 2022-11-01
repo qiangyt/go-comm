@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
@@ -17,7 +18,7 @@ func RenderWithTemplateP(w io.Writer, name string, tmpl string, data map[string]
 }
 
 func RenderWithTemplate(w io.Writer, name string, tmpl string, data map[string]any) error {
-	t, err := template.New(name).Parse(tmpl)
+	t, err := template.New(name).Funcs(sprig.FuncMap()).Parse(tmpl)
 	if err != nil {
 		return errors.Wrapf(err, "parse template %s: %s", name, tmpl)
 	}

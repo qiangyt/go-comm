@@ -3,6 +3,7 @@ module github.com/fastgh/go-comm/v2
 go 1.18
 
 require (
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/a8m/envsubst v1.3.0
 	github.com/divideandconquer/go-merge v0.0.0-20160829212531-bc6b3a394b4e
 	github.com/emirpasic/gods v1.18.1
@@ -27,17 +28,25 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
+	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/aws/aws-sdk-go v1.37.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f // indirect
+	github.com/google/uuid v1.1.2 // indirect
+	github.com/huandu/xstrings v1.3.1 // indirect
+	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josephspurrier/goversioninfo v1.4.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
+	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/pkg/sftp v1.13.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 // indirect
 	github.com/secsy/goftp v0.0.0-20180816013212-012609e90524 // indirect
+	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
 	golang.org/x/image v0.0.0-20220722155232-062f8c9fd539 // indirect
