@@ -3,7 +3,11 @@ package comm
 import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+
+	"github.com/go-playground/validator/v10"
 )
+
+var validate *validator.Validate
 
 type ConfigMetadata = mapstructure.Metadata
 
@@ -138,6 +142,10 @@ func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T,
 
 	if err = decoder.Decode(backend); err != nil {
 		return nil, &cfgcfg.Metadata, errors.Wrapf(err, "decode map: %v", backend)
+	}
+
+	if err = validate.Struct(result); err != nil {
+		return nil, &cfgcfg.Metadata, errors.Wrapf(err, "validation: %v", backend)
 	}
 
 	return result, &cfgcfg.Metadata, nil

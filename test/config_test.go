@@ -25,7 +25,7 @@ b: B
 		B string `mapstruct:"b"`
 		C bool   `mapstruct:"c"`
 	}
-	r := comm.DecodeWithYamlP(yamlText, comm.StrictConfigConfig(), &Temp{}, devault)
+	r, _ := comm.DecodeWithYamlP(yamlText, comm.StrictConfigConfig(), &Temp{}, devault)
 	a.Equal(1, r.A)
 	a.Equal("B", r.B)
 	a.True(r.C)
