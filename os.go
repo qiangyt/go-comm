@@ -154,3 +154,12 @@ func WorkingDirectory() (string, error) {
 	}
 	return r, nil
 }
+
+func AbsPath(cwd string, _path string) string {
+	r := filepath.Clean(_path)
+	if filepath.IsAbs(r) {
+		return r
+	}
+
+	return filepath.Join(filepath.Clean(cwd), _path)
+}
