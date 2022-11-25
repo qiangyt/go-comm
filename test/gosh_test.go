@@ -10,7 +10,7 @@ import (
 func Test_RunGoshCommand_happy(t *testing.T) {
 	a := require.New(t)
 
-	vars := map[string]any{
+	vars := map[string]string{
 		"YOU": "fastgh",
 	}
 
@@ -26,7 +26,7 @@ func Test_RunGoshCommand_happy(t *testing.T) {
 func Test_RunShellCommand_gosh(t *testing.T) {
 	a := require.New(t)
 
-	vars := map[string]any{
+	vars := map[string]string{
 		"YOU": "fastgh",
 	}
 

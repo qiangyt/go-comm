@@ -13,6 +13,6 @@ func main() {
 			fmt.Printf("%+v", x)
 		}
 	}()
-	comm.RunShellCommandP(map[string]any{}, "", "bash", "sudo echo hi",
+	comm.RunShellCommandP(map[string]string{}, "", "bash", "sudo echo hi",
 		func() string { return "changeit" })
 }

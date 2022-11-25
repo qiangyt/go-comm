@@ -12,9 +12,9 @@ func Test_Vars2Pair_happy(t *testing.T) {
 	a := require.New(t)
 
 	a.Nil(comm.Vars2Pair(nil))
-	a.Nil(comm.Vars2Pair(map[string]any{}))
+	a.Nil(comm.Vars2Pair(map[string]string{}))
 
-	vars := map[string]any{
+	vars := map[string]string{
 		"k1": "v1",
 		"k2": "v2",
 	}
