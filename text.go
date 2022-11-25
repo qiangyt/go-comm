@@ -198,3 +198,8 @@ func TextLine2Array(line string) []string {
 	}
 	return r
 }
+
+func Text2Lines(text string) []string {
+	rdr := strings.NewReader(text)
+	return ReadLines(rdr)
+}
