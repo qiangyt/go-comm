@@ -49,7 +49,7 @@ func Test_SubstVars_noLocalVars(t *testing.T) {
 		"k":  "vParent",
 	}
 
-	actualMap := comm.SubstVarsP(map[string]any{
+	actualMap := comm.SubstVarsP(true, map[string]any{
 		"template": "prefix-{{.k0}}-{{.k}}-suffix",
 	}, vars)
 	a.Len(actualMap, 2)
@@ -69,7 +69,7 @@ func Test_SubstVars_hasDifferentLocalVars(t *testing.T) {
 		"k":  "vParent",
 	}
 
-	actualMap := comm.SubstVarsP(map[string]any{
+	actualMap := comm.SubstVarsP(true, map[string]any{
 		"vars": map[string]any{
 			"k1": "v1",
 		},
@@ -93,7 +93,7 @@ func Test_SubstVars_hasOverwrittenLocalVars(t *testing.T) {
 		"k":  "vParent",
 	}
 	// has overwritten local vars
-	actualMap := comm.SubstVarsP(map[string]any{
+	actualMap := comm.SubstVarsP(true, map[string]any{
 		"vars": map[string]any{
 			"k":  "vChild",
 			"k1": "v1",
@@ -118,7 +118,7 @@ func Test_SubstVars_skip(t *testing.T) {
 		"k":  "vParent",
 	}
 	// has overwritten local vars
-	actualMap := comm.SubstVarsP(map[string]any{
+	actualMap := comm.SubstVarsP(true, map[string]any{
 		"vars": map[string]any{
 			"k":  "vChild",
 			"k1": "v1",

@@ -12,14 +12,14 @@ func Test_OrderedMap_happy(t *testing.T) {
 
 	m := comm.NewOrderedMap("")
 	a.Equal(0, m.Len())
-	a.Len(m.Keys(), 0)
+	a.Equal(0, m.Keys().Size())
 	a.Len(m.Values(), 0)
 
 	m.Put("k1", "v1")
 	m.Put("k2", "v2")
 
 	a.Equal(2, m.Len())
-	a.Len(m.Keys(), 2)
+	a.Equal(2, m.Keys().Size())
 	a.Len(m.Values(), 2)
 
 	a.Equal("v1", m.Get("k1"))
@@ -83,7 +83,7 @@ func Test_OrderedMap_putAll(t *testing.T) {
 	})
 
 	a.Equal(2, m.Len())
-	a.Len(m.Keys(), 2)
+	a.Equal(2, m.Keys().Size())
 	a.Len(m.Values(), 2)
 
 	a.Equal("v1", m.Get("n1").Value)

@@ -2,6 +2,7 @@ package comm
 
 import (
 	"io"
+	"os"
 	"strings"
 	"text/template"
 
@@ -94,15 +95,15 @@ func ToYaml(hint string, me any) (string, error) {
 	return string(r), nil
 }
 
-func SubstVarsP(m map[string]any, parentVars map[string]any, keysToSkip ...string) map[string]any {
-	r, err := SubstVars(m, parentVars, keysToSkip...)
+func SubstVarsP(useGoTemplate bool, m map[string]any, parentVars map[string]any, keysToSkip ...string) map[string]any {
+	r, err := SubstVars(useGoTemplate, m, parentVars, keysToSkip...)
 	if err != nil {
 		panic(err)
 	}
 	return r
 }
 
-func SubstVars(m map[string]any, parentVars map[string]any, keysToSkip ...string) (map[string]any, error) {
+func SubstVars(useGoTemplate bool, m map[string]any, parentVars map[string]any, keysToSkip ...string) (map[string]any, error) {
 	newVars := map[string]any{}
 
 	// copy parent vars, it could be overwritten by local vars
@@ -149,9 +150,14 @@ func SubstVars(m map[string]any, parentVars map[string]any, keysToSkip ...string
 	if err != nil {
 		return nil, err
 	}
-	yamlNoVars, err = RenderAsTemplate(yamlNoVars, newVars)
-	if err != nil {
-		return nil, err
+
+	if useGoTemplate {
+		yamlNoVars, err = RenderAsTemplate(yamlNoVars, newVars)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		yamlNoVars = os.Expand(yamlNoVars, func(k string) string { return newVars[k].(string) })
 	}
 
 	r := map[string]any{}
