@@ -167,7 +167,7 @@ func SubstVars(useGoTemplate bool, m map[string]any, parentVars map[string]any, 
 					}
 					return fmt.Sprintf("%v", v)
 				}
-				return ""
+				return "${" + k + "}"
 			})
 	}
 
