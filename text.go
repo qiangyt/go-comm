@@ -1,6 +1,7 @@
 package comm
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -157,7 +158,17 @@ func SubstVars(useGoTemplate bool, m map[string]any, parentVars map[string]any, 
 			return nil, err
 		}
 	} else {
-		yamlNoVars = os.Expand(yamlNoVars, func(k string) string { return newVars[k].(string) })
+		yamlNoVars = os.Expand(yamlNoVars,
+			func(k string) string {
+				v := newVars[k]
+				if v != nil {
+					if vStr, isStr := v.(string); isStr {
+						return vStr
+					}
+					return fmt.Sprintf("%v", v)
+				}
+				return ""
+			})
 	}
 
 	r := map[string]any{}
