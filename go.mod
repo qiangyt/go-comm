@@ -1,13 +1,14 @@
-module github.com/fastgh/go-comm/v2
+module github.com/qiangyt/go-comm/v2
 
-go 1.18
+go 1.21
+
+toolchain go1.21.1
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/a8m/envsubst v1.3.0
 	github.com/divideandconquer/go-merge v0.0.0-20160829212531-bc6b3a394b4e
 	github.com/emirpasic/gods v1.18.1
-	github.com/fastgh/go-event v1.0.4
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/golang/mock v1.4.4
 	github.com/goodsru/go-universal-network-adapter v1.1.3-0.20221018065357-179acf84a4df
@@ -17,6 +18,7 @@ require (
 	github.com/ncruces/zenity v0.9.0
 	github.com/phuslu/log v1.0.81
 	github.com/pkg/errors v0.9.1
+	github.com/qiangyt/go-event v1.1.0
 	github.com/spf13/afero v1.9.2
 	github.com/spf13/cast v1.5.0
 	github.com/stretchr/testify v1.8.0

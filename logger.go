@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/fastgh/go-event"
-	eventloggers "github.com/fastgh/go-event/loggers/phuslu"
 	plog "github.com/phuslu/log"
 	"github.com/pkg/errors"
+	"github.com/qiangyt/go-event"
+	eventloggers "github.com/qiangyt/go-event/loggers/phuslu"
 	"go.uber.org/atomic"
 	"gopkg.in/natefinch/lumberjack.v2"
 )

@@ -25,7 +25,8 @@ var (
 
 func (i LogLevel) String() string {
 	switch {
-	case 0 <= i && i <= 3:
+	case 1 <= i && i <= 4:
+		i -= 1
 		return _LogLevelName_0[_LogLevelIndex_0[i]:_LogLevelIndex_0[i+1]]
 	case i == 127:
 		return _LogLevelName_1
@@ -38,10 +39,10 @@ func (i LogLevel) String() string {
 // Re-run the stringer command to generate them again.
 func _LogLevelNoOp() {
 	var x [1]struct{}
-	_ = x[LogLevelAnyway-(0)]
-	_ = x[LogLevelDebug-(1)]
-	_ = x[LogLevelInfo-(2)]
-	_ = x[LogLevelError-(3)]
+	_ = x[LogLevelAnyway-(1)]
+	_ = x[LogLevelDebug-(2)]
+	_ = x[LogLevelInfo-(3)]
+	_ = x[LogLevelError-(4)]
 	_ = x[LogLevelSilient-(127)]
 }
 

@@ -85,10 +85,6 @@ github.com/emirpasic/gods/containers
 github.com/emirpasic/gods/sets
 github.com/emirpasic/gods/sets/hashset
 github.com/emirpasic/gods/utils
-# github.com/fastgh/go-event v1.0.4
-## explicit; go 1.18
-github.com/fastgh/go-event
-github.com/fastgh/go-event/loggers/phuslu
 # github.com/go-playground/locales v0.14.0
 ## explicit; go 1.13
 github.com/go-playground/locales
@@ -164,6 +160,10 @@ github.com/pkg/sftp
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
+# github.com/qiangyt/go-event v1.1.0
+## explicit; go 1.21
+github.com/qiangyt/go-event
+github.com/qiangyt/go-event/loggers/phuslu
 # github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844
 ## explicit; go 1.13
 github.com/randall77/makefat

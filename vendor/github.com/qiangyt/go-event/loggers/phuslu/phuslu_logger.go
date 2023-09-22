@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fastgh/go-event"
 	ps "github.com/phuslu/log"
+	"github.com/qiangyt/go-event"
 )
 
 type PhusluLoggerT struct {

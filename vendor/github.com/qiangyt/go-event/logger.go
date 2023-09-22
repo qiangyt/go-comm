@@ -3,7 +3,8 @@ package event
 type LogLevel int8
 
 const (
-	LogLevelAnyway LogLevel = iota
+	_ LogLevel = iota
+	LogLevelAnyway
 
 	LogLevelDebug
 	LogLevelInfo

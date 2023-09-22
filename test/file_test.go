@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/fastgh/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )

@@ -1,6 +1,6 @@
 package event
 
-type Listener[K any] func(evnt K)
+type Listener[K any] func(sender any, evnt K)
 
 type EventListener[K any] struct {
 	name  string
@@ -48,7 +48,7 @@ func (me *EventListener[K]) onEvent(evnt Event) {
 	logr.LogEventDebug(EventHandleBegin, evnt)
 
 	var dat K = evnt.Data.(K)
-	me.lsner(dat)
+	me.lsner(evnt.Sender, dat)
 
 	logr.LogEventDebug(EventHandleOk, evnt)
 }

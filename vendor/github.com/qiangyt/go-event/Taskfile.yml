@@ -11,9 +11,10 @@ tasks:
     desc: init env, including install dependent tools
     cmds:
       - go install github.com/golang/mock/mockgen@v1.6.0
-      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-      - go install github.com/dmarkham/enumer@v1.5.6
-      - go install mvdan.cc/gofumpt@v0.4.0
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
+      - go install github.com/dmarkham/enumer@v1.5.8
+      - go install mvdan.cc/gofumpt@v0.5.0
+      - go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
 
   gen:
     desc: generate sources, for ex. enum.
@@ -33,6 +34,7 @@ tasks:
     sources:
       - './**/*.go'
     cmds:
+      - staticcheck ./...
       - golangci-lint run
 
   format:

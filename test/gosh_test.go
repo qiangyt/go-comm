@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	"github.com/fastgh/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2"
 	"github.com/stretchr/testify/require"
 )
 

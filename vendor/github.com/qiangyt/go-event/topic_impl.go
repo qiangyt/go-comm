@@ -85,7 +85,11 @@ func (me *TopicImpl[K]) UnSub(name string) bool {
 	lsners := me.lsners
 	for i, existing := range lsners {
 		if existing.name == name {
-			me.lsners = append(lsners[:i], lsners[i+1])
+			if i == len(lsners)-1 {
+				me.lsners = lsners[:i]
+			} else {
+				me.lsners = append(lsners[:i], lsners[i+1])
+			}
 			me.logr.LogInfo(ListenerUnsubOk, name)
 
 			stopEvent := NewCloseEvent(me.NewEventId(), me.Hub().Name(), me.name)
@@ -98,7 +102,7 @@ func (me *TopicImpl[K]) UnSub(name string) bool {
 	return false
 }
 
-func (me *TopicImpl[K]) Pub(mode PubMode, evnt K) {
+func (me *TopicImpl[K]) Pub(mode PubMode, sender any, evntData K) {
 	var async bool
 	if mode == PubModeAsync {
 		async = true
@@ -108,16 +112,23 @@ func (me *TopicImpl[K]) Pub(mode PubMode, evnt K) {
 		async = len(me.lsners) >= 100
 	}
 
+	evnt := NewDataEvent(me.NewEventId(), sender, me.Hub().name, me.name, evntData)
+
 	if async {
-		go me.doPub(evnt)
+		go func() {
+			defer func() {
+				if p := recover(); p != nil {
+					me.hub.Logger().LogEventError(EventPubError, "", evnt, p)
+				}
+			}()
+			me.doPub(sender, evnt)
+		}()
 	} else {
-		me.doPub(evnt)
+		me.doPub(sender, evnt)
 	}
 }
 
-func (me *TopicImpl[K]) doPub(evntData K) {
-	evnt := NewDataEvent(me.NewEventId(), me.Hub().name, me.name, evntData)
-
+func (me *TopicImpl[K]) doPub(sender any, evnt Event) {
 	me.mx.RLock()
 	defer me.mx.RUnlock()
 
