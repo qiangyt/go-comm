@@ -13,6 +13,17 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+func LogMapper(logger *plog.Entry, key string, mapper ToMap) *plog.Entry {
+	return LogMap(logger, key, mapper.ToMap())
+}
+
+func LogMap(logger *plog.Entry, key string, m map[string]any) *plog.Entry {
+	dict := plog.NewContext(nil)
+	dict.Fields(m)
+
+	return logger.Dict(key, dict.Value())
+}
+
 type LoggerT struct {
 	plog.Logger
 	parent           Logger

@@ -11,7 +11,7 @@ func Test_RunGoshCommand_happy(t *testing.T) {
 	a := require.New(t)
 
 	vars := map[string]string{
-		"YOU": "fastgh",
+		"YOU": "qiangyt",
 	}
 
 	output := comm.RunGoshCommandP(vars, "", "echo '$vars$\n\nkey=value'\n", nil)
@@ -27,12 +27,12 @@ func Test_RunShellCommand_gosh(t *testing.T) {
 	a := require.New(t)
 
 	vars := map[string]string{
-		"YOU": "fastgh",
+		"YOU": "qiangyt",
 	}
 
 	output := comm.RunShellCommandP(vars, "", "", "echo Hi ${YOU}", nil)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_TEXT, output.Kind)
-	a.Equal("Hi fastgh\n", output.Text)
+	a.Equal("Hi qiangyt\n", output.Text)
 
 	output = comm.RunShellCommandP(vars, "", "gosh", "echo '$json$\n\ntrue'", nil)
 	a.Equal(comm.COMMAND_OUTPUT_KIND_JSON, output.Kind)
