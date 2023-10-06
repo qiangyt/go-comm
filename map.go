@@ -1,0 +1,108 @@
+package comm
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func RequiredMapP(hint string, key string, m map[string]any) map[string]any {
+	r, err := RequiredMap(hint, key, m)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func RequiredMap(hint string, key string, m map[string]any) (map[string]any, error) {
+	v, has := m[key]
+	if !has {
+		return nil, fmt.Errorf("%s.%s is required", hint, key)
+	}
+
+	return Map(hint+"."+key, v)
+}
+
+func OptionalMapP(hint string, key string, m map[string]any, defaultresult map[string]any) map[string]any {
+	r, err := OptionalMap(hint, key, m, defaultresult)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func OptionalMap(hint string, key string, m map[string]any, defaultresult map[string]any) (map[string]any, error) {
+	v, has := m[key]
+	if !has {
+		return defaultresult, nil
+	}
+
+	return Map(hint+"."+key, v)
+}
+
+func MapP(hint string, v any) map[string]any {
+	r, err := Map(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func Map(hint string, v any) (map[string]any, error) {
+	r, ok := v.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a map[string]any, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}
+
+func RequiredMapArrayP(hint string, key string, m map[string]any) []map[string]any {
+	r, err := RequiredMapArray(hint, key, m)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func RequiredMapArray(hint string, key string, m map[string]any) ([]map[string]any, error) {
+	v, has := m[key]
+	if !has {
+		return nil, fmt.Errorf("%s.%s is required", hint, key)
+	}
+
+	return MapArray(hint+"."+key, v)
+}
+
+func OptionalMapArrayP(hint string, key string, m map[string]any, defaultresult []map[string]any) []map[string]any {
+	r, err := OptionalMapArray(hint, key, m, defaultresult)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func OptionalMapArray(hint string, key string, m map[string]any, defaultresult []map[string]any) ([]map[string]any, error) {
+	v, has := m[key]
+	if !has {
+		return defaultresult, nil
+	}
+
+	return MapArray(hint+"."+key, v)
+}
+
+func MapArrayP(hint string, v any) []map[string]any {
+	r, err := MapArray(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+// MapArray casts the input any value to []map[string]any if the input value type matches,
+// otherwise, return error.
+func MapArray(hint string, v any) ([]map[string]any, error) {
+	r, ok := v.([]map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a map[string]any array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}

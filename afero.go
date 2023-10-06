@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/mitchellh/go-homedir"
@@ -21,20 +20,6 @@ func DefaultEtcHostsP() string {
 		panic(err)
 	}
 	return r
-}
-
-func DefaultEtcHosts() (string, error) {
-	gos := runtime.GOOS
-	if gos == "windows" {
-		return `C:\Windows\System32\Drivers\etc\hosts`, nil
-	}
-	if gos == "darwin" {
-		return "/etc/hosts", nil
-	}
-	if gos == "linux" {
-		return "/private/etc/hosts", nil
-	}
-	return "", errors.New(runtime.GOOS + " is not yet supported")
 }
 
 func CopyFileP(fs afero.Fs, path string, newPath string) int64 {
