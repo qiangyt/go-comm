@@ -128,3 +128,11 @@ func (me *OrderedMap[K]) SortByKey(revert bool) {
 		return r < 0
 	})
 }
+
+func (me *OrderedMap[K]) ToMap() map[string]K {
+	r := map[string]K{}
+	for _, entry := range me.Entries() {
+		r[entry.Key] = entry.Value
+	}
+	return r
+}
