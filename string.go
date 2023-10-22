@@ -22,21 +22,27 @@ func RequiredString(hint string, key string, m map[string]any) (string, error) {
 	return String(hint+"."+key, v)
 }
 
-func OptionalStringP(hint string, key string, m map[string]any, devault string) string {
-	r, err := OptionalString(hint, key, m, devault)
+func OptionalStringP(hint string, key string, m map[string]any, devault string) (result string, has bool) {
+	var err error
+	result, has, err = OptionalString(hint, key, m, devault)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return
 }
 
-func OptionalString(hint string, key string, m map[string]any, devault string) (string, error) {
-	v, has := m[key]
+func OptionalString(hint string, key string, m map[string]any, devault string) (result string, has bool, err error) {
+	var v any
+
+	v, has = m[key]
 	if !has {
-		return devault, nil
+		result = devault
+		err = nil
+		return
 	}
 
-	return String(hint+"."+key, v)
+	result, err = String(hint+"."+key, v)
+	return
 }
 
 func StringP(hint string, v any) string {
@@ -72,21 +78,26 @@ func StringArrayValue(hint string, key string, m map[string]any) ([]string, erro
 	return StringArray(hint+"."+key, v)
 }
 
-func OptionalStringArrayValueP(hint string, key string, m map[string]any, devault []string) []string {
-	r, err := OptionalStringArrayValue(hint, key, m, devault)
+func OptionalStringArrayValueP(hint string, key string, m map[string]any, devault []string) (result []string, has bool) {
+	var err error
+	result, has, err = OptionalStringArrayValue(hint, key, m, devault)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return
 }
 
-func OptionalStringArrayValue(hint string, key string, m map[string]any, devault []string) ([]string, error) {
-	v, has := m[key]
+func OptionalStringArrayValue(hint string, key string, m map[string]any, devault []string) (result []string, has bool, err error) {
+	var v any
+	v, has = m[key]
 	if !has {
-		return devault, nil
+		result = devault
+		err = nil
+		return
 	}
 
-	return StringArray(hint+"."+key, v)
+	result, err = StringArray(hint+"."+key, v)
+	return
 }
 
 func StringArrayP(hint string, v any) []string {
@@ -103,4 +114,32 @@ func StringArray(hint string, v any) ([]string, error) {
 		return nil, fmt.Errorf("%s must be a string array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil
+}
+
+var asciiSpace = [256]uint8{'\t': 1, '\n': 1, '\v': 1, '\f': 1, '\r': 1, ' ': 1}
+
+func IsAsciiSpace(s uint8) bool {
+	return asciiSpace[s] == 1
+}
+
+func AnyArrayToStringArray(anyArray []any) []string {
+	if anyArray == nil {
+		return nil
+	}
+	result := make([]string, len(anyArray))
+	for i, any := range anyArray {
+		result[i] = any.(string)
+	}
+	return result
+}
+
+func StringArrayToAnyArray(stringArray []string) []any {
+	if stringArray == nil {
+		return nil
+	}
+	result := make([]any, len(stringArray))
+	for i, s := range stringArray {
+		result[i] = s
+	}
+	return result
 }

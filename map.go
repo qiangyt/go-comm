@@ -22,21 +22,25 @@ func RequiredMap(hint string, key string, m map[string]any) (map[string]any, err
 	return Map(hint+"."+key, v)
 }
 
-func OptionalMapP(hint string, key string, m map[string]any, defaultresult map[string]any) map[string]any {
-	r, err := OptionalMap(hint, key, m, defaultresult)
+func OptionalMapP(hint string, key string, m map[string]any, defaultresult map[string]any) (result map[string]any, has bool) {
+	var err error
+	result, has, err = OptionalMap(hint, key, m, defaultresult)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return
 }
 
-func OptionalMap(hint string, key string, m map[string]any, defaultresult map[string]any) (map[string]any, error) {
-	v, has := m[key]
+func OptionalMap(hint string, key string, m map[string]any, defaultresult map[string]any) (result map[string]any, has bool, err error) {
+	var v any
+	v, has = m[key]
 	if !has {
-		return defaultresult, nil
+		result = defaultresult
+		return
 	}
 
-	return Map(hint+"."+key, v)
+	result, err = Map(hint+"."+key, v)
+	return
 }
 
 func MapP(hint string, v any) map[string]any {
@@ -72,21 +76,25 @@ func RequiredMapArray(hint string, key string, m map[string]any) ([]map[string]a
 	return MapArray(hint+"."+key, v)
 }
 
-func OptionalMapArrayP(hint string, key string, m map[string]any, defaultresult []map[string]any) []map[string]any {
-	r, err := OptionalMapArray(hint, key, m, defaultresult)
+func OptionalMapArrayP(hint string, key string, m map[string]any, defaultresult []map[string]any) (result []map[string]any, has bool) {
+	var err error
+	result, has, err = OptionalMapArray(hint, key, m, defaultresult)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return
 }
 
-func OptionalMapArray(hint string, key string, m map[string]any, defaultresult []map[string]any) ([]map[string]any, error) {
-	v, has := m[key]
+func OptionalMapArray(hint string, key string, m map[string]any, defaultresult []map[string]any) (result []map[string]any, has bool, err error) {
+	var v any
+	v, has = m[key]
 	if !has {
-		return defaultresult, nil
+		result = defaultresult
+		return
 	}
 
-	return MapArray(hint+"."+key, v)
+	result, err = MapArray(hint+"."+key, v)
+	return
 }
 
 func MapArrayP(hint string, v any) []map[string]any {

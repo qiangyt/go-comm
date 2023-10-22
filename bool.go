@@ -28,23 +28,27 @@ func RequiredBool(hint string, key string, m map[string]any) (bool, error) {
 
 // OptionalBoolP returns the bool value of the key in the map. If parsing error occurred,
 // raise a panic. If the key is not found, return the default value.
-func OptionalBoolP(hint string, key string, m map[string]any, devault bool) bool {
-	r, err := OptionalBool(hint, key, m, devault)
+func OptionalBoolP(hint string, key string, m map[string]any, devault bool) (result bool, has bool) {
+	var err error
+	result, has, err = OptionalBool(hint, key, m, devault)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return
 }
 
 // OptionalBool returns the bool value of the key in the map. If parsing error occrred,
 // returns the error. If the key is not found, return the default value.
-func OptionalBool(hint string, key string, m map[string]any, devault bool) (bool, error) {
-	v, has := m[key]
+func OptionalBool(hint string, key string, m map[string]any, devault bool) (result bool, has bool, err error) {
+	var v any
+	v, has = m[key]
 	if !has {
-		return devault, nil
+		result = devault
+		return
 	}
 
-	return Bool(hint+"."+key, v)
+	result, err = Bool(hint+"."+key, v)
+	return
 }
 
 // Cast the value to bool. If parsing error occurred, raise a panic.

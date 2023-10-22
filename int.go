@@ -28,23 +28,28 @@ func RequiredInt(hint string, key string, m map[string]any) (int, error) {
 
 // OptionalIntP returns the int value of the key in the map. If parsing error occurred,
 // raise a panic. If the key is not found, return the default value.
-func OptionalIntP(hint string, key string, m map[string]any, devault int) int {
-	r, err := OptionalInt(hint, key, m, devault)
+func OptionalIntP(hint string, key string, m map[string]any, devault int) (result int, has bool) {
+	var err error
+	result, has, err = OptionalInt(hint, key, m, devault)
 	if err != nil {
 		panic(err)
 	}
-	return r
+	return
 }
 
 // OptionalInt returns the int value of the key in the map. If parsing error occrred,
 // returns the error. If the key is not found, return the default value.
-func OptionalInt(hint string, key string, m map[string]any, devault int) (int, error) {
-	v, has := m[key]
+func OptionalInt(hint string, key string, m map[string]any, devault int) (result int, has bool, err error) {
+	var v any
+
+	v, has = m[key]
 	if !has {
-		return devault, nil
+		result = devault
+		return
 	}
 
-	return Int(hint+"."+key, v)
+	result, err = Int(hint+"."+key, v)
+	return
 }
 
 // Cast the value to int. If parsing error occurred, raise a panic.

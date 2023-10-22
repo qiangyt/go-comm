@@ -53,13 +53,15 @@ func TestOptionalMapP(t *testing.T) {
 	m := map[string]any{
 		"key1": map[string]any{"key2": "value2"},
 	}
-	r := OptionalMapP("test", "key1", m, nil)
+	r, has := OptionalMapP("test", "key1", m, nil)
+	a.True(has)
 	expected := map[string]any{"key2": "value2"}
 	a.Equal(expected, r)
 
 	defaultValue := map[string]any{"default": "value"}
 	// Test that OptionalMap returns default value when the specified key does not exist in the map.
-	r = OptionalMapP("test", "key2", m, defaultValue)
+	r, has = OptionalMapP("test", "key2", m, defaultValue)
+	a.False(has)
 	a.Equal(defaultValue, r)
 
 	// Test that OptionalMapP panices when the value of the specified key is not a map[string]any.
@@ -74,20 +76,23 @@ func TestOptionalMap(t *testing.T) {
 	m := map[string]any{
 		"key1": map[string]any{"key2": "value2"},
 	}
-	r, err := OptionalMap("test", "key1", m, nil)
+	r, has, err := OptionalMap("test", "key1", m, nil)
+	a.True(has)
 	a.NoError(err)
 	expected := map[string]any{"key2": "value2"}
 	a.Equal(expected, r)
 
 	defaultValue := map[string]any{"default": "value"}
 	// Test that OptionalMap returns default value when the specified key does not exist in the map.
-	r, err = OptionalMap("test", "key2", m, defaultValue)
+	r, has, err = OptionalMap("test", "key2", m, defaultValue)
+	a.False(has)
 	a.NoError(err)
 	a.Equal(defaultValue, r)
 
 	// Test that OptionalMap returns error when the value of the specified key is not a map[string]any.
 	m["key3"] = "not-a-map"
-	r, err = OptionalMap("test", "key3", m, defaultValue)
+	r, has, err = OptionalMap("test", "key3", m, defaultValue)
+	a.True(has)
 	a.Error(err)
 	a.Nil(r)
 }
@@ -169,13 +174,15 @@ func TestOptionalMapArrayP(t *testing.T) {
 	m := map[string]any{
 		"key1": []map[string]any{{"key2": "value2"}},
 	}
-	r := OptionalMapArrayP("test", "key1", m, nil)
+	r, has := OptionalMapArrayP("test", "key1", m, nil)
+	a.True(has)
 	expected := []map[string]any{{"key2": "value2"}}
 	a.Equal(expected, r)
 
 	// Test that OptionalMapArrayP returns the default result when the specified key does not exist in the map.
 	defaultResult := []map[string]any{{"default": "value"}}
-	r = OptionalMapArrayP("test", "key2", m, defaultResult)
+	r, has = OptionalMapArrayP("test", "key2", m, defaultResult)
+	a.False(has)
 	a.Equal(defaultResult, r)
 
 	// Test that OptionalMapArrayP panics when the value of the specified key is not a []map[string]any.
@@ -190,20 +197,23 @@ func TestOptionalMapArray(t *testing.T) {
 	m := map[string]any{
 		"key1": []map[string]any{{"key2": "value2"}},
 	}
-	r, err := OptionalMapArray("test", "key1", m, nil)
+	r, has, err := OptionalMapArray("test", "key1", m, nil)
+	a.True(has)
 	a.NoError(err)
 	expected := []map[string]any{{"key2": "value2"}}
 	a.Equal(expected, r)
 
 	// Test that OptionalMapArray returns the default result when the specified key does not exist in the map.
 	defaultResult := []map[string]any{{"default": "value"}}
-	r, err = OptionalMapArray("test", "key2", m, defaultResult)
+	r, has, err = OptionalMapArray("test", "key2", m, defaultResult)
+	a.False(has)
 	a.NoError(err)
 	a.Equal(defaultResult, r)
 
 	// Test that OptionalMapArray returns error when the value of the specified key is not a []map[string]any.
 	m["key3"] = "not-an-array"
-	_, err = OptionalMapArray("test", "key3", m, defaultResult)
+	_, has, err = OptionalMapArray("test", "key3", m, defaultResult)
+	a.True(has)
 	a.Error(err)
 }
 
