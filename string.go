@@ -3,6 +3,7 @@ package comm
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 func RequiredStringP(hint string, key string, m map[string]any) string {
@@ -111,7 +112,7 @@ func StringArrayP(hint string, v any) []string {
 func StringArray(hint string, v any) ([]string, error) {
 	r, ok := v.([]string)
 	if !ok {
-		if r0, ok0 := v.(string); ok0 {
+		if r0, err := String(hint, v); err != nil {
 			return []string{r0}, nil
 		}
 		return nil, fmt.Errorf("%s must be a string array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
@@ -119,6 +120,31 @@ func StringArray(hint string, v any) ([]string, error) {
 	return r, nil
 }
 
+func StringMapP(hint string, v any) map[string]string {
+	r, err := StringMap(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func StringMap(hint string, v any) (map[string]string, error) {
+	r, ok := v.(map[string]string)
+	if !ok {
+		if r0, ok0 := v.(string); ok0 {
+			if posOfColon := strings.Index(r0, ":"); posOfColon > 0 && posOfColon != len(r0)-1 {
+				if value, err := String(hint, strings.TrimSpace(r0[posOfColon+1:])); err != nil {
+					key := strings.TrimSpace(r0[:posOfColon])
+					return map[string]string{key: value}, nil
+				}
+			}
+		}
+		return nil, fmt.Errorf("%s must be a float64 array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}
+
+// /////////////////////////////////////////////////////////
 var asciiSpace = [256]uint8{'\t': 1, '\n': 1, '\v': 1, '\f': 1, '\r': 1, ' ': 1}
 
 func IsAsciiSpace(s uint8) bool {

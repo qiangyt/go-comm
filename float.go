@@ -3,6 +3,7 @@ package comm
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // RequiredFloatP returns the float64 value of the key in the map. If either parsing error or the key is not
@@ -65,6 +66,15 @@ func FloatP(hint string, v any) float64 {
 func Float(hint string, v any) (float64, error) {
 	r, ok := v.(float64)
 	if !ok {
+		if i, isInt := v.(int); isInt {
+			return float64(i), nil
+		}
+		if i32, isInt32 := v.(int32); isInt32 {
+			return float64(i32), nil
+		}
+		if i64, isInt64 := v.(int64); isInt64 {
+			return float64(i64), nil
+		}
 		return 0, fmt.Errorf("%s must be a float64, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil
@@ -81,8 +91,32 @@ func FloatArrayP(hint string, v any) []float64 {
 func FloatArray(hint string, v any) ([]float64, error) {
 	r, ok := v.([]float64)
 	if !ok {
-		if r0, ok0 := v.(float64); ok0 {
+		if r0, err := Float(hint, v); err == nil {
 			return []float64{r0}, nil
+		}
+		return nil, fmt.Errorf("%s must be a float64 array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}
+
+func FloatMapP(hint string, v any) map[string]float64 {
+	r, err := FloatMap(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func FloatMap(hint string, v any) (map[string]float64, error) {
+	r, ok := v.(map[string]float64)
+	if !ok {
+		if r0, ok0 := v.(string); ok0 {
+			if posOfColon := strings.Index(r0, ":"); posOfColon > 0 && posOfColon != len(r0)-1 {
+				if value, err := Float(hint, strings.TrimSpace(r0[posOfColon+1:])); err != nil {
+					key := strings.TrimSpace(r0[:posOfColon])
+					return map[string]float64{key: value}, nil
+				}
+			}
 		}
 		return nil, fmt.Errorf("%s must be a float64 array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}

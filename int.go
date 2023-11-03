@@ -3,6 +3,7 @@ package comm
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // RequiredIntP returns the int value of the key in the map. If either parsing error or the key is not
@@ -65,6 +66,12 @@ func IntP(hint string, v any) int {
 func Int(hint string, v any) (int, error) {
 	r, ok := v.(int)
 	if !ok {
+		if f32, isFloat32 := v.(float32); isFloat32 {
+			return int(f32), nil
+		}
+		if f64, isFloat64 := v.(float64); isFloat64 {
+			return int(f64), nil
+		}
 		return 0, fmt.Errorf("%s must be a int, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil
@@ -81,8 +88,32 @@ func IntArrayP(hint string, v any) []int {
 func IntArray(hint string, v any) ([]int, error) {
 	r, ok := v.([]int)
 	if !ok {
-		if r0, ok0 := v.(int); ok0 {
+		if r0, err := Int(hint, v); err != nil {
 			return []int{r0}, nil
+		}
+		return nil, fmt.Errorf("%s must be a int array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}
+
+func IntMapP(hint string, v any) map[string]int {
+	r, err := IntMap(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func IntMap(hint string, v any) (map[string]int, error) {
+	r, ok := v.(map[string]int)
+	if !ok {
+		if r0, ok0 := v.(string); ok0 {
+			if posOfColon := strings.Index(r0, ":"); posOfColon > 0 && posOfColon != len(r0)-1 {
+				if value, err := Int(hint, strings.TrimSpace(r0[posOfColon+1:])); err != nil {
+					key := strings.TrimSpace(r0[:posOfColon])
+					return map[string]int{key: value}, nil
+				}
+			}
 		}
 		return nil, fmt.Errorf("%s must be a int array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}

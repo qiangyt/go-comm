@@ -3,6 +3,7 @@ package comm
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // RequiredBoolP returns the bool value of the key in the map. If either parsing error or the key is not
@@ -64,6 +65,15 @@ func BoolP(hint string, v any) bool {
 func Bool(hint string, v any) (bool, error) {
 	r, ok := v.(bool)
 	if !ok {
+		if str, isStr := v.(string); isStr {
+			str = strings.ToLower(strings.TrimSpace(str))
+			if str == "true" {
+				return true, nil
+			}
+			if str == "false" {
+				return false, nil
+			}
+		}
 		return false, fmt.Errorf("%s must be a bool, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil
@@ -80,8 +90,32 @@ func BoolArrayP(hint string, v any) []bool {
 func BoolArray(hint string, v any) ([]bool, error) {
 	r, ok := v.([]bool)
 	if !ok {
-		if r0, ok0 := v.(bool); ok0 {
+		if r0, err := Bool(hint, v); err == nil {
 			return []bool{r0}, nil
+		}
+		return nil, fmt.Errorf("%s must be a bool array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}
+
+func BoolMapP(hint string, v any) map[string]bool {
+	r, err := BoolMap(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func BoolMap(hint string, v any) (map[string]bool, error) {
+	r, ok := v.(map[string]bool)
+	if !ok {
+		if r0, ok0 := v.(string); ok0 {
+			if posOfColon := strings.Index(r0, ":"); posOfColon > 0 && posOfColon != len(r0)-1 {
+				if value, err := Bool(hint, strings.TrimSpace(r0[posOfColon+1:])); err != nil {
+					key := strings.TrimSpace(r0[:posOfColon])
+					return map[string]bool{key: value}, nil
+				}
+			}
 		}
 		return nil, fmt.Errorf("%s must be a bool array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
