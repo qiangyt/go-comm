@@ -68,3 +68,19 @@ func Bool(hint string, v any) (bool, error) {
 	}
 	return r, nil
 }
+
+func BoolArrayP(hint string, v any) []bool {
+	r, err := BoolArray(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func BoolArray(hint string, v any) ([]bool, error) {
+	r, ok := v.([]bool)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a bool array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}

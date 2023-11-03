@@ -69,3 +69,19 @@ func Int(hint string, v any) (int, error) {
 	}
 	return r, nil
 }
+
+func IntArrayP(hint string, v any) []int {
+	r, err := IntArray(hint, v)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func IntArray(hint string, v any) ([]int, error) {
+	r, ok := v.([]int)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a int array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+	}
+	return r, nil
+}
