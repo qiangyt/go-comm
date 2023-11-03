@@ -110,7 +110,18 @@ func MapArrayP(hint string, v any) []map[string]any {
 func MapArray(hint string, v any) ([]map[string]any, error) {
 	r, ok := v.([]map[string]any)
 	if !ok {
-		if r0, ok0 := v.(map[string]any); ok0 {
+		if r1, ok1 := v.([]any); ok1 {
+			var err error
+			r = make([]map[string]any, len(r1))
+			for i, v := range r1 {
+				if r[i], err = Map(fmt.Sprintf("%s[%d]", hint, i), v); err != nil {
+					break
+				}
+			}
+			if err == nil {
+				return r, nil
+			}
+		} else if r0, ok0 := v.(map[string]any); ok0 {
 			return []map[string]any{r0}, nil
 		}
 		return nil, fmt.Errorf("%s must be a map[string]any array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
