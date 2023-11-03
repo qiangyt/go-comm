@@ -81,6 +81,9 @@ func IntArrayP(hint string, v any) []int {
 func IntArray(hint string, v any) ([]int, error) {
 	r, ok := v.([]int)
 	if !ok {
+		if r0, ok0 := v.(int); ok0 {
+			return []int{r0}, nil
+		}
 		return nil, fmt.Errorf("%s must be a int array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil

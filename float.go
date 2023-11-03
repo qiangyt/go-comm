@@ -81,6 +81,9 @@ func FloatArrayP(hint string, v any) []float64 {
 func FloatArray(hint string, v any) ([]float64, error) {
 	r, ok := v.([]float64)
 	if !ok {
+		if r0, ok0 := v.(float64); ok0 {
+			return []float64{r0}, nil
+		}
 		return nil, fmt.Errorf("%s must be a float64 array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil

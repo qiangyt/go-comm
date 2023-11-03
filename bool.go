@@ -80,6 +80,9 @@ func BoolArrayP(hint string, v any) []bool {
 func BoolArray(hint string, v any) ([]bool, error) {
 	r, ok := v.([]bool)
 	if !ok {
+		if r0, ok0 := v.(bool); ok0 {
+			return []bool{r0}, nil
+		}
 		return nil, fmt.Errorf("%s must be a bool array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil

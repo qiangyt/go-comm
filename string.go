@@ -111,6 +111,9 @@ func StringArrayP(hint string, v any) []string {
 func StringArray(hint string, v any) ([]string, error) {
 	r, ok := v.([]string)
 	if !ok {
+		if r0, ok0 := v.(string); ok0 {
+			return []string{r0}, nil
+		}
 		return nil, fmt.Errorf("%s must be a string array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
 	}
 	return r, nil
