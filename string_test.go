@@ -142,5 +142,4 @@ func TestOptionalStringArrayValueP(t *testing.T) {
 		}
 	}()*/
 	a.Panics(func() { OptionalStringArrayValueP("test", "key4", m, []string{"default"}) })
-
 }
