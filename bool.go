@@ -35,7 +35,7 @@ func OptionalBoolP(hint string, key string, m map[string]any, devault bool) (res
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 // OptionalBool returns the bool value of the key in the map. If parsing error occrred,
@@ -45,11 +45,11 @@ func OptionalBool(hint string, key string, m map[string]any, devault bool) (resu
 	v, has = m[key]
 	if !has {
 		result = devault
-		return
+		return result, has, err
 	}
 
 	result, err = Bool(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 // Cast the value to bool. If parsing error occurred, raise a panic.

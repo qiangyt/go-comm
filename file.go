@@ -137,7 +137,7 @@ func DownloadBytes(logger Logger, fallbackDir string, fs afero.Fs, url string, c
 					logger.Warn().Err(fallbackErr).Str("url", url).Str("fallbackFilePath", fallbackFilePath).Msg("save fallback file failed")
 				}
 			}
-			return
+			return result, err
 		} else {
 			if logger != nil {
 				logger.Warn().Err(err).Str("url", url).Msg("fallbacking due to failed to download the file")
@@ -154,7 +154,7 @@ func DownloadBytes(logger Logger, fallbackDir string, fs afero.Fs, url string, c
 		}
 	}
 
-	return
+	return result, err
 }
 
 func downloadBytes(fs afero.Fs, url string, credentials Credentials, timeout time.Duration) ([]byte, error) {
@@ -286,7 +286,7 @@ func FromYaml(yamlText string, envsubt bool, result any) (err error) {
 	if envsubt {
 		yamlText, err = EnvSubst(yamlText, nil)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
@@ -324,7 +324,7 @@ func FromJson(jsonText string, envsubt bool, result any) (err error) {
 	if envsubt {
 		jsonText, err = EnvSubst(jsonText, nil)
 		if err != nil {
-			return
+			return err
 		}
 	}
 

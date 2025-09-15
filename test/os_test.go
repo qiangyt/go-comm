@@ -29,16 +29,31 @@ func Test_EnvironMap_happy(t *testing.T) {
 func Test_AbsPath_happy(t *testing.T) {
 	a := require.New(t)
 
-	a.Equal("/home", comm.AbsPath("/home", "."))
-	a.Equal("/home", comm.AbsPath("/home", "./"))
-	a.Equal("/", comm.AbsPath("/home", ".."))
-	a.Equal("/", comm.AbsPath("/home", "../"))
+	if comm.IsWindows() {
+		a.Equal("\\home", comm.AbsPath("/home", "."))
+		a.Equal("\\home", comm.AbsPath("/home", "./"))
+		a.Equal("\\", comm.AbsPath("/home", ".."))
+		a.Equal("\\", comm.AbsPath("/home", "../"))
 
-	a.Equal("/home/1/2", comm.AbsPath("/home/1", "2"))
-	a.Equal("/home/1/2/3", comm.AbsPath("/home/1", "2/3"))
-	a.Equal("/home/1/2/3", comm.AbsPath("/home/1", "./2/3"))
-	a.Equal("/home/2/3", comm.AbsPath("/home/1", "../2/3"))
+		a.Equal("\\home\\1\\2", comm.AbsPath("/home/1", "2"))
+		a.Equal("\\home\\1\\2\\3", comm.AbsPath("/home/1", "2/3"))
+		a.Equal("\\home\\1\\2\\3", comm.AbsPath("/home/1", "./2/3"))
+		a.Equal("\\home\\2\\3", comm.AbsPath("/home/1", "../2/3"))
 
-	a.Equal("/home/1/2/3", comm.AbsPath("/home/1", "2/./3"))
-	a.Equal("/home/1/3", comm.AbsPath("/home/1", "2/../3"))
+		a.Equal("\\home\\1\\2\\3", comm.AbsPath("/home/1", "2/./3"))
+		a.Equal("\\home\\1\\3", comm.AbsPath("/home/1", "2/../3"))
+	} else {
+		a.Equal("/home", comm.AbsPath("/home", "."))
+		a.Equal("/home", comm.AbsPath("/home", "./"))
+		a.Equal("/", comm.AbsPath("/home", ".."))
+		a.Equal("/", comm.AbsPath("/home", "../"))
+
+		a.Equal("/home/1/2", comm.AbsPath("/home/1", "2"))
+		a.Equal("/home/1/2/3", comm.AbsPath("/home/1", "2/3"))
+		a.Equal("/home/1/2/3", comm.AbsPath("/home/1", "./2/3"))
+		a.Equal("/home/2/3", comm.AbsPath("/home/1", "../2/3"))
+
+		a.Equal("/home/1/2/3", comm.AbsPath("/home/1", "2/./3"))
+		a.Equal("/home/1/3", comm.AbsPath("/home/1", "2/../3"))
+	}
 }

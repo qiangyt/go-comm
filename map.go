@@ -28,7 +28,7 @@ func OptionalMapP(hint string, key string, m map[string]any, defaultresult map[s
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 func OptionalMap(hint string, key string, m map[string]any, defaultresult map[string]any) (result map[string]any, has bool, err error) {
@@ -36,11 +36,11 @@ func OptionalMap(hint string, key string, m map[string]any, defaultresult map[st
 	v, has = m[key]
 	if !has {
 		result = defaultresult
-		return
+		return result, has, err
 	}
 
 	result, err = Map(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 func MapP(hint string, v any) map[string]any {
@@ -82,7 +82,7 @@ func OptionalMapArrayP(hint string, key string, m map[string]any, defaultresult 
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 func OptionalMapArray(hint string, key string, m map[string]any, defaultresult []map[string]any) (result []map[string]any, has bool, err error) {
@@ -90,11 +90,11 @@ func OptionalMapArray(hint string, key string, m map[string]any, defaultresult [
 	v, has = m[key]
 	if !has {
 		result = defaultresult
-		return
+		return result, has, err
 	}
 
 	result, err = MapArray(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 func MapArrayP(hint string, v any) []map[string]any {

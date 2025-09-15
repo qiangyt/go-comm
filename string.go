@@ -29,7 +29,7 @@ func OptionalStringP(hint string, key string, m map[string]any, devault string) 
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 func OptionalString(hint string, key string, m map[string]any, devault string) (result string, has bool, err error) {
@@ -39,11 +39,11 @@ func OptionalString(hint string, key string, m map[string]any, devault string) (
 	if !has {
 		result = devault
 		err = nil
-		return
+		return result, has, err
 	}
 
 	result, err = String(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 func StringP(hint string, v any) string {
@@ -85,7 +85,7 @@ func OptionalStringArrayValueP(hint string, key string, m map[string]any, devaul
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 func OptionalStringArrayValue(hint string, key string, m map[string]any, devault []string) (result []string, has bool, err error) {
@@ -94,11 +94,11 @@ func OptionalStringArrayValue(hint string, key string, m map[string]any, devault
 	if !has {
 		result = devault
 		err = nil
-		return
+		return result, has, err
 	}
 
 	result, err = StringArray(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 func StringArrayP(hint string, v any) []string {

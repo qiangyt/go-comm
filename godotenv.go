@@ -47,10 +47,10 @@ func LoadEnv(fs afero.Fs, filenames ...string) (err error) {
 	for _, filename := range filenames {
 		err = loadEnvFile(fs, filename, false)
 		if err != nil {
-			return // return early on a spazout
+			return err // return early on a spazout
 		}
 	}
-	return
+	return err
 }
 
 // Overload will read your env file(s) and load them into ENV for this process.
@@ -70,10 +70,10 @@ func OverloadEnv(fs afero.Fs, filenames ...string) (err error) {
 	for _, filename := range filenames {
 		err = loadEnvFile(fs, filename, true)
 		if err != nil {
-			return // return early on a spazout
+			return err // return early on a spazout
 		}
 	}
-	return
+	return err
 }
 
 // Read all env (with same file loading semantics as Load) but return values as
@@ -87,7 +87,7 @@ func ReadEnv(fs afero.Fs, filenames ...string) (envMap map[string]string, err er
 
 		if individualErr != nil {
 			err = individualErr
-			return // return early on a spazout
+			return envMap, err // return early on a spazout
 		}
 
 		for key, value := range individualEnvMap {
@@ -95,7 +95,7 @@ func ReadEnv(fs afero.Fs, filenames ...string) (envMap map[string]string, err er
 		}
 	}
 
-	return
+	return envMap, err
 }
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
@@ -109,21 +109,20 @@ func ParseEnv(r io.Reader) (envMap map[string]string, err error) {
 	}
 
 	if err = scanner.Err(); err != nil {
-		return
+		return envMap, err
 	}
 
 	for _, fullLine := range lines {
 		if !isIgnoredEnvLine(fullLine) {
 			var key, value string
 			key, value, err = parseEnvLine(fullLine, envMap)
-
 			if err != nil {
-				return
+				return envMap, err
 			}
 			envMap[key] = value
 		}
 	}
-	return
+	return envMap, err
 }
 
 // Unmarshal reads an env file from a string, returning a map of keys and values.
@@ -215,7 +214,7 @@ func loadEnvFile(fs afero.Fs, filename string, overload bool) error {
 func readEnvFile(fs afero.Fs, filename string) (envMap map[string]string, err error) {
 	file, err := fs.Open(filename)
 	if err != nil {
-		return
+		return envMap, err
 	}
 	defer file.Close()
 
@@ -227,7 +226,7 @@ var envExportRegex = regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 func parseEnvLine(line string, envMap map[string]string) (key string, value string, err error) {
 	if len(line) == 0 {
 		err = errors.New("zero length string")
-		return
+		return key, value, err
 	}
 
 	// ditch the comments (but keep quoted hashes)
@@ -263,7 +262,7 @@ func parseEnvLine(line string, envMap map[string]string) (key string, value stri
 
 	if len(splitString) != 2 {
 		err = errors.New("can't separate key from value")
-		return
+		return key, value, err
 	}
 
 	// Parse the key
@@ -275,7 +274,7 @@ func parseEnvLine(line string, envMap map[string]string) (key string, value stri
 
 	// Parse the value
 	value = parseEnvValue(splitString[1], envMap)
-	return
+	return key, value, err
 }
 
 var (

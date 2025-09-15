@@ -35,7 +35,7 @@ func OptionalIntP(hint string, key string, m map[string]any, devault int) (resul
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 // OptionalInt returns the int value of the key in the map. If parsing error occrred,
@@ -46,11 +46,11 @@ func OptionalInt(hint string, key string, m map[string]any, devault int) (result
 	v, has = m[key]
 	if !has {
 		result = devault
-		return
+		return result, has, err
 	}
 
 	result, err = Int(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 // Cast the value to int. If parsing error occurred, raise a panic.

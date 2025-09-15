@@ -53,7 +53,7 @@ func ParseCommandOutput(outputText string) (CommandOutput, error) {
 
 		err := json.Unmarshal([]byte(jsonBody), &r.Json)
 		if err != nil {
-			return nil, errors.Wrapf(err, "json: %s"+jsonBody)
+			return nil, errors.Wrapf(err, "json: %s", jsonBody)
 		}
 
 		r.Kind = COMMAND_OUTPUT_KIND_JSON

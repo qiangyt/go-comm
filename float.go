@@ -35,7 +35,7 @@ func OptionalFloatP(hint string, key string, m map[string]any, devault float64) 
 	if err != nil {
 		panic(err)
 	}
-	return
+	return result, has
 }
 
 // OptionalFloat returns the float64 value of the key in the map. If parsing error occrred,
@@ -46,11 +46,11 @@ func OptionalFloat(hint string, key string, m map[string]any, devault float64) (
 	v, has = m[key]
 	if !has {
 		result = devault
-		return
+		return result, has, err
 	}
 
 	result, err = Float(hint+"."+key, v)
-	return
+	return result, has, err
 }
 
 // Cast the value to float64. If parsing error occurred, raise a panic.
