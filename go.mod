@@ -23,6 +23,7 @@ require (
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tiaotiao/mapstruct v0.0.0-20170819235540-950894f801ed
+	github.com/traefik/yaegi v0.16.1
 	go.uber.org/atomic v1.10.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1

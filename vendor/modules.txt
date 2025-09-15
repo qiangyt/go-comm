@@ -201,6 +201,12 @@ github.com/stretchr/testify/require
 # github.com/tiaotiao/mapstruct v0.0.0-20170819235540-950894f801ed
 ## explicit
 github.com/tiaotiao/mapstruct
+# github.com/traefik/yaegi v0.16.1
+## explicit; go 1.21
+github.com/traefik/yaegi/internal/unsafe2
+github.com/traefik/yaegi/interp
+github.com/traefik/yaegi/stdlib
+github.com/traefik/yaegi/stdlib/generic
 # go.uber.org/atomic v1.10.0
 ## explicit; go 1.18
 go.uber.org/atomic
