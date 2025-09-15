@@ -7,6 +7,6 @@ import (
 
 func main() {
 	fs := afero.NewOsFs()
-	f, _ := comm.CreateLockFile(fs, "/tmp/hi.pid")
+	f, _ := comm.CreateLockFile(fs, "/tmp/hi.pid", nil)
 	f.Close()
 }
