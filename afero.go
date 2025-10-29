@@ -336,8 +336,32 @@ func WriteFileP(fs afero.Fs, path string, content []byte) {
 	}
 }
 
+func Mkdir4FileP(fs afero.Fs, filePath string) {
+	if err := Mkdir4File(fs, filePath); err != nil {
+		panic(err)
+	}
+}
+
+func Mkdir4File(fs afero.Fs, filePath string) error {
+	dirPath := filepath.Dir(filePath)
+	exists, err := DirExists(fs, dirPath)
+	if err != nil {
+		return nil
+	}
+	if !exists {
+		if err = Mkdir(fs, dirPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Write ...
 func WriteFile(fs afero.Fs, path string, content []byte) error {
+	if err := Mkdir4File(fs, path); err != nil {
+		return err
+	}
+
 	if err := afero.WriteFile(fs, path, content, 0o640); err != nil {
 		return errors.Wrapf(err, "write file: %s", path)
 	}
