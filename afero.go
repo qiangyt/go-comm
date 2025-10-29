@@ -133,6 +133,23 @@ func EnsureFileExists(fs afero.Fs, path string) error {
 	return nil
 }
 
+func EnsureFileNotExistsP(fs afero.Fs, path string) {
+	if err := EnsureFileNotExists(fs, path); err != nil {
+		panic(err)
+	}
+}
+
+func EnsureFileNotExists(fs afero.Fs, path string) error {
+	exists, err := FileExists(fs, path)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("file already exists: %s", path)
+	}
+	return nil
+}
+
 func DirExistsP(fs afero.Fs, path string) bool {
 	r, err := DirExists(fs, path)
 	if err != nil {
@@ -169,6 +186,23 @@ func EnsureDirExists(fs afero.Fs, path string) error {
 	}
 	if !exists {
 		return fmt.Errorf("directory not found: %s", path)
+	}
+	return nil
+}
+
+func EnsureDirNotExistsP(fs afero.Fs, path string) {
+	if err := EnsureDirNotExists(fs, path); err != nil {
+		panic(err)
+	}
+}
+
+func EnsureDirNotExists(fs afero.Fs, path string) error {
+	exists, err := DirExists(fs, path)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("directory already exists: %s", path)
 	}
 	return nil
 }
