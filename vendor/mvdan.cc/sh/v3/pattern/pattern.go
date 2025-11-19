@@ -30,24 +30,25 @@ func (e SyntaxError) Error() string { return e.msg }
 func (e SyntaxError) Unwrap() error { return e.err }
 
 const (
-	Shortest  Mode = 1 << iota // prefer the shortest match.
-	Filenames                  // "*" and "?" don't match slashes; only "**" does
-	Braces                     // support "{a,b}" and "{1..4}"
+	Shortest     Mode = 1 << iota // prefer the shortest match.
+	Filenames                     // "*" and "?" don't match slashes; only "**" does
+	Braces                        // support "{a,b}" and "{1..4}"
+	EntireString                  // match the entire string using ^$ delimiters
 )
 
 var numRange = regexp.MustCompile(`^([+-]?\d+)\.\.([+-]?\d+)}`)
 
 // Regexp turns a shell pattern into a regular expression that can be used with
-// regexp.Compile. It will return an error if the input pattern was incorrect.
-// Otherwise, the returned expression can be passed to regexp.MustCompile.
+// [regexp.Compile]. It will return an error if the input pattern was incorrect.
+// Otherwise, the returned expression can be passed to [regexp.MustCompile].
 //
 // For example, Regexp(`foo*bar?`, true) returns `foo.*bar.`.
 //
-// Note that this function (and QuoteMeta) should not be directly used with file
+// Note that this function (and [QuoteMeta]) should not be directly used with file
 // paths if Windows is supported, as the path separator on that platform is the
 // same character as the escaping character for shell patterns.
 func Regexp(pat string, mode Mode) (string, error) {
-	any := false
+	needsEscaping := false
 noopLoop:
 	for _, r := range pat {
 		switch r {
@@ -55,15 +56,21 @@ noopLoop:
 		// regular expression metacharacters
 		case '*', '?', '[', '\\', '.', '+', '(', ')', '|',
 			']', '{', '}', '^', '$':
-			any = true
+			needsEscaping = true
 			break noopLoop
 		}
 	}
-	if !any { // short-cut without a string copy
+	if !needsEscaping && mode&EntireString == 0 { // short-cut without a string copy
 		return pat, nil
 	}
 	closingBraces := []int{}
 	var buf bytes.Buffer
+	// Enable matching `\n` with the `.` metacharacter as globs match `\n`
+	buf.WriteString("(?s)")
+	dotMeta := false
+	if mode&EntireString != 0 {
+		buf.WriteString("^")
+	}
 writeLoop:
 	for i := 0; i < len(pat); i++ {
 		switch c := pat[i]; c {
@@ -72,8 +79,10 @@ writeLoop:
 				if i++; i < len(pat) && pat[i] == '*' {
 					if i++; i < len(pat) && pat[i] == '/' {
 						buf.WriteString("(.*/|)")
+						dotMeta = true
 					} else {
 						buf.WriteString(".*")
+						dotMeta = true
 						i--
 					}
 				} else {
@@ -82,6 +91,7 @@ writeLoop:
 				}
 			} else {
 				buf.WriteString(".*")
+				dotMeta = true
 			}
 			if mode&Shortest != 0 {
 				buf.WriteByte('?')
@@ -91,6 +101,7 @@ writeLoop:
 				buf.WriteString("[^/]")
 			} else {
 				buf.WriteByte('.')
+				dotMeta = true
 			}
 		case '\\':
 			if i++; i >= len(pat) {
@@ -228,6 +239,13 @@ writeLoop:
 			}
 		}
 	}
+	if mode&EntireString != 0 {
+		buf.WriteString("$")
+	}
+	// No `.` metacharacters were used, so don't return the flag.
+	if !dotMeta {
+		return string(buf.Bytes()[4:]), nil
+	}
 	return buf.String(), nil
 }
 
@@ -284,7 +302,7 @@ func HasMeta(pat string, mode Mode) bool {
 //
 // For example, QuoteMeta(`foo*bar?`) returns `foo\*bar\?`.
 func QuoteMeta(pat string, mode Mode) string {
-	any := false
+	needsEscaping := false
 loop:
 	for _, r := range pat {
 		switch r {
@@ -294,11 +312,11 @@ loop:
 			}
 			fallthrough
 		case '*', '?', '[', '\\':
-			any = true
+			needsEscaping = true
 			break loop
 		}
 	}
-	if !any { // short-cut without a string copy
+	if !needsEscaping { // short-cut without a string copy
 		return pat
 	}
 	var buf bytes.Buffer

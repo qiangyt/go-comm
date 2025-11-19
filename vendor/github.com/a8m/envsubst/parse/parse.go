@@ -11,11 +11,11 @@ type Mode int
 
 // Mode for parser behaviour
 const (
-	Quick     Mode = iota // stop parsing after first error encountered and return
+	Quick     Mode = iota // stop parsing after first error encoutered and return
 	AllErrors             // report all errors
 )
 
-// The restrictions option controls the parsing restriction.
+// The restrictions option controls the parsring restriction.
 type Restrictions struct {
 	NoUnset bool
 	NoEmpty bool

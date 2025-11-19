@@ -4,9 +4,7 @@ import (
 	"net"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
 // SyslogWriter is an Writer that writes logs to a syslog server..
@@ -30,7 +28,7 @@ type SyslogWriter struct {
 	Dial func(network, addr string) (net.Conn, error)
 
 	mu    sync.Mutex
-	conn  *net.Conn
+	conn  net.Conn
 	local bool
 }
 
@@ -40,7 +38,7 @@ func (w *SyslogWriter) Close() (err error) {
 	defer w.mu.Unlock()
 
 	if w.conn != nil {
-		err = (*w.conn).Close()
+		err = w.conn.Close()
 		w.conn = nil
 		return
 	}
@@ -50,7 +48,7 @@ func (w *SyslogWriter) Close() (err error) {
 // connect makes a connection to the syslog server.
 func (w *SyslogWriter) connect() (err error) {
 	if w.conn != nil {
-		(*w.conn).Close()
+		w.conn.Close()
 		w.conn = nil
 	}
 
@@ -59,12 +57,10 @@ func (w *SyslogWriter) connect() (err error) {
 		dial = net.Dial
 	}
 
-	var conn net.Conn
-	conn, err = dial(w.Network, w.Address)
+	w.conn, err = dial(w.Network, w.Address)
 	if err != nil {
 		return
 	}
-	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&w.conn)), unsafe.Pointer(&conn))
 
 	w.local = w.Address != "" && w.Address[0] == '/'
 
@@ -72,7 +68,7 @@ func (w *SyslogWriter) connect() (err error) {
 		if w.local {
 			w.Hostname = hostname
 		} else {
-			w.Hostname, _, _ = net.SplitHostPort((*w.conn).LocalAddr().String())
+			w.Hostname = w.conn.LocalAddr().String()
 		}
 	}
 
@@ -81,7 +77,7 @@ func (w *SyslogWriter) connect() (err error) {
 
 // WriteEntry implements Writer, sends logs with priority to the syslog server.
 func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
-	if atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&w.conn))) == nil {
+	if w.conn == nil {
 		w.mu.Lock()
 		if w.conn == nil {
 			err = w.connect()
@@ -145,14 +141,14 @@ func (w *SyslogWriter) WriteEntry(e *Entry) (n int, err error) {
 	defer w.mu.Unlock()
 
 	if w.conn != nil {
-		if n, err := (*w.conn).Write(e1.buf); err == nil {
+		if n, err := w.conn.Write(e1.buf); err == nil {
 			return n, err
 		}
 	}
 	if err := w.connect(); err != nil {
 		return 0, err
 	}
-	return (*w.conn).Write(e1.buf)
+	return w.conn.Write(e1.buf)
 }
 
 var _ Writer = (*SyslogWriter)(nil)

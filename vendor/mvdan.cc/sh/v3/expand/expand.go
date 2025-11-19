@@ -52,13 +52,17 @@ type Config struct {
 	// this field might change until #451 is completely fixed.
 	ProcSubst func(*syntax.ProcSubst) (string, error)
 
-	// TODO(v4): update to os.Readdir with fs.DirEntry.
-	// We could possibly expose that as a preferred ReadDir2 before then,
-	// to allow users to opt into better performance in v3.
+	// TODO(v4): replace ReadDir with ReadDir2.
 
-	// ReadDir is used for file path globbing. If nil, globbing is disabled.
-	// Use ioutil.ReadDir to use the filesystem directly.
-	ReadDir func(string) ([]os.FileInfo, error)
+	// ReadDir is the older form of [ReadDir2], before io/fs.
+	//
+	// Deprecated: use ReadDir2 instead.
+	ReadDir func(string) ([]fs.FileInfo, error)
+
+	// ReadDir is used for file path globbing.
+	// If nil, and ReadDir is nil as well, globbing is disabled.
+	// Use os.ReadDir to use the filesystem directly.
+	ReadDir2 func(string) ([]fs.DirEntry, error)
 
 	// GlobStar corresponds to the shell option that allows globbing with
 	// "**".
@@ -83,7 +87,7 @@ type Config struct {
 }
 
 // UnexpectedCommandError is returned if a command substitution is encountered
-// when Config.CmdSubst is nil.
+// when [Config.CmdSubst] is nil.
 type UnexpectedCommandError struct {
 	Node *syntax.CmdSubst
 }
@@ -93,6 +97,9 @@ func (u UnexpectedCommandError) Error() string {
 }
 
 var zeroConfig = &Config{}
+
+// TODO: note that prepareConfig is modifying the user's config in place,
+// which doesn't feel right - we should make a copy.
 
 func prepareConfig(cfg *Config) *Config {
 	if cfg == nil {
@@ -105,6 +112,20 @@ func prepareConfig(cfg *Config) *Config {
 	cfg.ifs = " \t\n"
 	if vr := cfg.Env.Get("IFS"); vr.IsSet() {
 		cfg.ifs = vr.String()
+	}
+
+	if cfg.ReadDir != nil && cfg.ReadDir2 == nil {
+		cfg.ReadDir2 = func(path string) ([]fs.DirEntry, error) {
+			infos, err := cfg.ReadDir(path)
+			if err != nil {
+				return nil, err
+			}
+			entries := make([]fs.DirEntry, len(infos))
+			for i, info := range infos {
+				entries[i] = fs.FileInfoToDirEntry(info)
+			}
+			return entries, nil
+		}
 	}
 	return cfg
 }
@@ -182,9 +203,9 @@ func Document(cfg *Config, word *syntax.Word) (string, error) {
 
 const patMode = pattern.Filenames | pattern.Braces
 
-// Pattern expands a single shell word as a pattern, using syntax.QuotePattern
+// Pattern expands a single shell word as a pattern, using [syntax.QuotePattern]
 // on any non-quoted parts of the input word. The result can be used on
-// syntax.TranslatePattern directly.
+// [syntax.TranslatePattern] directly.
 //
 // The config specifies shell expansion options; nil behaves the same as an
 // empty config.
@@ -215,6 +236,24 @@ func Pattern(cfg *Config, word *syntax.Word) (string, error) {
 func Format(cfg *Config, format string, args []string) (string, int, error) {
 	cfg = prepareConfig(cfg)
 	buf := cfg.strBuilder()
+
+	consumed, err := formatIntoBuffer(buf, format, args)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return buf.String(), consumed, err
+}
+
+// Format expands a format string with a number of arguments, following the
+// shell's format specifications. These include printf(1), among others.
+//
+// The resulting string is written to the provided buffer, and the number
+// of arguments used is returned.
+//
+// The config specifies shell expansion options; nil behaves the same as an
+// empty config.
+func formatIntoBuffer(buf *bytes.Buffer, format string, args []string) (int, error) {
 	var fmts []byte
 	initialArgs := len(args)
 
@@ -269,9 +308,10 @@ formatLoop:
 			case 'x', 'u', 'U':
 				i++
 				max := 2
-				if c == 'u' {
+				switch c {
+				case 'u':
 					max = 4
-				} else if c == 'U' {
+				case 'U':
 					max = 8
 				}
 				digits := readDigits(max, true)
@@ -314,18 +354,26 @@ formatLoop:
 				fmts = nil
 			case '+', '-', ' ':
 				if len(fmts) > 1 {
-					return "", 0, fmt.Errorf("invalid format char: %c", c)
+					return 0, fmt.Errorf("invalid format char: %c", c)
 				}
 				fmts = append(fmts, c)
 			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 				fmts = append(fmts, c)
-			case 's', 'd', 'i', 'u', 'o', 'x':
+			case 's', 'b', 'd', 'i', 'u', 'o', 'x':
 				arg := ""
 				if len(args) > 0 {
 					arg, args = args[0], args[1:]
 				}
-				var farg interface{} = arg
-				if c != 's' {
+				var farg any
+				if c == 'b' {
+					// Passing in nil for args ensures that % format
+					// strings aren't processed; only escape sequences
+					// will be handled.
+					_, err := formatIntoBuffer(buf, arg, nil)
+					if err != nil {
+						return 0, err
+					}
+				} else if c != 's' {
 					n, _ := strconv.ParseInt(arg, 0, 0)
 					if c == 'i' || c == 'd' {
 						farg = int(n)
@@ -335,12 +383,16 @@ formatLoop:
 					if c == 'i' || c == 'u' {
 						c = 'd'
 					}
+				} else {
+					farg = arg
 				}
-				fmts = append(fmts, c)
-				fmt.Fprintf(buf, string(fmts), farg)
+				if farg != nil {
+					fmts = append(fmts, c)
+					fmt.Fprintf(buf, string(fmts), farg)
+				}
 				fmts = nil
 			default:
-				return "", 0, fmt.Errorf("invalid format char: %c", c)
+				return 0, fmt.Errorf("invalid format char: %c", c)
 			}
 		case args != nil && c == '%':
 			// if args == nil, we are not doing format
@@ -351,9 +403,9 @@ formatLoop:
 		}
 	}
 	if len(fmts) > 0 {
-		return "", 0, fmt.Errorf("missing format char")
+		return 0, fmt.Errorf("missing format char")
 	}
-	return buf.String(), initialArgs - len(args), nil
+	return initialArgs - len(args), nil
 }
 
 func (cfg *Config) fieldJoin(parts []fieldPart) string {
@@ -410,7 +462,7 @@ func Fields(cfg *Config, words ...*syntax.Word) ([]string, error) {
 				path, doGlob := cfg.escapedGlobField(field)
 				var matches []string
 				var syntaxError *pattern.SyntaxError
-				if doGlob && cfg.ReadDir != nil {
+				if doGlob && cfg.ReadDir2 != nil {
 					matches, err = cfg.glob(dir, path)
 					if !errors.As(err, &syntaxError) {
 						if err != nil {
@@ -546,11 +598,22 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 		curField = nil
 	}
 	splitAdd := func(val string) {
-		for i, field := range strings.FieldsFunc(val, cfg.ifsRune) {
-			if i > 0 {
+		fieldStart := -1
+		for i, r := range val {
+			if cfg.ifsRune(r) {
+				if fieldStart >= 0 { // ending a field
+					curField = append(curField, fieldPart{val: val[fieldStart:i]})
+					fieldStart = -1
+				}
 				flush()
+			} else {
+				if fieldStart < 0 { // starting a new field
+					fieldStart = i
+				}
 			}
-			curField = append(curField, fieldPart{val: field})
+		}
+		if fieldStart >= 0 { // ending a field without IFS
+			curField = append(curField, fieldPart{val: val[fieldStart:]})
 		}
 	}
 	for i, wp := range wps {
@@ -636,6 +699,8 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 				return nil, err
 			}
 			splitAdd(path)
+		case *syntax.ExtGlob:
+			return nil, fmt.Errorf("extended globbing is not supported")
 		default:
 			panic(fmt.Sprintf("unhandled word part: %T", x))
 		}
@@ -648,31 +713,60 @@ func (cfg *Config) wordFields(wps []syntax.WordPart) ([][]fieldPart, error) {
 }
 
 // quotedElemFields returns the list of elements resulting from a quoted
-// parameter expansion if it was in the form of ${*}, ${@}, ${foo[*], ${foo[@]},
-// or ${!foo@}.
+// parameter expansion that should be treated especially, like "${foo[@]}".
 func (cfg *Config) quotedElemFields(pe *syntax.ParamExp) []string {
 	if pe == nil || pe.Length || pe.Width {
 		return nil
 	}
+	name := pe.Param.Value
 	if pe.Excl {
-		if pe.Names == syntax.NamesPrefixWords {
+		switch pe.Names {
+		case syntax.NamesPrefixWords: // "${!prefix@}"
 			return cfg.namesByPrefix(pe.Param.Value)
+		case syntax.NamesPrefix: // "${!prefix*}"
+			return nil
+		}
+		switch nodeLit(pe.Index) {
+		case "@": // "${!name[@]}"
+			switch vr := cfg.Env.Get(name); vr.Kind {
+			case Indexed:
+				keys := make([]string, 0, len(vr.Map))
+				// TODO: maps.Keys if it makes it into Go 1.23
+				for key := range vr.List {
+					keys = append(keys, strconv.Itoa(key))
+				}
+				return keys
+			case Associative:
+				keys := make([]string, 0, len(vr.Map))
+				// TODO: maps.Keys if it makes it into Go 1.23
+				for key := range vr.Map {
+					keys = append(keys, key)
+				}
+				return keys
+			}
 		}
 		return nil
 	}
-	name := pe.Param.Value
 	switch name {
-	case "*":
+	case "*": // "${*}"
 		return []string{cfg.ifsJoin(cfg.Env.Get(name).List)}
-	case "@":
+	case "@": // "${@}"
 		return cfg.Env.Get(name).List
 	}
 	switch nodeLit(pe.Index) {
-	case "@":
-		if vr := cfg.Env.Get(name); vr.Kind == Indexed {
+	case "@": // "${name[@]}"
+		switch vr := cfg.Env.Get(name); vr.Kind {
+		case Indexed:
 			return vr.List
+		case Associative:
+			// TODO: maps.Values if it makes it into Go 1.23
+			elems := make([]string, 0, len(vr.Map))
+			for _, elem := range vr.Map {
+				elems = append(elems, elem)
+			}
+			return elems
 		}
-	case "*":
+	case "*": // "${name[*]}"
 		if vr := cfg.Env.Get(name); vr.Kind == Indexed {
 			return []string{cfg.ifsJoin(vr.List)}
 		}
@@ -732,7 +826,7 @@ func findAllIndex(pat, name string, n int) [][]int {
 
 var rxGlobStar = regexp.MustCompile(".*")
 
-// pathJoin2 is a simpler version of filepath.Join without cleaning the result,
+// pathJoin2 is a simpler version of [filepath.Join] without cleaning the result,
 // since that's needed for globbing.
 func pathJoin2(elem1, elem2 string) string {
 	if elem1 == "" {
@@ -745,7 +839,7 @@ func pathJoin2(elem1, elem2 string) string {
 }
 
 // pathSplit splits a file path into its elements, retaining empty ones. Before
-// splitting, slashes are replaced with filepath.Separator, so that splitting
+// splitting, slashes are replaced with [filepath.Separator], so that splitting
 // Unix paths on Windows works as well.
 func pathSplit(path string) []string {
 	path = filepath.FromSlash(path)
@@ -769,11 +863,11 @@ func (cfg *Config) glob(base, pat string) ([]string, error) {
 	// TODO: as an optimization, we could do chunks of the path all at once,
 	// like doing a single stat for "/foo/bar" in "/foo/bar/*".
 
-	// TODO: Another optimization would be to reduce the number of ReadDir calls.
+	// TODO: Another optimization would be to reduce the number of ReadDir2 calls.
 	// For example, /foo/* can end up doing one duplicate call:
 	//
-	//    ReadDir("/foo") to ensure that "/foo/" exists and only matches a directory
-	//    ReadDir("/foo") glob "*"
+	//    ReadDir2("/foo") to ensure that "/foo/" exists and only matches a directory
+	//    ReadDir2("/foo") glob "*"
 
 	for i, part := range parts {
 		// Keep around for debugging.
@@ -794,12 +888,12 @@ func (cfg *Config) glob(base, pat string) ([]string, error) {
 					match = filepath.Join(base, match)
 				}
 				match = pathJoin2(match, part)
-				// We can't use ReadDir on the parent and match the directory
+				// We can't use ReadDir2 on the parent and match the directory
 				// entry by name, because short paths on Windows break that.
-				// Our only option is to ReadDir on the directory entry itself,
+				// Our only option is to ReadDir2 on the directory entry itself,
 				// which can be wasteful if we only want to see if it exists,
 				// but at least it's correct in all scenarios.
-				if _, err := cfg.ReadDir(match); err != nil {
+				if _, err := cfg.ReadDir2(match); err != nil {
 					const errPathNotFound = syscall.Errno(3) // from syscall/types_windows.go, to avoid a build tag
 					var pathErr *os.PathError
 					if runtime.GOOS == "windows" && errors.As(err, &pathErr) && pathErr.Err == errPathNotFound {
@@ -845,21 +939,22 @@ func (cfg *Config) glob(base, pat string) ([]string, error) {
 
 				// If dir is not a directory, we keep the stack as-is and continue.
 				newMatches = newMatches[:0]
-				newMatches, _ = cfg.globDir(base, dir, rxGlobStar, wantDir, newMatches)
+				newMatches, _ = cfg.globDir(base, dir, rxGlobStar, false, wantDir, newMatches)
 				for i := len(newMatches) - 1; i >= 0; i-- {
 					stack = append(stack, newMatches[i])
 				}
 			}
 			continue
 		}
-		expr, err := pattern.Regexp(part, pattern.Filenames)
+		expr, err := pattern.Regexp(part, pattern.Filenames|pattern.EntireString)
 		if err != nil {
 			return nil, err
 		}
-		rx := regexp.MustCompile("^" + expr + "$")
+		rx := regexp.MustCompile(expr)
+		matchHidden := part[0] == byte('.')
 		var newMatches []string
 		for _, dir := range matches {
-			newMatches, err = cfg.globDir(base, dir, rx, wantDir, newMatches)
+			newMatches, err = cfg.globDir(base, dir, rx, matchHidden, wantDir, newMatches)
 			if err != nil {
 				return nil, err
 			}
@@ -869,12 +964,12 @@ func (cfg *Config) glob(base, pat string) ([]string, error) {
 	return matches, nil
 }
 
-func (cfg *Config) globDir(base, dir string, rx *regexp.Regexp, wantDir bool, matches []string) ([]string, error) {
+func (cfg *Config) globDir(base, dir string, rx *regexp.Regexp, matchHidden bool, wantDir bool, matches []string) ([]string, error) {
 	fullDir := dir
 	if !filepath.IsAbs(dir) {
 		fullDir = filepath.Join(base, dir)
 	}
-	infos, err := cfg.ReadDir(fullDir)
+	infos, err := cfg.ReadDir2(fullDir)
 	if err != nil {
 		// We still want to return matches, for the sake of reusing slices.
 		return matches, err
@@ -883,20 +978,20 @@ func (cfg *Config) globDir(base, dir string, rx *regexp.Regexp, wantDir bool, ma
 		name := info.Name()
 		if !wantDir {
 			// No filtering.
-		} else if mode := info.Mode(); mode&os.ModeSymlink != 0 {
+		} else if mode := info.Type(); mode&os.ModeSymlink != 0 {
 			// We need to know if the symlink points to a directory.
 			// This requires an extra syscall, as ReadDir on the parent directory
 			// does not follow symlinks for each of the directory entries.
 			// ReadDir is somewhat wasteful here, as we only want its error result,
 			// but we could try to reuse its result as per the TODO in Config.glob.
-			if _, err := cfg.ReadDir(filepath.Join(fullDir, info.Name())); err != nil {
+			if _, err := cfg.ReadDir2(filepath.Join(fullDir, info.Name())); err != nil {
 				continue
 			}
 		} else if !mode.IsDir() {
 			// Not a symlink nor a directory.
 			continue
 		}
-		if !strings.HasPrefix(rx.String(), `^\.`) && name[0] == '.' {
+		if !matchHidden && name[0] == '.' {
 			continue
 		}
 		if rx.MatchString(name) {
@@ -906,7 +1001,8 @@ func (cfg *Config) globDir(base, dir string, rx *regexp.Regexp, wantDir bool, ma
 	return matches, nil
 }
 
-// ReadFields TODO write doc.
+// ReadFields splits and returns n fields from s, like the "read" shell builtin.
+// If raw is set, backslash escape sequences are not interpreted.
 //
 // The config specifies shell expansion options; nil behaves the same as an
 // empty config.

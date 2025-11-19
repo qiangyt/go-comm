@@ -2,7 +2,6 @@ package log
 
 import (
 	"crypto/md5"
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -24,7 +23,7 @@ import (
 // `/var/log/foo/server.log`, a backup created at 6:30pm on Nov 11 2016 would
 // use the filename `/var/log/foo/server.2016-11-04T18-30-00.log`
 //
-// # Cleaning Up Old Log Files
+// Cleaning Up Old Log Files
 //
 // Whenever a new logfile gets created, old log files may be deleted.  The most
 // recent files according to filesystem modified time will be retained, up to a
@@ -156,14 +155,7 @@ func (w *FileWriter) rotate() (err error) {
 	var file *os.File
 	file, err = os.OpenFile(w.fileargs(timeNow()))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) && w.EnsureFolder {
-			if err = os.MkdirAll(filepath.Dir(w.Filename), 0755); err == nil {
-				file, err = os.OpenFile(w.fileargs(timeNow()))
-			}
-		}
-		if err != nil {
-			return err
-		}
+		return err
 	}
 	if w.file != nil {
 		w.file.Close()
@@ -247,11 +239,6 @@ func (w *FileWriter) create() (err error) {
 	st, err := w.file.Stat()
 	if err == nil {
 		w.size = st.Size()
-	}
-
-	err = w.rotate()
-	if err != nil {
-		return err
 	}
 
 	if w.size == 0 && w.Header != nil {

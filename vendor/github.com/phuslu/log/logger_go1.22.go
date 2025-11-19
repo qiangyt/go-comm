@@ -4,33 +4,11 @@
 package log
 
 import (
-	"encoding/base64"
+	_ "unsafe"
 )
 
-// Base64 adds base64 encoding of the value to the entry.
-func (e *Entry) Base64(key string, value []byte) *Entry {
-	if e == nil {
-		return nil
-	}
-
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':', '"')
-	e.buf = base64.StdEncoding.AppendEncode(e.buf, value)
-	e.buf = append(e.buf, '"')
-	return e
-}
-
-// Base64URL adds base64 url encoding of the value to the entry.
-func (e *Entry) Base64URL(key string, value []byte) *Entry {
-	if e == nil {
-		return nil
-	}
-
-	e.buf = append(e.buf, ',', '"')
-	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':', '"')
-	e.buf = base64.URLEncoding.AppendEncode(e.buf, value)
-	e.buf = append(e.buf, '"')
-	return e
-}
+// Fastrandn returns a pseudorandom uint32 in [0,n).
+//
+//go:noescape
+//go:linkname Fastrandn runtime.cheaprandn
+func Fastrandn(x uint32) uint32
