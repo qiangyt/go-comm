@@ -127,3 +127,127 @@ func TestOptionalInt_error(t *testing.T) {
 	a.True(has)
 	a.Error(err)
 }
+
+// TestInt_FloatConversion tests converting float32/float64 to int
+func TestInt_FloatConversion(t *testing.T) {
+	a := require.New(t)
+
+	// Test float32 to int conversion
+	r, err := Int("test", float32(42.7))
+	a.NoError(err)
+	a.Equal(42, r)
+
+	// Test float64 to int conversion
+	r, err = Int("test", float64(99.9))
+	a.NoError(err)
+	a.Equal(99, r)
+
+	// Test negative float
+	r, err = Int("test", float64(-15.3))
+	a.NoError(err)
+	a.Equal(-15, r)
+}
+
+// TestInt_I18nError tests that error messages are localized
+func TestInt_I18nError(t *testing.T) {
+	a := require.New(t)
+
+	// Test with English
+	InitI18n("en")
+	_, err := Int("testField", "not-an-int")
+	a.Error(err)
+	a.Contains(err.Error(), "testField")
+	a.Contains(err.Error(), "int")
+
+	// Test with Chinese
+	InitI18n("zh")
+	_, err = Int("testField", "not-an-int")
+	a.Error(err)
+	a.Contains(err.Error(), "testField")
+	a.Contains(err.Error(), "整数")
+}
+
+// TestIntArray tests IntArray function
+func TestIntArray(t *testing.T) {
+	a := require.New(t)
+	InitI18n("en")
+
+	// Test with []int
+	r, err := IntArray("test", []int{1, 2, 3})
+	a.NoError(err)
+	a.Equal([]int{1, 2, 3}, r)
+
+	// Test with []any containing ints
+	r, err = IntArray("test", []any{4, 5, 6})
+	a.NoError(err)
+	a.Equal([]int{4, 5, 6}, r)
+
+	// Test with []any containing float64
+	r, err = IntArray("test", []any{float64(7), float64(8)})
+	a.NoError(err)
+	a.Equal([]int{7, 8}, r)
+
+	// Test with single int value (converts to array)
+	r, err = IntArray("test", 42)
+	a.NoError(err)
+	a.Equal([]int{42}, r)
+
+	// Test with invalid type
+	_, err = IntArray("test", "not-an-array")
+	a.Error(err)
+	a.Contains(err.Error(), "array")
+}
+
+// TestIntArrayP tests IntArrayP panic behavior
+func TestIntArrayP(t *testing.T) {
+	a := require.New(t)
+	InitI18n("en")
+
+	// Test successful conversion
+	r := IntArrayP("test", []int{10, 20, 30})
+	a.Equal([]int{10, 20, 30}, r)
+
+	// Test panic on invalid type
+	a.Panics(func() { IntArrayP("test", "invalid") })
+}
+
+// TestIntMap tests IntMap function
+func TestIntMap(t *testing.T) {
+	a := require.New(t)
+	InitI18n("en")
+
+	// Test with map[string]int
+	r, err := IntMap("test", map[string]int{"a": 1, "b": 2})
+	a.NoError(err)
+	a.Equal(1, r["a"])
+	a.Equal(2, r["b"])
+
+	// Test with map[string]any
+	r, err = IntMap("test", map[string]any{"x": 10, "y": 20})
+	a.NoError(err)
+	a.Equal(10, r["x"])
+	a.Equal(20, r["y"])
+
+	// Test with string "key:value" format
+	r, err = IntMap("test", "count:42")
+	a.NoError(err)
+	a.Equal(42, r["count"])
+
+	// Test with invalid type
+	_, err = IntMap("test", 123)
+	a.Error(err)
+	a.Contains(err.Error(), "map")
+}
+
+// TestIntMapP tests IntMapP panic behavior
+func TestIntMapP(t *testing.T) {
+	a := require.New(t)
+
+	// Test successful conversion
+	r := IntMapP("test", map[string]int{"a": 100})
+	a.Equal(100, r["a"])
+
+	// Test panic on invalid type
+	a.Panics(func() { IntMapP("test", []int{1, 2, 3}) })
+}
+

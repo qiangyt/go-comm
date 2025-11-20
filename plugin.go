@@ -45,9 +45,17 @@ func StartPlugin(namespace string, plugin Plugin, logger Logger) (err error) {
 			var err2 error
 			var isErr bool
 			if err2, isErr = p.(error); isErr {
-				err = errors.Wrapf(err2, "start plugin: %s (version %s)", pluginId, ver)
+				err = errors.Wrap(err2, T("error.plugin.start_failed", map[string]interface{}{
+					"PluginId": pluginId,
+					"Version":  ver,
+					"Cause":    err2,
+				}))
 			} else {
-				err = fmt.Errorf("start plugin: %s (version %s), cause: %+v", pluginId, ver, p)
+				err = LocalizeError("error.plugin.start_failed", map[string]interface{}{
+					"PluginId": pluginId,
+					"Version":  ver,
+					"Cause":    p,
+				})
 			}
 		}
 	}()
@@ -73,9 +81,17 @@ func StopPlugin(namespace string, plugin Plugin, logger Logger) (err error) {
 			var err2 error
 			var isErr bool
 			if err2, isErr = p.(error); isErr {
-				err = errors.Wrapf(err2, "stop plugin: %s (version %s)", pluginId, ver)
-			} else {
-				err = fmt.Errorf("stop plugin: %s (version %s), cause: %+v", pluginId, ver, p)
+				err = errors.Wrap(err2, T("error.plugin.stop_failed", map[string]interface{}{
+					"PluginId": pluginId,
+					"Version":  ver,
+					"Cause":    err2,
+				}))
+			} else{
+				err = LocalizeError("error.plugin.stop_failed", map[string]interface{}{
+					"PluginId": pluginId,
+					"Version":  ver,
+					"Cause":    p,
+				})
 			}
 		}
 	}()

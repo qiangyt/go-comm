@@ -3,6 +3,7 @@ package comm
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -21,7 +22,10 @@ func RequiredIntP(hint string, key string, m map[string]any) int {
 func RequiredInt(hint string, key string, m map[string]any) (int, error) {
 	v, has := m[key]
 	if !has {
-		return 0, fmt.Errorf("%s.%s is required", hint, key)
+		return 0, LocalizeError("error.required", map[string]interface{}{
+			"Hint": hint,
+			"Key":  key,
+		})
 	}
 
 	return Int(hint+"."+key, v)
@@ -72,7 +76,16 @@ func Int(hint string, v any) (int, error) {
 		if f64, isFloat64 := v.(float64); isFloat64 {
 			return int(f64), nil
 		}
-		return 0, fmt.Errorf("%s must be a int, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		if s, isString := v.(string); isString {
+			if parsed, err := strconv.Atoi(s); err == nil {
+				return parsed, nil
+			}
+		}
+		return 0, LocalizeError("error.type.int", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -99,10 +112,14 @@ func IntArray(hint string, v any) ([]int, error) {
 			if err == nil {
 				return r, nil
 			}
-		} else if r0, err := Int(hint, v); err != nil {
+		} else if r0, err := Int(hint, v); err == nil {
 			return []int{r0}, nil
 		}
-		return nil, fmt.Errorf("%s must be a int array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.int_array", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -137,7 +154,11 @@ func IntMap(hint string, v any) (map[string]int, error) {
 				}
 			}
 		}
-		return nil, fmt.Errorf("%s must be a int map, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.int_map", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }

@@ -21,7 +21,10 @@ func RequiredBoolP(hint string, key string, m map[string]any) bool {
 func RequiredBool(hint string, key string, m map[string]any) (bool, error) {
 	v, has := m[key]
 	if !has {
-		return false, fmt.Errorf("%s.%s is required", hint, key)
+		return false, LocalizeError("error.required", map[string]interface{}{
+			"Hint": hint,
+			"Key":  key,
+		})
 	}
 
 	return Bool(hint+"."+key, v)
@@ -74,7 +77,11 @@ func Bool(hint string, v any) (bool, error) {
 				return false, nil
 			}
 		}
-		return false, fmt.Errorf("%s must be a bool, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return false, LocalizeError("error.type.bool", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -104,7 +111,11 @@ func BoolArray(hint string, v any) ([]bool, error) {
 		} else if r0, err := Bool(hint, v); err == nil {
 			return []bool{r0}, nil
 		}
-		return nil, fmt.Errorf("%s must be a bool array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.bool_array", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -139,7 +150,11 @@ func BoolMap(hint string, v any) (map[string]bool, error) {
 				}
 			}
 		}
-		return nil, fmt.Errorf("%s must be a bool map, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.bool_map", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }

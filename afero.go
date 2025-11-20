@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -85,7 +84,9 @@ func Stat(fs afero.Fs, path string, ensureExists bool) (os.FileInfo, error) {
 			return nil, errors.Wrapf(err, "stat file: %s", path)
 		}
 		if ensureExists {
-			return nil, errors.Wrapf(err, "file not found: %s", path)
+			return nil, errors.Wrap(err, T("error.file.not_found", map[string]interface{}{
+				"Path": path,
+			}))
 		}
 		return nil, nil
 	}
@@ -111,7 +112,9 @@ func FileExists(fs afero.Fs, path string) (bool, error) {
 		return false, nil
 	}
 	if fi.IsDir() {
-		return false, fmt.Errorf("expect %s be file, but it is directory", path)
+		return false, LocalizeError("error.file.expect_file_but_dir", map[string]interface{}{
+			"Path": path,
+		})
 	}
 	return true, nil
 }
@@ -128,7 +131,9 @@ func EnsureFileExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("file not found: %s", path)
+		return LocalizeError("error.file.not_found", map[string]interface{}{
+			"Path": path,
+		})
 	}
 	return nil
 }
@@ -145,7 +150,9 @@ func EnsureFileNotExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("file already exists: %s", path)
+		return LocalizeError("error.file.already_exists", map[string]interface{}{
+			"Path": path,
+		})
 	}
 	return nil
 }
@@ -168,7 +175,9 @@ func DirExists(fs afero.Fs, path string) (bool, error) {
 		return false, nil
 	}
 	if !fi.IsDir() {
-		return false, fmt.Errorf("expect %s be directory, but it is file", path)
+		return false, LocalizeError("error.file.expect_dir_but_file", map[string]interface{}{
+			"Path": path,
+		})
 	}
 	return true, nil
 }
@@ -185,7 +194,9 @@ func EnsureDirExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("directory not found: %s", path)
+		return LocalizeError("error.dir.not_found", map[string]interface{}{
+			"Path": path,
+		})
 	}
 	return nil
 }
@@ -202,7 +213,9 @@ func EnsureDirNotExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("directory already exists: %s", path)
+		return LocalizeError("error.dir.already_exists", map[string]interface{}{
+			"Path": path,
+		})
 	}
 	return nil
 }
@@ -237,7 +250,7 @@ func RemoveDirP(fs afero.Fs, path string) {
 // RemoveDir ...
 func RemoveDir(fs afero.Fs, path string) error {
 	if path == "/" || path == "\\" {
-		return fmt.Errorf("should NOT remove root directory")
+		return LocalizeError("error.file.cannot_remove_root", nil)
 	}
 	found, err := DirExists(fs, path)
 	if err != nil {

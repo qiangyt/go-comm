@@ -1,0 +1,47 @@
+# Type conversion errors
+error.required: "{{.Hint}}.{{.Key}} is required"
+error.type.string: "{{.Hint}} must be a string, but now it is a {{.Type}}({{.Value}})"
+error.type.string_array: "{{.Hint}} must be a string array, but now it is a {{.Type}}({{.Value}})"
+error.type.string_map: "{{.Hint}} must be a string map, but now it is a {{.Type}}({{.Value}})"
+error.type.int: "{{.Hint}} must be a int, but now it is a {{.Type}}({{.Value}})"
+error.type.int_array: "{{.Hint}} must be a int array, but now it is a {{.Type}}({{.Value}})"
+error.type.int_map: "{{.Hint}} must be a int map, but now it is a {{.Type}}({{.Value}})"
+error.type.float: "{{.Hint}} must be a float64, but now it is a {{.Type}}({{.Value}})"
+error.type.float_array: "{{.Hint}} must be a float64 array, but now it is a {{.Type}}({{.Value}})"
+error.type.float_map: "{{.Hint}} must be a float64 map, but now it is a {{.Type}}({{.Value}})"
+error.type.bool: "{{.Hint}} must be a bool, but now it is a {{.Type}}({{.Value}})"
+error.type.bool_array: "{{.Hint}} must be a bool array, but now it is a {{.Type}}({{.Value}})"
+error.type.bool_map: "{{.Hint}} must be a bool map, but now it is a {{.Type}}({{.Value}})"
+
+# Plugin errors
+error.plugin.version_mismatch: "expect plugin {{.Namespace}}/{{.Name}} major version is {{.Expected}}, but it is {{.Actual}}"
+error.plugin.unsupported_kind: "plugin {{.Namespace}}/{{.Name}} claims unsupported plugin kind {{.Kind}}"
+error.plugin.namespace_not_specified: "namespace not specified: {{.Loader}}"
+error.plugin.namespace_already_registered: "plugin namespace {{.Namespace}} is already registered by: {{.Loader}}"
+error.plugin.duplicated_kind: "plugin {{.Namespace}} has duplicated kind {{.Kind}} with {{.Loader}}"
+error.plugin.start_failed: "start plugin: {{.PluginId}} (version {{.Version}}), cause: {{.Cause}}"
+error.plugin.stop_failed: "stop plugin: {{.PluginId}} (version {{.Version}}), cause: {{.Cause}}"
+
+# Plugin log messages
+log.plugin.loader.starting: "starting plugin loader"
+log.plugin.loader.started: "started plugin loader"
+log.plugin.loader.start_failed: "failed to start plugin loader"
+log.plugin.loader.stopping: "stopping plugin loader"
+log.plugin.loader.stopped: "stopped plugin loader"
+log.plugin.loader.stop_failed: "failed to stop plugin loader"
+
+# File errors
+error.file.already_exists: "file already exists: {{.Path}}"
+error.file.not_found: "file not found: {{.Path}}"
+error.dir.already_exists: "directory already exists: {{.Path}}"
+error.dir.not_found: "directory not found: {{.Path}}"
+error.file.expect_file_but_dir: "expect {{.Path}} be file, but it is directory"
+error.file.expect_dir_but_file: "expect {{.Path}} be directory, but it is file"
+error.file.cannot_remove_root: "should NOT remove root directory"
+
+# Env file errors
+error.env.zero_length_string: "zero length string"
+error.env.cannot_separate_key_value: "can't separate key from value"
+
+# Network errors
+error.net.interface_not_found: "interface {{.Interface}} is not found, or down, or not supports broadcast"

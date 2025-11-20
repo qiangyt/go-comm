@@ -17,7 +17,10 @@ func RequiredStringP(hint string, key string, m map[string]any) string {
 func RequiredString(hint string, key string, m map[string]any) (string, error) {
 	v, has := m[key]
 	if !has {
-		return "", fmt.Errorf("%s.%s is required", hint, key)
+		return "", LocalizeError("error.required", map[string]interface{}{
+			"Hint": hint,
+			"Key":  key,
+		})
 	}
 
 	return String(hint+"."+key, v)
@@ -57,7 +60,11 @@ func StringP(hint string, v any) string {
 func String(hint string, v any) (string, error) {
 	r, ok := v.(string)
 	if !ok {
-		return "", fmt.Errorf("%s must be a string, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return "", LocalizeError("error.type.string", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -73,7 +80,10 @@ func StringArrayValueP(hint string, key string, m map[string]any) []string {
 func StringArrayValue(hint string, key string, m map[string]any) ([]string, error) {
 	v, has := m[key]
 	if !has {
-		return nil, fmt.Errorf("%s.%s is required", hint, key)
+		return nil, LocalizeError("error.required", map[string]interface{}{
+			"Hint": hint,
+			"Key":  key,
+		})
 	}
 
 	return StringArray(hint+"."+key, v)
@@ -123,10 +133,14 @@ func StringArray(hint string, v any) ([]string, error) {
 			if err == nil {
 				return r, nil
 			}
-		} else if r0, err := String(hint, v); err != nil {
+		} else if r0, err := String(hint, v); err == nil {
 			return []string{r0}, nil
 		}
-		return nil, fmt.Errorf("%s must be a string array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.string_array", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -161,7 +175,11 @@ func StringMap(hint string, v any) (map[string]string, error) {
 				}
 			}
 		}
-		return nil, fmt.Errorf("%s must be a string map, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.string_map", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }

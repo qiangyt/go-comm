@@ -15,7 +15,6 @@ package comm
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -225,7 +224,7 @@ var envExportRegex = regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 
 func parseEnvLine(line string, envMap map[string]string) (key string, value string, err error) {
 	if len(line) == 0 {
-		err = errors.New("zero length string")
+		err = LocalizeError("error.env.zero_length_string", nil)
 		return key, value, err
 	}
 
@@ -261,7 +260,7 @@ func parseEnvLine(line string, envMap map[string]string) (key string, value stri
 	}
 
 	if len(splitString) != 2 {
-		err = errors.New("can't separate key from value")
+		err = LocalizeError("error.env.cannot_separate_key_value", nil)
 		return key, value, err
 	}
 

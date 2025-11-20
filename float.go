@@ -3,6 +3,7 @@ package comm
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -21,7 +22,10 @@ func RequiredFloatP(hint string, key string, m map[string]any) float64 {
 func RequiredFloat(hint string, key string, m map[string]any) (float64, error) {
 	v, has := m[key]
 	if !has {
-		return 0, fmt.Errorf("%s.%s is required", hint, key)
+		return 0, LocalizeError("error.required", map[string]interface{}{
+			"Hint": hint,
+			"Key":  key,
+		})
 	}
 
 	return Float(hint+"."+key, v)
@@ -75,7 +79,16 @@ func Float(hint string, v any) (float64, error) {
 		if i64, isInt64 := v.(int64); isInt64 {
 			return float64(i64), nil
 		}
-		return 0, fmt.Errorf("%s must be a float64, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		if s, isString := v.(string); isString {
+			if parsed, err := strconv.ParseFloat(s, 64); err == nil {
+				return parsed, nil
+			}
+		}
+		return 0, LocalizeError("error.type.float", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -105,7 +118,11 @@ func FloatArray(hint string, v any) ([]float64, error) {
 		} else if r0, err := Float(hint, v); err == nil {
 			return []float64{r0}, nil
 		}
-		return nil, fmt.Errorf("%s must be a float array, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.float_array", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }
@@ -140,7 +157,11 @@ func FloatMap(hint string, v any) (map[string]float64, error) {
 				}
 			}
 		}
-		return nil, fmt.Errorf("%s must be a float map, but now it is a %v(%v)", hint, reflect.TypeOf(v), v)
+		return nil, LocalizeError("error.type.float_map", map[string]interface{}{
+			"Hint":  hint,
+			"Type":  reflect.TypeOf(v),
+			"Value": v,
+		})
 	}
 	return r, nil
 }

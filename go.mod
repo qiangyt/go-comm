@@ -16,6 +16,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/ncruces/zenity v0.10.12
+	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/phuslu/log v1.0.89
 	github.com/pkg/errors v0.9.1
 	github.com/qiangyt/go-event v1.1.0
@@ -25,6 +26,7 @@ require (
 	github.com/tiaotiao/mapstruct v0.0.0-20170819235540-950894f801ed
 	github.com/traefik/yaegi v0.16.1
 	go.uber.org/atomic v1.11.0
+	golang.org/x/text v0.31.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.8.0
@@ -58,8 +60,7 @@ require (
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/image v0.15.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 )

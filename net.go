@@ -76,7 +76,14 @@ func BroadcastIpWithInterface(intf net.Interface) (net.IP, error) {
 		if ipAddr, isIpAddr := addr.(*net.IPNet); isIpAddr {
 			ip := ipAddr.IP
 			if !ip.IsLoopback() && ip.To4() != nil {
-				return ip, nil
+				// Calculate broadcast address: (IP & mask) | ~mask
+				ip4 := ip.To4()
+				mask := ipAddr.Mask
+				broadcast := make(net.IP, len(ip4))
+				for i := range ip4 {
+					broadcast[i] = ip4[i] | ^mask[i]
+				}
+				return broadcast, nil
 			}
 		}
 	}
@@ -95,17 +102,36 @@ func ResolveBroadcastIpP(interfaces []net.Interface, interfaceName string) (net.
 func ResolveBroadcastIp(interfaces []net.Interface, interfaceName string) (net.IP, net.IP, error) {
 	for _, intF := range interfaces {
 		if intF.Name == interfaceName {
-			localIp, err := BroadcastIpWithInterface(intF)
-			if localIp == nil {
-				return nil, nil, errors.Wrapf(err, "cannot get a broadcast ip for interface %s", interfaceName)
+			// Get addresses for the interface
+			addrs, err := intF.Addrs()
+			if err != nil {
+				return nil, nil, errors.Wrapf(err, "get addresses for interface: %s", interfaceName)
 			}
 
-			broadcastIp := make(net.IP, len(localIp))
-			copy(broadcastIp, localIp)
-			broadcastIp[len(broadcastIp)-1] = 255
-			return localIp, broadcastIp, nil
+			// Find IPv4 address
+			for _, addr := range addrs {
+				if ipAddr, isIpAddr := addr.(*net.IPNet); isIpAddr {
+					ip := ipAddr.IP
+					if !ip.IsLoopback() && ip.To4() != nil {
+						// Get local IP
+						localIp := ip.To4()
+
+						// Calculate broadcast address: (IP & mask) | ~mask
+						mask := ipAddr.Mask
+						broadcastIp := make(net.IP, len(localIp))
+						for i := range localIp {
+							broadcastIp[i] = localIp[i] | ^mask[i]
+						}
+						return localIp, broadcastIp, nil
+					}
+				}
+			}
+
+			return nil, nil, errors.Errorf("no valid IPv4 address found for interface %s", interfaceName)
 		}
 	}
 
-	return nil, nil, fmt.Errorf("interface %s is not found, or down, or not supports broadcast", interfaceName)
+	return nil, nil, LocalizeError("error.net.interface_not_found", map[string]interface{}{
+		"Interface": interfaceName,
+	})
 }

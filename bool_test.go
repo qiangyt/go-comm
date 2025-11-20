@@ -146,3 +146,144 @@ func TestOptionalBool_error(t *testing.T) {
 	a.True(has)
 	a.Error(err)
 }
+
+// TestBool_StringConversion tests converting string to bool
+func TestBool_StringConversion(t *testing.T) {
+	a := require.New(t)
+
+	// Test "true" string
+	r, err := Bool("test", "true")
+	a.NoError(err)
+	a.True(r)
+
+	// Test "TRUE" string (case insensitive)
+	r, err = Bool("test", "TRUE")
+	a.NoError(err)
+	a.True(r)
+
+	// Test " True " string (with spaces)
+	r, err = Bool("test", " True ")
+	a.NoError(err)
+	a.True(r)
+
+	// Test "false" string
+	r, err = Bool("test", "false")
+	a.NoError(err)
+	a.False(r)
+
+	// Test "FALSE" string (case insensitive)
+	r, err = Bool("test", "FALSE")
+	a.NoError(err)
+	a.False(r)
+
+	// Test invalid string
+	_, err = Bool("test", "yes")
+	a.Error(err)
+}
+
+// TestBool_I18nError tests that error messages are localized
+func TestBool_I18nError(t *testing.T) {
+	a := require.New(t)
+
+	// Test with English
+	InitI18n("en")
+	_, err := Bool("testField", 123)
+	a.Error(err)
+	a.Contains(err.Error(), "testField")
+	a.Contains(err.Error(), "bool")
+
+	// Test with Chinese
+	InitI18n("zh")
+	_, err = Bool("testField", 123)
+	a.Error(err)
+	a.Contains(err.Error(), "testField")
+	a.Contains(err.Error(), "布尔")
+}
+
+// TestBoolArray tests BoolArray function
+func TestBoolArray(t *testing.T) {
+	a := require.New(t)
+
+	// Test with []bool
+	r, err := BoolArray("test", []bool{true, false, true})
+	a.NoError(err)
+	a.Equal([]bool{true, false, true}, r)
+
+	// Test with []any containing bools
+	r, err = BoolArray("test", []any{true, false})
+	a.NoError(err)
+	a.Equal([]bool{true, false}, r)
+
+	// Test with []any containing string bools
+	r, err = BoolArray("test", []any{"true", "false"})
+	a.NoError(err)
+	a.Equal([]bool{true, false}, r)
+
+	// Test with single bool value (converts to array)
+	r, err = BoolArray("test", true)
+	a.NoError(err)
+	a.Equal([]bool{true}, r)
+
+	// Test with invalid type
+	_, err = BoolArray("test", "not-an-array")
+	a.Error(err)
+	a.Contains(err.Error(), "array")
+}
+
+// TestBoolArrayP tests BoolArrayP panic behavior
+func TestBoolArrayP(t *testing.T) {
+	a := require.New(t)
+
+	// Test successful conversion
+	r := BoolArrayP("test", []bool{true, false, true})
+	a.Equal([]bool{true, false, true}, r)
+
+	// Test panic on invalid type
+	a.Panics(func() { BoolArrayP("test", "invalid") })
+}
+
+// TestBoolMap tests BoolMap function
+func TestBoolMap(t *testing.T) {
+	a := require.New(t)
+	InitI18n("en")
+
+	// Test with map[string]bool
+	r, err := BoolMap("test", map[string]bool{"enabled": true, "disabled": false})
+	a.NoError(err)
+	a.True(r["enabled"])
+	a.False(r["disabled"])
+
+	// Test with map[string]any
+	r, err = BoolMap("test", map[string]any{"active": true, "inactive": false})
+	a.NoError(err)
+	a.True(r["active"])
+	a.False(r["inactive"])
+
+	// Test with string "key:value" format
+	r, err = BoolMap("test", "visible:true")
+	a.NoError(err)
+	a.True(r["visible"])
+
+	// Test with string "key:false" format
+	r, err = BoolMap("test", "hidden:false")
+	a.NoError(err)
+	a.False(r["hidden"])
+
+	// Test with invalid type
+	_, err = BoolMap("test", 123)
+	a.Error(err)
+	a.Contains(err.Error(), "map")
+}
+
+// TestBoolMapP tests BoolMapP panic behavior
+func TestBoolMapP(t *testing.T) {
+	a := require.New(t)
+
+	// Test successful conversion
+	r := BoolMapP("test", map[string]bool{"ok": true})
+	a.True(r["ok"])
+
+	// Test panic on invalid type
+	a.Panics(func() { BoolMapP("test", []bool{true, false}) })
+}
+

@@ -43,13 +43,21 @@ func (me PluginRegistry) ValidatePlugin(namespace string, plugin Plugin) error {
 
 	major, _ := plugin.Version()
 	if major != me.supportedMajorVersion {
-		return fmt.Errorf("expect plugin %s/%s major version is %d, but it is %d",
-			namespace, name, me.supportedMajorVersion, major)
+		return LocalizeError("error.plugin.version_mismatch", map[string]interface{}{
+			"Namespace": namespace,
+			"Name":      name,
+			"Expected":  me.supportedMajorVersion,
+			"Actual":    major,
+		})
 	}
 
 	kind := plugin.Kind()
 	if !me.IsSupportedPluginKind(kind) {
-		return fmt.Errorf("plugin %s/%s claims unsupported plugin kind %s", namespace, name, kind)
+		return LocalizeError("error.plugin.unsupported_kind", map[string]interface{}{
+			"Namespace": namespace,
+			"Name":      name,
+			"Kind":      kind,
+		})
 	}
 
 	return nil
@@ -71,12 +79,12 @@ func (me PluginRegistry) Init(logger Logger) {
 		logCtx.Str("namespace", ns)
 		subLogger := logger.NewSubLogger(logCtx)
 
-		subLogger.Info().Msg("starting plugin loader")
+		subLogger.Info().Msg(T("log.plugin.loader.starting", nil))
 		err := loader.Start(logger)
 		if err != nil {
-			subLogger.Error(err).Msg("failed to start plugin loader")
+			subLogger.Error(err).Msg(T("log.plugin.loader.start_failed", nil))
 		} else {
-			subLogger.Info().Msg("started plugin loader")
+			subLogger.Info().Msg(T("log.plugin.loader.started", nil))
 		}
 	}
 }
@@ -90,12 +98,12 @@ func (me PluginRegistry) Destroy(logger Logger) {
 		logCtx.Str("namespace", ns)
 		subLogger := logger.NewSubLogger(logCtx)
 
-		subLogger.Info().Msg("stopping plugin loader")
+		subLogger.Info().Msg(T("log.plugin.loader.stopping", nil))
 		err := loader.Stop(logger)
 		if err != nil {
-			subLogger.Error(err).Msg("failed to stop plugin loader")
+			subLogger.Error(err).Msg(T("log.plugin.loader.stop_failed", nil))
 		} else {
-			subLogger.Info().Msg("stopped plugin loader")
+			subLogger.Info().Msg(T("log.plugin.loader.stopped", nil))
 		}
 	}
 
@@ -115,11 +123,16 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 
 	ns := loader.Namespace()
 	if len(ns) == 0 {
-		panic(fmt.Errorf("namespace not specified: %+v", loader))
+		panic(LocalizeError("error.plugin.namespace_not_specified", map[string]interface{}{
+			"Loader": fmt.Sprintf("%+v", loader),
+		}))
 	}
 
 	if existingLoader, alreadyRegistered := me.loaders[ns]; alreadyRegistered {
-		panic(fmt.Errorf("plugin namespace %s is already registered by: %+v", ns, existingLoader))
+		panic(LocalizeError("error.plugin.namespace_already_registered", map[string]interface{}{
+			"Namespace": ns,
+			"Loader":    fmt.Sprintf("%+v", existingLoader),
+		}))
 	}
 
 	newPlugins := loader.Plugins()
@@ -141,7 +154,11 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 		}
 
 		if existingPlugin, found := pluginsWithKind[name]; found {
-			panic(fmt.Errorf("plugin %s has duplicated kind %s with %+v", id, kind, existingPlugin))
+			panic(LocalizeError("error.plugin.duplicated_kind", map[string]interface{}{
+				"Namespace": id,
+				"Kind":      kind,
+				"Loader":    fmt.Sprintf("%+v", existingPlugin),
+			}))
 		}
 		pluginsWithKind[name] = plugin
 	}
@@ -155,4 +172,5 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 
 	me.plugins = allPlugins
 	me.pluginsByKind = pluginsByKind
+	me.loaders[ns] = loader
 }
