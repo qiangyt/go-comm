@@ -12,18 +12,18 @@ func TestInitI18n(t *testing.T) {
 
 	// Test English initialization
 	InitI18n("en")
-	a.NotNil(defaultBundle)
-	a.NotNil(defaultLocalizer)
+	a.NotNil(bundle)
+	a.NotNil(localizer)
 
 	// Test Chinese initialization
 	InitI18n("zh")
-	a.NotNil(defaultBundle)
-	a.NotNil(defaultLocalizer)
+	a.NotNil(bundle)
+	a.NotNil(localizer)
 
 	// Test invalid language defaults to English
 	InitI18n("invalid")
-	a.NotNil(defaultBundle)
-	a.NotNil(defaultLocalizer)
+	a.NotNil(bundle)
+	a.NotNil(localizer)
 }
 
 func TestSetLanguage(t *testing.T) {
@@ -31,11 +31,11 @@ func TestSetLanguage(t *testing.T) {
 
 	// Test setting English
 	SetLanguage("en")
-	a.NotNil(defaultLocalizer)
+	a.NotNil(localizer)
 
 	// Test setting Chinese
 	SetLanguage("zh")
-	a.NotNil(defaultLocalizer)
+	a.NotNil(localizer)
 }
 
 func TestGetLanguage(t *testing.T) {
@@ -315,5 +315,5 @@ func TestConcurrentLanguageSwitch(t *testing.T) {
 	<-done
 
 	// Should not crash
-	a.NotNil(defaultLocalizer)
+	a.NotNil(localizer)
 }

@@ -6,18 +6,19 @@ import (
 	"os"
 	"sync"
 
+	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/spf13/afero"
 	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
 )
 
-//go:embed locales/*.yaml
+//go:embed locales/*.toml
 var localesFS embed.FS
 
 var (
-	defaultBundle    *i18n.Bundle
-	defaultLocalizer *i18n.Localizer
-	i18nMutex        sync.RWMutex
+	bundle    *i18n.Bundle
+	localizer *i18n.Localizer
+	mutex     sync.RWMutex
 )
 
 func init() {
@@ -29,8 +30,8 @@ func init() {
 // Supported languages: "en" (English), "zh" (Chinese).
 // If an unsupported language is provided, it defaults to "en".
 func InitI18n(lang string) {
-	i18nMutex.Lock()
-	defer i18nMutex.Unlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	// Validate language
 	var defaultLang language.Tag
@@ -43,14 +44,14 @@ func InitI18n(lang string) {
 		defaultLang = language.English
 	}
 
-	defaultBundle = i18n.NewBundle(defaultLang)
-	defaultBundle.RegisterUnmarshalFunc("yaml", yaml.Unmarshal)
+	bundle = i18n.NewBundle(defaultLang)
+	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 
 	// Load embedded locale files
 	loadEmbeddedLocales()
 
 	// Create localizer
-	defaultLocalizer = i18n.NewLocalizer(defaultBundle, lang)
+	localizer = i18n.NewLocalizer(bundle, lang)
 }
 
 // SetLanguage changes the current language for i18n.
@@ -77,13 +78,13 @@ func GetLanguage() string {
 
 func loadEmbeddedLocales() {
 	// Load English translations
-	if data, err := localesFS.ReadFile("locales/en.yaml"); err == nil {
-		defaultBundle.MustParseMessageFileBytes(data, "en.yaml")
+	if data, err := localesFS.ReadFile("locales/active.en.toml"); err == nil {
+		bundle.MustParseMessageFileBytes(data, "active.en.toml")
 	}
 
 	// Load Chinese translations
-	if data, err := localesFS.ReadFile("locales/zh.yaml"); err == nil {
-		defaultBundle.MustParseMessageFileBytes(data, "zh.yaml")
+	if data, err := localesFS.ReadFile("locales/active.zh.toml"); err == nil {
+		bundle.MustParseMessageFileBytes(data, "active.zh.toml")
 	}
 }
 
@@ -91,14 +92,14 @@ func loadEmbeddedLocales() {
 // Usage:
 //   T("error.required", map[string]interface{}{"Hint": "config", "Key": "name"})
 func T(messageID string, templateData map[string]interface{}) string {
-	i18nMutex.RLock()
-	defer i18nMutex.RUnlock()
+	mutex.RLock()
+	defer mutex.RUnlock()
 
-	if defaultLocalizer == nil {
+	if localizer == nil {
 		return messageID
 	}
 
-	msg, err := defaultLocalizer.Localize(&i18n.LocalizeConfig{
+	msg, err := localizer.Localize(&i18n.LocalizeConfig{
 		MessageID:    messageID,
 		TemplateData: templateData,
 	})
@@ -112,15 +113,15 @@ func T(messageID string, templateData map[string]interface{}) string {
 // Tf translates a message ID with formatted arguments (printf-style).
 // This is a convenience function for simple string formatting.
 func Tf(messageID string, args ...interface{}) string {
-	i18nMutex.RLock()
-	defer i18nMutex.RUnlock()
+	mutex.RLock()
+	defer mutex.RUnlock()
 
-	if defaultLocalizer == nil {
+	if localizer == nil {
 		return fmt.Sprintf(messageID, args...)
 	}
 
 	// Try to get translation first
-	msg, err := defaultLocalizer.Localize(&i18n.LocalizeConfig{
+	msg, err := localizer.Localize(&i18n.LocalizeConfig{
 		MessageID: messageID,
 	})
 	if err != nil {
@@ -143,4 +144,52 @@ func LocalizeError(messageID string, templateData map[string]interface{}) error 
 // LocalizeErrorf creates a localized error message with printf-style formatting.
 func LocalizeErrorf(messageID string, args ...interface{}) error {
 	return fmt.Errorf("%s", Tf(messageID, args...))
+}
+
+// localize localizes a message with optional template data.
+// This is the unified localization function used by FileOps and other components.
+func localize(id string, args ...map[string]any) string {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	cfg := &i18n.LocalizeConfig{
+		MessageID:   id,
+		PluralCount: 2,
+	}
+	if len(args) > 0 {
+		cfg.TemplateData = args[0]
+	}
+
+	r, err := localizer.Localize(cfg)
+	if err != nil {
+		return id
+	}
+	return r
+}
+
+// LocalizeFunc is the i18n localization function type
+type LocalizeFunc func(id string, args ...map[string]any) string
+
+var (
+	// DefaultLocalizeFunc is the default localization function (returns id directly)
+	DefaultLocalizeFunc LocalizeFunc = func(id string, args ...map[string]any) string {
+		return id
+	}
+)
+
+// NewLocalizedFileOps creates a FileOps with built-in i18n support
+func NewLocalizedFileOps(fs afero.Fs) FileOps {
+	ops := NewFileOps(fs)
+	ops.SetLocalizeFunc(localize)
+	return ops
+}
+
+// CommLocalize is an alias for localize, for backward compatibility
+func CommLocalize(id string, args ...map[string]any) string {
+	return localize(id, args...)
+}
+
+// SetCommLang is an alias for SetLanguage, for backward compatibility
+func SetCommLang(lang string) {
+	SetLanguage(lang)
 }
