@@ -14,8 +14,9 @@ func Test_Set2Strings_happy(t *testing.T) {
 	strs := comm.Set2Strings(hashset.New("A", "A", "B"))
 	a.Len(strs, 2)
 
-	a.Equal("A", strs[0])
-	a.Equal("B", strs[1])
+	// Set order is not guaranteed, so check both elements are present
+	a.Contains(strs, "A")
+	a.Contains(strs, "B")
 }
 
 func Test_Slice2Set_happy(t *testing.T) {

@@ -5,8 +5,9 @@ package expand
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -65,13 +66,13 @@ func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
 		// This is the only parameter expansion that the environment
 		// interface cannot satisfy.
 		line := uint64(cfg.curParam.Pos().Line())
-		vr = Variable{Kind: String, Str: strconv.FormatUint(line, 10)}
+		vr = Variable{Set: true, Kind: String, Str: strconv.FormatUint(line, 10)}
 	default:
 		vr = cfg.Env.Get(name)
 	}
 	orig := vr
 	_, vr = vr.Resolve(cfg.Env)
-	if cfg.NoUnset && vr.Kind == Unset && !overridingUnset(pe) {
+	if cfg.NoUnset && !vr.IsSet() && !overridingUnset(pe) {
 		return "", UnsetParameterError{
 			Node:    pe,
 			Message: "unbound variable",
@@ -106,7 +107,7 @@ func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
 	switch nodeLit(index) {
 	case "@", "*":
 		switch vr.Kind {
-		case Unset:
+		case Unknown:
 			elems = nil
 			indexAllElements = true
 		case Indexed:
@@ -167,10 +168,8 @@ func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
 				}
 			}
 		case pe.Index != nil && vr.Kind == Associative:
-			for k := range vr.Map {
-				strs = append(strs, k)
-			}
-		case vr.Kind == Unset:
+			strs = slices.AppendSeq(strs, maps.Keys(vr.Map))
+		case !vr.IsSet():
 			return "", fmt.Errorf("invalid indirect expansion")
 		case str == "":
 			return "", nil
@@ -178,7 +177,7 @@ func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
 			vr = cfg.Env.Get(str)
 			strs = append(strs, vr.String())
 		}
-		sort.Strings(strs)
+		slices.Sort(strs)
 		str = strings.Join(strs, " ")
 	case pe.Slice != nil:
 		if callVarInd {
@@ -205,6 +204,9 @@ func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if orig == "" {
+			break // nothing to replace
+		}
 		with, err := Literal(cfg, pe.Repl.With)
 		if err != nil {
 			return "", err
@@ -214,15 +216,15 @@ func (cfg *Config) paramExp(pe *syntax.ParamExp) (string, error) {
 			n = -1
 		}
 		locs := findAllIndex(orig, str, n)
-		buf := cfg.strBuilder()
+		sb := cfg.strBuilder()
 		last := 0
 		for _, loc := range locs {
-			buf.WriteString(str[last:loc[0]])
-			buf.WriteString(with)
+			sb.WriteString(str[last:loc[0]])
+			sb.WriteString(with)
 			last = loc[1]
 		}
-		buf.WriteString(str[last:])
-		str = buf.String()
+		sb.WriteString(str[last:])
+		str = sb.String()
 	case pe.Exp != nil:
 		arg, err := Literal(cfg, pe.Exp.Word)
 		if err != nil {
@@ -396,11 +398,7 @@ func (cfg *Config) varInd(vr Variable, idx syntax.ArithmExpr) (string, error) {
 	case Associative:
 		switch lit := nodeLit(idx); lit {
 		case "@", "*":
-			strs := make([]string, 0, len(vr.Map))
-			for _, val := range vr.Map {
-				strs = append(strs, val)
-			}
-			sort.Strings(strs)
+			strs := slices.Sorted(maps.Values(vr.Map))
 			if lit == "*" {
 				return cfg.ifsJoin(strs), nil
 			}
@@ -417,11 +415,10 @@ func (cfg *Config) varInd(vr Variable, idx syntax.ArithmExpr) (string, error) {
 
 func (cfg *Config) namesByPrefix(prefix string) []string {
 	var names []string
-	cfg.Env.Each(func(name string, vr Variable) bool {
+	for name := range cfg.Env.Each {
 		if strings.HasPrefix(name, prefix) {
 			names = append(names, name)
 		}
-		return true
-	})
+	}
 	return names
 }

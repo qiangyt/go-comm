@@ -8,15 +8,16 @@ import (
 	"unsafe"
 )
 
-// FormatterArgs is a parsed sturct from json input
+// FormatterArgs is a parsed struct from json input
 type FormatterArgs struct {
-	Time      string // "2019-07-10T05:35:54.277Z"
-	Level     string // "info"
-	Caller    string // "prog.go:42"
-	Goid      string // "123"
-	Stack     string // "<stack string>"
-	Message   string // "a structure message"
-	KeyValues []struct {
+	Time       string // "2019-07-10T05:35:54.277Z"
+	Level      string // "info"
+	Caller     string // "prog.go:42"
+	CallerFunc string // "main.main"
+	Goid       string // "123"
+	Stack      string // "<stack string>"
+	Message    string // "a structure message"
+	KeyValues  []struct {
 		Key       string // "foo"
 		Value     string // "bar"
 		ValueType byte   // 's'
@@ -25,7 +26,8 @@ type FormatterArgs struct {
 
 // Get gets the value associated with the given key.
 func (args *FormatterArgs) Get(key string) (value string) {
-	for _, kv := range args.KeyValues {
+	for i := len(args.KeyValues) - 1; i >= 0; i-- {
+		kv := &args.KeyValues[i]
 		if kv.Key == key {
 			value = kv.Value
 			break
@@ -42,21 +44,32 @@ func formatterArgsPos(key string) (pos int) {
 		pos = 2
 	case "caller":
 		pos = 3
-	case "goid":
+	case "callerfunc":
 		pos = 4
-	case "stack":
+	case "goid":
 		pos = 5
-	case "message", "msg":
+	case "stack":
 		pos = 6
+	case "message", "msg":
+		pos = 7
 	}
 	return
 }
 
 // parseFormatterArgs extracts json string to json items
 func parseFormatterArgs(json []byte, args *FormatterArgs) {
+	// Pre-allocate KeyValues slice to a reasonable capacity.
+	// This prevents a race condition that can lead to memory corruption
+	// when append is called on a nil slice from multiple goroutines.
+	args.KeyValues = make([]struct {
+		Key       string
+		Value     string
+		ValueType byte
+	}, 0, 16)
+
 	// treat formatter args as []string
 	const size = int(unsafe.Sizeof(FormatterArgs{}) / unsafe.Sizeof(""))
-	// nolint
+	//nolint:all
 	slice := *(*[]string)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(args)), Len: size, Cap: size,
 	}))

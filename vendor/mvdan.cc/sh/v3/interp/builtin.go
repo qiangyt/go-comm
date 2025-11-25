@@ -6,22 +6,28 @@ package interp
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
+
+	"golang.org/x/term"
 
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/syntax"
 )
 
-func isBuiltin(name string) bool {
+// IsBuiltin returns true if the given word is a shell builtin.
+func IsBuiltin(name string) bool {
 	switch name {
-	case "true", ":", "false", "exit", "set", "shift", "unset",
+	case ":", "true", "false", "exit", "set", "shift", "unset",
 		"echo", "printf", "break", "continue", "pwd", "cd",
 		"wait", "builtin", "trap", "type", "source", ".", "command",
 		"dirs", "pushd", "popd", "umask", "alias", "unalias",
@@ -32,49 +38,65 @@ func isBuiltin(name string) bool {
 	return false
 }
 
-// TODO: oneIf and atoi are duplicated in the expand package.
+// TODO: atoi is duplicated in the expand package.
 
-func oneIf(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
-}
-
-// atoi is like [strconv.Atoi], but it ignores errors and trims whitespace.
-func atoi(s string) int {
+// atoi is like [strconv.ParseInt](s, 10, 64), but it ignores errors and trims whitespace.
+func atoi(s string) int64 {
 	s = strings.TrimSpace(s)
-	n, _ := strconv.Atoi(s)
+	n, _ := strconv.ParseInt(s, 10, 64)
 	return n
 }
 
-func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, args []string) int {
+type errBuiltinExitStatus exitStatus
+
+func (e errBuiltinExitStatus) Error() string {
+	return fmt.Sprintf("builtin exit status %d", e.code)
+}
+
+// Builtin allows [ExecHandlerFunc] implementations to execute any builtin,
+// which can be useful for an exec handler to wrap or combine builtin calls.
+//
+// Note that a non-nil error may be returned in cases where the builtin
+// alters the control flow of the runner, even if the builtin did not fail.
+// For example, this is the case with `exit 0` or `return`.
+func (hc HandlerContext) Builtin(ctx context.Context, args []string) error {
+	if hc.kind != handlerKindExec {
+		return fmt.Errorf("HandlerContext.Builtin can only be called via an ExecHandlerFunc")
+	}
+	exit := hc.runner.builtin(ctx, hc.Pos, args[0], args[1:])
+	if exit != (exitStatus{}) {
+		return errBuiltinExitStatus(exit)
+	}
+	return nil
+}
+
+func (r *Runner) builtin(ctx context.Context, pos syntax.Pos, name string, args []string) (exit exitStatus) {
+	failf := func(code uint8, format string, args ...any) exitStatus {
+		r.errf(format, args...)
+		exit.code = code
+		return exit
+	}
 	switch name {
-	case "true", ":":
+	case ":", "true":
 	case "false":
-		return 1
+		exit.code = 1
 	case "exit":
-		exit := 0
 		switch len(args) {
 		case 0:
 			exit = r.lastExit
 		case 1:
 			n, err := strconv.Atoi(args[0])
 			if err != nil {
-				r.errf("invalid exit status code: %q\n", args[0])
-				return 2
+				return failf(2, "invalid exit status code: %q\n", args[0])
 			}
-			exit = n
+			exit.code = uint8(n)
 		default:
-			r.errf("exit cannot take multiple arguments\n")
-			return 1
+			return failf(1, "exit cannot take multiple arguments\n")
 		}
-		r.exitShell(ctx, exit)
-		return exit
+		exit.exiting = true
 	case "set":
 		if err := Params(args...)(r); err != nil {
-			r.errf("set: %v\n", err)
-			return 2
+			return failf(2, "set: %v\n", err)
 		}
 		r.updateExpandOpts()
 	case "shift":
@@ -88,8 +110,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			}
 			fallthrough
 		default:
-			r.errf("usage: shift [n]\n")
-			return 2
+			return failf(2, "usage: shift [n]\n")
 		}
 		if n >= len(r.Params) {
 			r.Params = nil
@@ -148,15 +169,13 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 	case "printf":
 		if len(args) == 0 {
-			r.errf("usage: printf format [arguments]\n")
-			return 2
+			return failf(2, "usage: printf format [arguments]\n")
 		}
 		format, args := args[0], args[1:]
 		for {
 			s, n, err := expand.Format(r.ecfg, format, args)
 			if err != nil {
-				r.errf("%v\n", err)
-				return 1
+				return failf(1, "%v\n", err)
 			}
 			r.out(s)
 			args = args[n:]
@@ -166,8 +185,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 	case "break", "continue":
 		if !r.inLoop {
-			r.errf("%s is only useful in a loop\n", name)
-			break
+			return failf(0, "%s is only useful in a loop\n", name)
 		}
 		enclosing := &r.breakEnclosing
 		if name == "continue" {
@@ -183,8 +201,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			}
 			fallthrough
 		default:
-			r.errf("usage: %s [n]\n", name)
-			return 2
+			return failf(2, "usage: %s [n]\n", name)
 		}
 	case "pwd":
 		evalSymlinks := false
@@ -195,8 +212,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			case "-P":
 				evalSymlinks = true
 			default:
-				r.errf("invalid option: %q\n", args[0])
-				return 2
+				return failf(2, "invalid option: %q\n", args[0])
 			}
 			args = args[1:]
 		}
@@ -205,8 +221,8 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			var err error
 			pwd, err = filepath.EvalSymlinks(pwd)
 			if err != nil {
-				r.setErr(err)
-				return 1
+				exit.fatal(err) // perhaps overly dramatic?
+				return exit
 			}
 		}
 		r.outf("%s\n", pwd)
@@ -225,26 +241,45 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				r.outf("%s\n", path)
 			}
 		default:
-			r.errf("usage: cd [dir]\n")
-			return 2
+			return failf(2, "usage: cd [dir]\n")
 		}
-		return r.changeDir(ctx, path)
+		exit.code = r.changeDir(ctx, path)
 	case "wait":
-		if len(args) > 0 {
-			panic("wait with args not handled yet")
+		fp := flagParser{remaining: args}
+		for fp.more() {
+			switch flag := fp.flag(); flag {
+			case "-n", "-p":
+				return failf(2, "wait: unsupported option %q\n", flag)
+			default:
+				return failf(2, "wait: invalid option %q\n", flag)
+			}
 		}
-		err := r.bgShells.Wait()
-		if _, ok := IsExitStatus(err); err != nil && !ok {
-			r.setErr(err)
+		if len(args) == 0 {
+			// Note that "wait" without arguments always returns exit status zero.
+			for _, bg := range r.bgProcs {
+				<-bg.done
+			}
+			break
+		}
+		for _, arg := range args {
+			arg, ok := strings.CutPrefix(arg, "g")
+			pid := atoi(arg)
+			if !ok || pid <= 0 || pid > int64(len(r.bgProcs)) {
+				return failf(1, "wait: pid %s is not a child of this shell\n", arg)
+			}
+			bg := r.bgProcs[pid-1]
+			<-bg.done
+			exit = *bg.exit
 		}
 	case "builtin":
 		if len(args) < 1 {
 			break
 		}
-		if !isBuiltin(args[0]) {
-			return 1
+		if !IsBuiltin(args[0]) {
+			exit.code = 1
+			return exit
 		}
-		return r.builtinCode(ctx, pos, args[0], args[1:])
+		exit = r.builtin(ctx, pos, args[0], args[1:])
 	case "type":
 		anyNotFound := false
 		mode := ""
@@ -252,13 +287,11 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		for fp.more() {
 			switch flag := fp.flag(); flag {
 			case "-a", "-f", "-P", "--help":
-				r.errf("command: NOT IMPLEMENTED\n")
-				return 3
+				return failf(3, "command: NOT IMPLEMENTED\n")
 			case "-p", "-t":
 				mode = flag
 			default:
-				r.errf("command: invalid option %q\n", flag)
-				return 2
+				return failf(2, "command: invalid option %q\n", flag)
 			}
 		}
 		args := fp.args()
@@ -305,7 +338,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				}
 				continue
 			}
-			if isBuiltin(arg) {
+			if IsBuiltin(arg) {
 				if mode == "-t" {
 					r.out("builtin\n")
 				} else {
@@ -327,22 +360,20 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			anyNotFound = true
 		}
 		if anyNotFound {
-			return 1
+			exit.code = 1
 		}
 	case "eval":
 		src := strings.Join(args, " ")
 		p := syntax.NewParser()
 		file, err := p.Parse(strings.NewReader(src), "")
 		if err != nil {
-			r.errf("eval: %v\n", err)
-			return 1
+			return failf(1, "eval: %v\n", err)
 		}
 		r.stmts(ctx, file.Stmts)
-		return r.exit
+		exit = r.exit
 	case "source", ".":
 		if len(args) < 1 {
-			r.errf("%v: source: need filename\n", pos)
-			return 2
+			return failf(2, "%v: source: need filename\n", pos)
 		}
 		path, err := scriptFromPathDir(r.Dir, r.writeEnv, args[0])
 		if err != nil {
@@ -354,15 +385,13 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		}
 		f, err := r.open(ctx, path, os.O_RDONLY, 0, false)
 		if err != nil {
-			r.errf("source: %v\n", err)
-			return 1
+			return failf(1, "source: %v\n", err)
 		}
 		defer f.Close()
 		p := syntax.NewParser()
 		file, err := p.Parse(f, path)
 		if err != nil {
-			r.errf("source: %v\n", err)
-			return 1
+			return failf(1, "source: %v\n", err)
 		}
 
 		// Keep the current versions of some fields we might modify.
@@ -391,15 +420,11 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		r.sourceSetParams = oldSourceSetParams
 		r.inSource = oldInSource
 
-		if code, ok := r.err.(returnStatus); ok {
-			r.err = nil
-			return int(code)
-		}
-		return r.exit
+		exit = r.exit
+		exit.returning = false
 	case "[":
 		if len(args) == 0 || args[len(args)-1] != "]" {
-			r.errf("%v: [: missing matching ]\n", pos)
-			return 2
+			return failf(2, "%v: [: missing matching ]\n", pos)
 		}
 		args = args[:len(args)-1]
 		fallthrough
@@ -415,9 +440,10 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		p.next()
 		expr := p.classicTest("[", false)
 		if parseErr {
-			return 2
+			exit.code = 2
+			return exit
 		}
-		return oneIf(r.bashTest(ctx, expr, true) == "")
+		exit.oneIf(r.bashTest(ctx, expr, true) == "")
 	case "exec":
 		// TODO: Consider unix.Exec, i.e. actually replacing
 		// the process. It's in theory what a shell should do,
@@ -427,9 +453,9 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.keepRedirs = true
 			break
 		}
-		r.exitShell(ctx, 1)
-		r.exec(ctx, args)
-		return r.exit
+		r.exit.exiting = true
+		r.exec(ctx, pos, args)
+		exit = r.exit
 	case "command":
 		show := false
 		fp := flagParser{remaining: args}
@@ -438,8 +464,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			case "-v":
 				show = true
 			default:
-				r.errf("command: invalid option %q\n", flag)
-				return 2
+				return failf(2, "command: invalid option %q\n", flag)
 			}
 		}
 		args := fp.args()
@@ -447,16 +472,17 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			break
 		}
 		if !show {
-			if isBuiltin(args[0]) {
-				return r.builtinCode(ctx, pos, args[0], args[1:])
+			if IsBuiltin(args[0]) {
+				return r.builtin(ctx, pos, args[0], args[1:])
 			}
-			r.exec(ctx, args)
-			return r.exit
+			r.exec(ctx, pos, args)
+			exit = r.exit
+			return exit
 		}
-		last := 0
+		last := uint8(0)
 		for _, arg := range args {
 			last = 0
-			if r.Funcs[arg] != nil || isBuiltin(arg) {
+			if r.Funcs[arg] != nil || IsBuiltin(arg) {
 				r.outf("%s\n", arg)
 			} else if path, err := LookPathDir(r.Dir, r.writeEnv, arg); err == nil {
 				r.outf("%s\n", path)
@@ -464,10 +490,10 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				last = 1
 			}
 		}
-		return last
+		exit.code = last
 	case "dirs":
-		for i := len(r.dirStack) - 1; i >= 0; i-- {
-			r.outf("%s", r.dirStack[i])
+		for i, dir := range slices.Backward(r.dirStack) {
+			r.outf("%s", dir)
 			if i > 0 {
 				r.out(" ")
 			}
@@ -492,28 +518,28 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				break
 			}
 			if len(r.dirStack) < 2 {
-				r.errf("pushd: no other directory\n")
-				return 1
+				return failf(1, "pushd: no other directory\n")
 			}
 			newtop := swap()
 			if code := r.changeDir(ctx, newtop); code != 0 {
-				return code
+				exit.code = code
+				return exit
 			}
-			r.builtinCode(ctx, syntax.Pos{}, "dirs", nil)
+			r.builtin(ctx, syntax.Pos{}, "dirs", nil)
 		case 1:
 			if change {
 				if code := r.changeDir(ctx, args[0]); code != 0 {
-					return code
+					exit.code = code
+					return exit
 				}
 				r.dirStack = append(r.dirStack, r.Dir)
 			} else {
 				r.dirStack = append(r.dirStack, args[0])
 				swap()
 			}
-			r.builtinCode(ctx, syntax.Pos{}, "dirs", nil)
+			r.builtin(ctx, syntax.Pos{}, "dirs", nil)
 		default:
-			r.errf("pushd: too many arguments\n")
-			return 2
+			return failf(2, "pushd: too many arguments\n")
 		}
 	case "popd":
 		change := true
@@ -524,64 +550,64 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		switch len(args) {
 		case 0:
 			if len(r.dirStack) < 2 {
-				r.errf("popd: directory stack empty\n")
-				return 1
+				return failf(1, "popd: directory stack empty\n")
 			}
 			oldtop := r.dirStack[len(r.dirStack)-1]
 			r.dirStack = r.dirStack[:len(r.dirStack)-1]
 			if change {
 				newtop := r.dirStack[len(r.dirStack)-1]
 				if code := r.changeDir(ctx, newtop); code != 0 {
-					return code
+					exit.code = code
+					return exit
 				}
 			} else {
 				r.dirStack[len(r.dirStack)-1] = oldtop
 			}
-			r.builtinCode(ctx, syntax.Pos{}, "dirs", nil)
+			r.builtin(ctx, syntax.Pos{}, "dirs", nil)
 		default:
-			r.errf("popd: invalid argument\n")
-			return 2
+			return failf(2, "popd: invalid argument\n")
 		}
 	case "return":
 		if !r.inFunc && !r.inSource {
-			r.errf("return: can only be done from a func or sourced script\n")
-			return 1
+			return failf(1, "return: can only be done from a func or sourced script\n")
 		}
-		code := 0
 		switch len(args) {
 		case 0:
 		case 1:
-			code = atoi(args[0])
+			n, err := strconv.Atoi(args[0])
+			if err != nil {
+				return failf(2, "invalid return status code: %q\n", args[0])
+			}
+			exit.code = uint8(n)
 		default:
-			r.errf("return: too many arguments\n")
-			return 2
+			return failf(2, "return: too many arguments\n")
 		}
-		r.setErr(returnStatus(code))
+		exit.returning = true
 	case "read":
 		var prompt string
 		raw := false
+		silent := false
 		fp := flagParser{remaining: args}
 		for fp.more() {
 			switch flag := fp.flag(); flag {
+			case "-s":
+				silent = true
 			case "-r":
 				raw = true
 			case "-p":
 				prompt = fp.value()
 				if prompt == "" {
-					r.errf("read: -p: option requires an argument\n")
-					return 2
+					return failf(2, "read: -p: option requires an argument\n")
 				}
 			default:
-				r.errf("read: invalid option %q\n", flag)
-				return 2
+				return failf(2, "read: invalid option %q\n", flag)
 			}
 		}
 
 		args := fp.args()
 		for _, name := range args {
 			if !syntax.ValidName(name) {
-				r.errf("read: invalid identifier %q\n", name)
-				return 2
+				return failf(2, "read: invalid identifier %q\n", name)
 			}
 		}
 
@@ -589,9 +615,13 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.out(prompt)
 		}
 
-		line, err := r.readLine(raw)
-		if err != nil {
-			return 1
+		var line []byte
+		var err error
+		if silent {
+			// Note that on Windows, syscall.Stdin is of type uintptr.
+			line, err = term.ReadPassword(int(syscall.Stdin))
+		} else {
+			line, err = r.readLine(ctx, raw)
 		}
 		if len(args) == 0 {
 			args = append(args, shellReplyVar)
@@ -606,12 +636,16 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.setVarString(name, val)
 		}
 
-		return 0
+		// We can get data back from readLine and an error at the same time, so
+		// check err after we process the data.
+		if err != nil {
+			exit.code = 1
+			return exit
+		}
 
 	case "getopts":
 		if len(args) < 2 {
-			r.errf("getopts: usage: getopts optstring name [arg ...]\n")
-			return 2
+			return failf(2, "getopts: usage: getopts optstring name [arg ...]\n")
 		}
 		optind, _ := strconv.Atoi(r.envGet("OPTIND"))
 		if optind-1 != r.optState.argidx {
@@ -623,8 +657,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		optstr := args[0]
 		name := args[1]
 		if !syntax.ValidName(name) {
-			r.errf("getopts: invalid identifier: %q\n", name)
-			return 2
+			return failf(2, "getopts: invalid identifier: %q\n", name)
 		}
 		args = args[2:]
 		if len(args) == 0 {
@@ -650,7 +683,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			r.setVarString("OPTIND", strconv.FormatInt(int64(r.optState.argidx+1), 10))
 		}
 
-		return oneIf(done)
+		exit.oneIf(done)
 
 	case "shopt":
 		mode := ""
@@ -665,8 +698,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			case "-p", "-q":
 				panic(fmt.Sprintf("unhandled shopt flag: %s", flag))
 			default:
-				r.errf("shopt: invalid option %q\n", flag)
-				return 2
+				return failf(2, "shopt: invalid option %q\n", flag)
 			}
 		}
 		args := fp.args()
@@ -686,8 +718,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		for _, arg := range args {
 			i, opt := r.optByName(arg, bash)
 			if opt == nil {
-				r.errf("shopt: invalid option name %q\n", arg)
-				return 1
+				return failf(1, "shopt: invalid option name %q\n", arg)
 			}
 
 			var (
@@ -702,8 +733,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			switch mode {
 			case "-s", "-u":
 				if bash && !supported {
-					r.errf("shopt: invalid option name %q %q (%q not supported)\n", arg, r.optStatusText(bo.defaultState), r.optStatusText(!bo.defaultState))
-					return 1
+					return failf(1, "shopt: invalid option name %q %q (%q not supported)\n", arg, r.optStatusText(bo.defaultState), r.optStatusText(!bo.defaultState))
 				}
 				*opt = mode == "-s"
 			default: // ""
@@ -732,9 +762,10 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				show(name, als)
 			}
 		}
-		for _, name := range args {
-			i := strings.IndexByte(name, '=')
-			if i < 1 { // don't save an empty name
+	argsLoop:
+		for _, arg := range args {
+			name, src, ok := strings.Cut(arg, "=")
+			if !ok {
 				als, ok := r.alias[name]
 				if !ok {
 					r.errf("alias: %q not found\n", name)
@@ -747,16 +778,14 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			// TODO: parse any CallExpr perhaps, or even any Stmt
 			parser := syntax.NewParser()
 			var words []*syntax.Word
-			src := name[i+1:]
-			if err := parser.Words(strings.NewReader(src), func(w *syntax.Word) bool {
+			for w, err := range parser.WordsSeq(strings.NewReader(src)) {
+				if err != nil {
+					r.errf("alias: could not parse %q: %v\n", src, err)
+					continue argsLoop
+				}
 				words = append(words, w)
-				return true
-			}); err != nil {
-				r.errf("alias: could not parse %q: %v\n", src, err)
-				continue
 			}
 
-			name = name[:i]
 			if r.alias == nil {
 				r.alias = make(map[string]alias)
 			}
@@ -776,14 +805,14 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 		for fp.more() {
 			switch flag := fp.flag(); flag {
 			case "-l", "-p":
-				r.errf("trap: %q: NOT IMPLEMENTED flag\n", flag)
-				return 2
+				return failf(2, "trap: %q: NOT IMPLEMENTED flag\n", flag)
 			case "-":
 				// default signal
 			default:
 				r.errf("trap: %q: invalid option\n", flag)
 				r.errf("trap: usage: trap [-lp] [[arg] signal_spec ...]\n")
-				return 2
+				exit.code = 2
+				return exit
 			}
 		}
 		args := fp.args()
@@ -814,8 +843,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			case "EXIT":
 				r.callbackExit = callback
 			default:
-				r.errf("trap: %s: invalid signal specification\n", arg)
-				return 2
+				return failf(2, "trap: %s: invalid signal specification\n", arg)
 			}
 		}
 
@@ -830,8 +858,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 				dropDelim = true
 			case "-d":
 				if len(fp.remaining) == 0 {
-					r.errf("%s: -d: option requires an argument\n", name)
-					return 2
+					return failf(2, "%s: -d: option requires an argument\n", name)
 				}
 				delim = fp.value()
 				if delim == "" {
@@ -840,8 +867,7 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 					delim = "\x00"
 				}
 			default:
-				r.errf("%s: invalid option %q\n", name, flag)
-				return 2
+				return failf(2, "%s: invalid option %q\n", name, flag)
 			}
 		}
 
@@ -852,13 +878,11 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			arrayName = "MAPFILE"
 		case 1:
 			if !syntax.ValidName(args[0]) {
-				r.errf("%s: invalid identifier %q\n", name, args[0])
-				return 2
+				return failf(2, "%s: invalid identifier %q\n", name, args[0])
 			}
 			arrayName = args[0]
 		default:
-			r.errf("%s: Only one array name may be specified, %v\n", name, args)
-			return 2
+			return failf(2, "%s: Only one array name may be specified, %v\n", name, args)
 		}
 
 		var vr expand.Variable
@@ -869,24 +893,20 @@ func (r *Runner) builtinCode(ctx context.Context, pos syntax.Pos, name string, a
 			vr.List = append(vr.List, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			r.errf("%s: unable to read, %v\n", name, err)
-			return 2
+			return failf(2, "%s: unable to read, %v\n", name, err)
 		}
-		r.setVarInternal(arrayName, vr)
-
-		return 0
+		r.setVar(arrayName, vr)
 
 	default:
 		// "umask", "fg", "bg",
-		r.errf("%s: unimplemented builtin\n", name)
-		return 2
+		return failf(2, "%s: unimplemented builtin\n", name)
 	}
-	return 0
+	return exit
 }
 
 // mapfileSplit returns a suitable Split function for a [bufio.Scanner];
 // the code is mostly stolen from [bufio.ScanLines].
-func mapfileSplit(delim byte, dropDelim bool) func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func mapfileSplit(delim byte, dropDelim bool) bufio.SplitFunc {
 	return func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 		if atEOF && len(data) == 0 {
 			return 0, nil, nil
@@ -917,7 +937,7 @@ func (r *Runner) printOptLine(name string, enabled, supported bool) {
 	r.outf("%s\t%s\t(%q not supported)\n", name, state, r.optStatusText(!enabled))
 }
 
-func (r *Runner) readLine(raw bool) ([]byte, error) {
+func (r *Runner) readLine(ctx context.Context, raw bool) ([]byte, error) {
 	if r.stdin == nil {
 		return nil, errors.New("interp: can't read, there's no stdin")
 	}
@@ -925,6 +945,19 @@ func (r *Runner) readLine(raw bool) ([]byte, error) {
 	var line []byte
 	esc := false
 
+	stopc := make(chan struct{})
+	stop := context.AfterFunc(ctx, func() {
+		r.stdin.SetReadDeadline(time.Now())
+		close(stopc)
+	})
+	defer func() {
+		if !stop() {
+			// The AfterFunc was started.
+			// Wait for it to complete, and reset the file's deadline.
+			<-stopc
+			r.stdin.SetReadDeadline(time.Time{})
+		}
+	}()
 	for {
 		var buf [1]byte
 		n, err := r.stdin.Read(buf[:])
@@ -945,25 +978,20 @@ func (r *Runner) readLine(raw bool) ([]byte, error) {
 				esc = false
 			}
 		}
-		if err == io.EOF && len(line) > 0 {
-			return line, nil
-		}
 		if err != nil {
-			return nil, err
+			return line, err
 		}
 	}
 }
 
-func (r *Runner) changeDir(ctx context.Context, path string) int {
-	if path == "" {
-		path = "."
-	}
+func (r *Runner) changeDir(ctx context.Context, path string) uint8 {
+	path = cmp.Or(path, ".")
 	path = r.absPath(path)
 	info, err := r.stat(ctx, path)
 	if err != nil || !info.IsDir() {
 		return 1
 	}
-	if !hasPermissionToDir(path) {
+	if r.access(ctx, path, access_X_OK) != nil {
 		return 1
 	}
 	r.Dir = path

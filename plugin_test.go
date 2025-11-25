@@ -395,3 +395,79 @@ func TestPluginRegistry_Destroy(t *testing.T) {
 	a.True(loader.stopCalled)
 	a.False(registry.HasNamespace("test-namespace"))
 }
+
+func TestNewBasePlugin(t *testing.T) {
+	a := require.New(t)
+
+	plugin := NewBasePlugin("test-plugin", "test-kind")
+
+	a.Equal("test-plugin", plugin.Name())
+	a.Equal(PluginKind("test-kind"), plugin.Kind())
+	a.False(plugin.IsStarted())
+}
+
+func TestBasePlugin_StartAndStop(t *testing.T) {
+	a := require.New(t)
+
+	plugin := NewBasePlugin("test-plugin", "test-kind")
+	logger := NewDiscardLogger()
+
+	// Initially not started
+	a.False(plugin.IsStarted())
+
+	// Start the plugin
+	plugin.Start(logger)
+	a.True(plugin.IsStarted())
+
+	// Start again - should be idempotent
+	plugin.Start(logger)
+	a.True(plugin.IsStarted())
+
+	// Stop the plugin
+	plugin.Stop(logger)
+	a.False(plugin.IsStarted())
+
+	// Stop again - should be idempotent
+	plugin.Stop(logger)
+	a.False(plugin.IsStarted())
+}
+
+func TestBasePlugin_Version(t *testing.T) {
+	a := require.New(t)
+
+	plugin := NewBasePlugin("test-plugin", "test-kind")
+
+	major, minor := plugin.Version()
+	a.Equal(1, major)
+	a.Equal(0, minor)
+}
+
+func TestBasePlugin_ConcurrentAccess(t *testing.T) {
+	a := require.New(t)
+
+	plugin := NewBasePlugin("test-plugin", "test-kind")
+	logger := NewDiscardLogger()
+
+	// Test concurrent start/stop
+	done := make(chan bool, 10)
+
+	for i := 0; i < 5; i++ {
+		go func() {
+			plugin.Start(logger)
+			done <- true
+		}()
+		go func() {
+			plugin.Stop(logger)
+			done <- true
+		}()
+	}
+
+	// Wait for all goroutines
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+
+	// Should not panic and state should be consistent
+	_ = plugin.IsStarted()
+	a.True(true) // If we reach here, concurrent access worked
+}

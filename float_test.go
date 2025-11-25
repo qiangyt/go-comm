@@ -50,6 +50,17 @@ func TestFloat(t *testing.T) {
 	a.Error(err)
 }
 
+func TestFloatP_direct(t *testing.T) {
+	a := require.New(t)
+
+	// Test successful conversion
+	result := FloatP("test", 3.14)
+	a.Equal(3.14, result)
+
+	// Test panic on invalid type
+	a.Panics(func() { FloatP("test", "not a float") })
+}
+
 func TestFloat_parsingError(t *testing.T) {
 	a := require.New(t)
 

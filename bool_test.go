@@ -58,6 +58,20 @@ func TestBool(t *testing.T) {
 	a.Error(err)
 }
 
+func TestBoolP_direct(t *testing.T) {
+	a := require.New(t)
+
+	// Test successful conversion
+	result := BoolP("test", true)
+	a.True(result)
+
+	result = BoolP("test", false)
+	a.False(result)
+
+	// Test panic on invalid type
+	a.Panics(func() { BoolP("test", "not a bool") })
+}
+
 func TestBool_parsingError(t *testing.T) {
 	a := require.New(t)
 

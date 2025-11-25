@@ -179,6 +179,35 @@ func TestTf(t *testing.T) {
 	a.Contains(msg, "5")
 }
 
+func TestTf_withNilLocalizer(t *testing.T) {
+	a := require.New(t)
+
+	// Temporarily set localizer to nil to test fallback
+	mutex.Lock()
+	savedLocalizer := localizer
+	localizer = nil
+	mutex.Unlock()
+
+	// Should use fmt.Sprintf directly
+	msg := Tf("Count: %d", 42)
+	a.Contains(msg, "42")
+
+	// Restore localizer
+	mutex.Lock()
+	localizer = savedLocalizer
+	mutex.Unlock()
+}
+
+func TestTf_nonExistentMessage(t *testing.T) {
+	a := require.New(t)
+
+	InitI18n("en")
+
+	// Test with non-existent message ID, should fallback to format string
+	msg := Tf("nonexistent.message.%s", "test")
+	a.Contains(msg, "test")
+}
+
 func TestLocalizeError(t *testing.T) {
 	a := require.New(t)
 

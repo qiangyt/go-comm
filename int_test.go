@@ -50,6 +50,17 @@ func TestInt(t *testing.T) {
 	a.Error(err)
 }
 
+func TestIntP_direct(t *testing.T) {
+	a := require.New(t)
+
+	// Test successful conversion
+	result := IntP("test", 42)
+	a.Equal(42, result)
+
+	// Test panic on invalid type
+	a.Panics(func() { IntP("test", "not an int") })
+}
+
 func TestInt_parsingError(t *testing.T) {
 	a := require.New(t)
 

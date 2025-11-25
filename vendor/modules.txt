@@ -1,3 +1,6 @@
+# dario.cat/mergo v1.0.2
+## explicit; go 1.13
+dario.cat/mergo
 # github.com/BurntSushi/toml v1.5.0
 ## explicit; go 1.18
 github.com/BurntSushi/toml
@@ -5,21 +8,21 @@ github.com/BurntSushi/toml/internal
 # github.com/Masterminds/goutils v1.1.1
 ## explicit
 github.com/Masterminds/goutils
-# github.com/Masterminds/semver/v3 v3.2.1
-## explicit; go 1.18
+# github.com/Masterminds/semver/v3 v3.4.0
+## explicit; go 1.21
 github.com/Masterminds/semver/v3
-# github.com/Masterminds/sprig/v3 v3.2.3
-## explicit; go 1.13
+# github.com/Masterminds/sprig/v3 v3.3.0
+## explicit; go 1.21
 github.com/Masterminds/sprig/v3
-# github.com/a8m/envsubst v1.4.2
-## explicit; go 1.17
+# github.com/a8m/envsubst v1.4.3
+## explicit; go 1.24
 github.com/a8m/envsubst/parse
 # github.com/akavel/rsrc v0.10.2
 ## explicit; go 1.12
 github.com/akavel/rsrc/binutil
 github.com/akavel/rsrc/coff
 github.com/akavel/rsrc/ico
-# github.com/aws/aws-sdk-go v1.51.13
+# github.com/aws/aws-sdk-go v1.55.8
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -77,8 +80,8 @@ github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f
-## explicit
+# github.com/dchest/jsmin v1.0.0
+## explicit; go 1.23.1
 github.com/dchest/jsmin
 # github.com/divideandconquer/go-merge v0.0.0-20160829212531-bc6b3a394b4e
 ## explicit
@@ -89,12 +92,15 @@ github.com/emirpasic/gods/containers
 github.com/emirpasic/gods/sets
 github.com/emirpasic/gods/sets/hashset
 github.com/emirpasic/gods/utils
-# github.com/gabriel-vasile/mimetype v1.4.3
-## explicit; go 1.20
+# github.com/gabriel-vasile/mimetype v1.4.11
+## explicit; go 1.21
 github.com/gabriel-vasile/mimetype
 github.com/gabriel-vasile/mimetype/internal/charset
+github.com/gabriel-vasile/mimetype/internal/csv
 github.com/gabriel-vasile/mimetype/internal/json
 github.com/gabriel-vasile/mimetype/internal/magic
+github.com/gabriel-vasile/mimetype/internal/markup
+github.com/gabriel-vasile/mimetype/internal/scan
 # github.com/go-playground/locales v0.14.1
 ## explicit; go 1.17
 github.com/go-playground/locales
@@ -102,8 +108,8 @@ github.com/go-playground/locales/currency
 # github.com/go-playground/universal-translator v0.18.1
 ## explicit; go 1.18
 github.com/go-playground/universal-translator
-# github.com/go-playground/validator/v10 v10.19.0
-## explicit; go 1.18
+# github.com/go-playground/validator/v10 v10.28.0
+## explicit; go 1.24.0
 github.com/go-playground/validator/v10
 # github.com/golang/mock v1.6.0
 ## explicit; go 1.11
@@ -120,7 +126,7 @@ github.com/goodsru/go-universal-network-adapter/services/downloader/sftp
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
-# github.com/huandu/xstrings v1.4.0
+# github.com/huandu/xstrings v1.5.0
 ## explicit; go 1.12
 github.com/huandu/xstrings
 # github.com/iancoleman/orderedmap v0.3.0
@@ -128,12 +134,11 @@ github.com/huandu/xstrings
 github.com/iancoleman/orderedmap
 # github.com/imdario/mergo v0.3.16
 ## explicit; go 1.13
-github.com/imdario/mergo
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14
 github.com/jmespath/go-jmespath
-# github.com/josephspurrier/goversioninfo v1.4.1
-## explicit; go 1.12
+# github.com/josephspurrier/goversioninfo v1.5.0
+## explicit; go 1.18
 github.com/josephspurrier/goversioninfo
 # github.com/kr/fs v0.1.0
 ## explicit
@@ -154,7 +159,7 @@ github.com/mitchellh/mapstructure
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
-# github.com/ncruces/zenity v0.10.12
+# github.com/ncruces/zenity v0.10.14
 ## explicit; go 1.20
 github.com/ncruces/zenity
 github.com/ncruces/zenity/internal/win
@@ -165,21 +170,22 @@ github.com/nicksnyder/go-i18n/v2/i18n
 github.com/nicksnyder/go-i18n/v2/i18n/template
 github.com/nicksnyder/go-i18n/v2/internal
 github.com/nicksnyder/go-i18n/v2/internal/plural
-# github.com/phuslu/log v1.0.89
+# github.com/phuslu/log v1.0.120
 ## explicit; go 1.18
 github.com/phuslu/log
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/pkg/sftp v1.13.6
-## explicit; go 1.15
+# github.com/pkg/sftp v1.13.10
+## explicit; go 1.23.0
 github.com/pkg/sftp
 github.com/pkg/sftp/internal/encoding/ssh/filexfer
+github.com/pkg/sftp/internal/encoding/ssh/filexfer/openssh
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/qiangyt/go-event v1.1.0
-## explicit; go 1.21
+# github.com/qiangyt/go-event v1.1.1
+## explicit; go 1.25
 github.com/qiangyt/go-event
 github.com/qiangyt/go-event/loggers/phuslu
 # github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844
@@ -188,23 +194,25 @@ github.com/randall77/makefat
 # github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 ## explicit
 github.com/secsy/goftp
-# github.com/shopspring/decimal v1.3.1
-## explicit; go 1.13
+# github.com/shopspring/decimal v1.4.0
+## explicit; go 1.10
 github.com/shopspring/decimal
-# github.com/spf13/afero v1.11.0
-## explicit; go 1.19
+# github.com/spf13/afero v1.15.0
+## explicit; go 1.23.0
 github.com/spf13/afero
 github.com/spf13/afero/internal/common
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.6.0
-## explicit; go 1.19
+# github.com/spf13/cast v1.10.0
+## explicit; go 1.21.0
 github.com/spf13/cast
-# github.com/stretchr/objx v0.5.2
+github.com/spf13/cast/internal
+# github.com/stretchr/objx v0.5.3
 ## explicit; go 1.20
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.9.0
+# github.com/stretchr/testify v1.11.1
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
+github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
 # github.com/tiaotiao/mapstruct v0.0.0-20170819235540-950894f801ed
@@ -219,13 +227,12 @@ github.com/traefik/yaegi/stdlib/generic
 # go.uber.org/atomic v1.11.0
 ## explicit; go 1.18
 go.uber.org/atomic
-# golang.org/x/crypto v0.21.0
-## explicit; go 1.18
+# golang.org/x/crypto v0.45.0
+## explicit; go 1.24.0
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/curve25519
-golang.org/x/crypto/curve25519/internal/field
 golang.org/x/crypto/internal/alias
 golang.org/x/crypto/internal/poly1305
 golang.org/x/crypto/pbkdf2
@@ -233,24 +240,21 @@ golang.org/x/crypto/scrypt
 golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/image v0.15.0
-## explicit; go 1.18
+# golang.org/x/image v0.33.0
+## explicit; go 1.24.0
 golang.org/x/image/colornames
-# golang.org/x/net v0.22.0
-## explicit; go 1.18
-golang.org/x/net/html
-golang.org/x/net/html/atom
+# golang.org/x/net v0.47.0
+## explicit; go 1.24.0
 # golang.org/x/sync v0.18.0
 ## explicit; go 1.24.0
-golang.org/x/sync/errgroup
-# golang.org/x/sys v0.18.0
-## explicit; go 1.18
+# golang.org/x/sys v0.38.0
+## explicit; go 1.24.0
 golang.org/x/sys/cpu
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.18.0
-## explicit; go 1.18
+# golang.org/x/term v0.37.0
+## explicit; go 1.24.0
 golang.org/x/term
 # golang.org/x/text v0.31.0
 ## explicit; go 1.24.0
@@ -267,8 +271,8 @@ gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# mvdan.cc/sh/v3 v3.8.0
-## explicit; go 1.21
+# mvdan.cc/sh/v3 v3.12.0
+## explicit; go 1.23.0
 mvdan.cc/sh/v3/expand
 mvdan.cc/sh/v3/fileutil
 mvdan.cc/sh/v3/interp

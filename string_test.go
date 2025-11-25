@@ -269,3 +269,51 @@ func TestRequiredString_I18nError(t *testing.T) {
 	a.Contains(err.Error(), "必需")
 }
 
+// TestIsAsciiSpace tests IsAsciiSpace function
+func TestIsAsciiSpace(t *testing.T) {
+	a := require.New(t)
+
+	// Test space character
+	a.True(IsAsciiSpace(' '))
+
+	// Test tab character
+	a.True(IsAsciiSpace('\t'))
+
+	// Test newline character
+	a.True(IsAsciiSpace('\n'))
+
+	// Test carriage return
+	a.True(IsAsciiSpace('\r'))
+
+	// Test non-space characters
+	a.False(IsAsciiSpace('a'))
+	a.False(IsAsciiSpace('1'))
+	a.False(IsAsciiSpace('.'))
+}
+
+// TestAnyArrayToStringArray tests AnyArrayToStringArray function
+func TestAnyArrayToStringArray(t *testing.T) {
+	a := require.New(t)
+
+	anyArray := []any{"a", "b", "c"}
+	result := AnyArrayToStringArray(anyArray)
+	a.Equal([]string{"a", "b", "c"}, result)
+
+	// Empty array
+	result = AnyArrayToStringArray([]any{})
+	a.Equal([]string{}, result)
+}
+
+// TestStringArrayToAnyArray tests StringArrayToAnyArray function
+func TestStringArrayToAnyArray(t *testing.T) {
+	a := require.New(t)
+
+	strArray := []string{"x", "y", "z"}
+	result := StringArrayToAnyArray(strArray)
+	a.Equal([]any{"x", "y", "z"}, result)
+
+	// Empty array
+	result = StringArrayToAnyArray([]string{})
+	a.Equal([]any{}, result)
+}
+
