@@ -433,3 +433,24 @@ func TestReadFileLines_error(t *testing.T) {
 	_, err := ReadFileLines(fs, "/nonexistent.txt")
 	a.Error(err)
 }
+
+func TestDefaultEtcHosts(t *testing.T) {
+	a := require.New(t)
+
+	path, err := DefaultEtcHosts()
+	a.NoError(err)
+	a.NotEmpty(path)
+
+	// Check path contains "hosts"
+	a.Contains(path, "hosts")
+
+	t.Logf("Default hosts file: %s", path)
+}
+
+func TestDefaultEtcHostsP(t *testing.T) {
+	a := require.New(t)
+
+	path := DefaultEtcHostsP()
+	a.NotEmpty(path)
+	a.Contains(path, "hosts")
+}

@@ -76,6 +76,14 @@ func TestBroadcastInterfaces(t *testing.T) {
 	t.Logf("Found %d broadcast-capable interfaces", len(interfaces))
 }
 
+func TestBroadcastInterfacesP(t *testing.T) {
+	a := require.New(t)
+
+	// Test the panic version
+	interfaces := BroadcastInterfacesP(true)
+	a.NotNil(interfaces)
+}
+
 func TestBroadcastIpWithInterface(t *testing.T) {
 	a := require.New(t)
 
@@ -140,3 +148,65 @@ func TestHostnameP(t *testing.T) {
 	a.NotEmpty(hostname)
 }
 
+
+func TestBroadcastIpWithInterface_NoValidAddress(t *testing.T) {
+	a := require.New(t)
+
+	// We need to test this with real interfaces
+	interfaces, err := BroadcastInterfaces(false)
+	a.NoError(err)
+
+	for _, iface := range interfaces {
+		// Try loopback interface which should work differently
+		if iface.Name == "lo" {
+			broadcastIP, err := BroadcastIpWithInterface(iface)
+			// Loopback might not return a broadcast IP
+			if err == nil {
+				t.Logf("Loopback broadcast IP: %v", broadcastIP)
+			}
+			return
+		}
+	}
+
+	t.Skip("No loopback interface found")
+}
+
+func TestResolveBroadcastIpP_PanicOnError(t *testing.T) {
+	// Test panic on error with non-existent interface
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("ResolveBroadcastIpP should panic on error")
+		}
+	}()
+
+	interfaces, _ := BroadcastInterfaces(false)
+	ResolveBroadcastIpP(interfaces, "nonexistent-interface-xyz")
+}
+
+func TestResolveBroadcastIpP_Happy(t *testing.T) {
+	a := require.New(t)
+
+	interfaces, err := BroadcastInterfaces(false)
+	a.NoError(err)
+
+	// Try to find a valid interface
+	for _, iface := range interfaces {
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		localIP, broadcastIP, err := ResolveBroadcastIp(interfaces, iface.Name)
+		if err == nil {
+			a.NotNil(localIP)
+			a.NotNil(broadcastIP)
+
+			// Test the panic version with valid data
+			localIP2, broadcastIP2 := ResolveBroadcastIpP(interfaces, iface.Name)
+			a.Equal(localIP.String(), localIP2.String())
+			a.Equal(broadcastIP.String(), broadcastIP2.String())
+			return
+		}
+	}
+
+	t.Skip("No valid network interface found")
+}

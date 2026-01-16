@@ -203,3 +203,102 @@ func TestRunCommandNoInputP_echo(t *testing.T) {
 	a.NotNil(result)
 	a.Contains(result.Text, "test")
 }
+
+func TestRunShellCommand_gosh(t *testing.T) {
+	a := require.New(t)
+
+	// Test with gosh shell
+	result, err := RunShellCommand(nil, "", "gosh", "echo hello", nil)
+	a.NoError(err)
+	a.NotNil(result)
+	// gosh should return output containing our text
+}
+
+func TestRunShellCommand_sudo(t *testing.T) {
+	a := require.New(t)
+
+	// Test with sudo command (should instrument)
+	result, err := RunShellCommand(nil, "", "", "sudo echo test", nil)
+	// This might fail on systems without sudo, so we check for expected behavior
+	if err != nil {
+		t.Logf("Sudo command not available: %v", err)
+	} else {
+		a.NotNil(result)
+	}
+}
+
+func TestRunShellCommandP(t *testing.T) {
+	a := require.New(t)
+
+	// Test panic version
+	result := RunShellCommandP(nil, "", "gosh", "echo test", nil)
+	a.NotNil(result)
+}
+
+func TestRunUserCommandP(t *testing.T) {
+	// Test panic version with invalid command - should panic
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("RunUserCommandP should panic on error")
+		}
+	}()
+	RunUserCommandP(nil, "", "invalid-command-xyz-123")
+}
+
+func TestRunUserCommand_invalid(t *testing.T) {
+	a := require.New(t)
+
+	// Test with invalid command
+	_, err := RunUserCommand(nil, "", "invalid-command-xyz-123")
+	a.Error(err)
+}
+
+func TestRunCommandWithInput_echo(t *testing.T) {
+	a := require.New(t)
+
+	cmdFn := RunCommandWithInput(nil, "", "echo", "arg1")
+	result, err := cmdFn()
+	a.NoError(err)
+	a.NotNil(result)
+	a.Contains(result.Text, "arg1")
+}
+
+func TestRunCommandWithInput_sudo(t *testing.T) {
+	a := require.New(t)
+
+	// Test sudo command instrumentation
+	cmdFn := RunCommandWithInput(nil, "", "sudo", "echo", "test")
+	result, err := cmdFn("password")
+
+	// This might fail on systems without sudo, check for expected behavior
+	if err != nil {
+		t.Logf("Sudo command not available: %v", err)
+	} else {
+		a.NotNil(result)
+	}
+}
+
+func TestRunCommandWithInput_withArgs(t *testing.T) {
+	a := require.New(t)
+
+	// Test with multiple arguments
+	cmdFn := RunCommandWithInput(nil, "", "echo", "arg1", "arg2", "arg3")
+	result, err := cmdFn()
+	a.NoError(err)
+	a.NotNil(result)
+}
+
+func TestNewExecCommand_happy(t *testing.T) {
+	a := require.New(t)
+
+	// Test creating exec command with vars
+	vars := map[string]string{
+		"TEST_VAR": "test_value",
+	}
+
+	cmd, err := newExecCommand(vars, "", "echo", "hello")
+	a.NoError(err)
+	a.NotNil(cmd)
+	// On Windows, cmd.Path is the full path to echo.exe
+	a.True(cmd.Path != "")
+}

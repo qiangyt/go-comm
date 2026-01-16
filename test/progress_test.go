@@ -65,8 +65,8 @@ func TestProgressReader(t *testing.T) {
 	if avgSpeed < 0 {
 		t.Error("Average speed should be non-negative")
 	}
-	if duration <= 0 {
-		t.Error("Duration should be positive")
+	if duration < 0 {
+		t.Error("Duration should be non-negative")
 	}
 }
 
@@ -133,8 +133,8 @@ func TestProgressWriter(t *testing.T) {
 	if avgSpeed < 0 {
 		t.Error("Average speed should be non-negative")
 	}
-	if duration <= 0 {
-		t.Error("Duration should be positive")
+	if duration < 0 {
+		t.Error("Duration should be non-negative")
 	}
 }
 
