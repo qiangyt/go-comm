@@ -12,3 +12,5 @@
 *.out
 /coverage.html
 /.task/
+
+debug.log
