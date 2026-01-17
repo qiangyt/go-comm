@@ -3,7 +3,13 @@
     "allow": [
       "Bash(go test:*)",
       "Bash(cat:*)",
-      "Bash(go tool cover:*)"
+      "Bash(go tool cover:*)",
+      "Bash(export GOPROXY=https://goproxy.cn,direct:*)",
+      "Bash(export:*)",
+      "Bash(go get:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go build:*)",
+      "Bash(go mod vendor:*)"
     ]
   }
 }

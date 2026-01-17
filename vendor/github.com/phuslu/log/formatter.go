@@ -50,7 +50,7 @@ func formatterArgsPos(key string) (pos int) {
 		pos = 5
 	case "stack":
 		pos = 6
-	case "message", "msg":
+	case "message", "msg", "_msg", MessageKey:
 		pos = 7
 	}
 	return
