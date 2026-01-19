@@ -19,39 +19,57 @@ var (
 	bundle    *i18n.Bundle
 	localizer *i18n.Localizer
 	mutex     sync.RWMutex
+	currLang  string // 当前语言代码
 )
 
+// 支持的语言标签映射
+var langTags = map[string]language.Tag{
+	"zh": language.SimplifiedChinese, // 中文
+	"en": language.English,            // 英语
+	"ru": language.Russian,            // 俄语
+	"fr": language.French,             // 法语
+	"es": language.Spanish,            // 西班牙语
+	"it": language.Italian,            // 意大利语
+	"de": language.German,             // 德语
+	"hu": language.Hungarian,          // 匈牙利语
+	"ko": language.Korean,             // 韩语
+	"ja": language.Japanese,           // 日语
+	"vi": language.Vietnamese,         // 越南语
+	"th": language.Thai,               // 泰语
+	"id": language.Indonesian,         // 印尼语
+}
+
+// 默认语言（英语）
+const defaultLang = "en"
+
 func init() {
-	// Initialize with English as default language
-	InitI18n("en")
+	// Initialize with detected language
+	InitI18n(DetectLanguage())
 }
 
 // InitI18n initializes the i18n system with the specified language.
-// Supported languages: "en" (English), "zh" (Chinese).
+// Supported languages: zh, en, ru, fr, es, it, de, hu, ko, ja, vi, th, id
 // If an unsupported language is provided, it defaults to "en".
 func InitI18n(lang string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// Validate language
-	var defaultLang language.Tag
-	switch lang {
-	case "zh", "zh-CN", "zh-Hans":
-		defaultLang = language.Chinese
-	case "en", "en-US":
-		defaultLang = language.English
-	default:
-		defaultLang = language.English
+	// 如果语言不支持，默认使用英语
+	if _, ok := langTags[lang]; !ok {
+		lang = "en"
 	}
 
-	bundle = i18n.NewBundle(defaultLang)
+	currLang = lang
+
+	// 使用英语作为基础语言创建 bundle（这样所有语言的翻译都可以被加载）
+	bundle = i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 
 	// Load embedded locale files
 	loadEmbeddedLocales()
 
-	// Create localizer
-	localizer = i18n.NewLocalizer(bundle, lang)
+	// Create localizer with fallback to English
+	localizer = i18n.NewLocalizer(bundle, lang, "en")
 }
 
 // SetLanguage changes the current language for i18n.
@@ -59,32 +77,70 @@ func SetLanguage(lang string) {
 	InitI18n(lang)
 }
 
-// GetLanguage returns the current language setting from environment variable or default.
-func GetLanguage() string {
-	lang := os.Getenv("LANG")
+// DetectLanguage detects the user's language from environment variables or default.
+// 检测顺序: LANGUAGE 环境变量 > LANG 环境变量 > 默认英语
+func DetectLanguage() string {
+	lang := os.Getenv("LANGUAGE")
 	if lang == "" {
-		lang = os.Getenv("LANGUAGE")
+		lang = os.Getenv("LANG")
 	}
 	if lang == "" {
-		return "en"
+		return defaultLang
 	}
 
 	// Parse language code (e.g., "zh_CN.UTF-8" -> "zh")
 	if len(lang) >= 2 {
-		return lang[:2]
+		code := lang[:2]
+		// 检查是否支持该语言
+		if _, ok := langTags[code]; ok {
+			return code
+		}
 	}
-	return "en"
+	return defaultLang
+}
+
+// GetLanguageTag returns the language.Tag for the given language code.
+// If the language is not supported, returns English tag.
+func GetLanguageTag(lang string) language.Tag {
+	if tag, ok := langTags[lang]; ok {
+		return tag
+	}
+	return language.English
+}
+
+// GetLanguage returns the current language code
+func GetLanguage() string {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	if currLang == "" {
+		return defaultLang
+	}
+	return currLang
 }
 
 func loadEmbeddedLocales() {
-	// Load English translations
-	if data, err := localesFS.ReadFile("locales/active.en.toml"); err == nil {
-		bundle.MustParseMessageFileBytes(data, "active.en.toml")
+	// 加载所有语言的翻译文件
+	langFiles := []string{
+		"locales/active.zh.toml",
+		"locales/active.en.toml",
+		"locales/active.ru.toml",
+		"locales/active.fr.toml",
+		"locales/active.es.toml",
+		"locales/active.it.toml",
+		"locales/active.de.toml",
+		"locales/active.hu.toml",
+		"locales/active.ko.toml",
+		"locales/active.ja.toml",
+		"locales/active.vi.toml",
+		"locales/active.th.toml",
+		"locales/active.id.toml",
 	}
 
-	// Load Chinese translations
-	if data, err := localesFS.ReadFile("locales/active.zh.toml"); err == nil {
-		bundle.MustParseMessageFileBytes(data, "active.zh.toml")
+	for _, file := range langFiles {
+		if data, err := localesFS.ReadFile(file); err == nil {
+			bundle.MustParseMessageFileBytes(data, file)
+		}
 	}
 }
 
