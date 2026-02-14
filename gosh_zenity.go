@@ -3,96 +3,67 @@ package comm
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/ncruces/zenity"
 	"mvdan.cc/sh/v3/interp"
 )
 
-func GoshExecHandler(killTimeout time.Duration) interp.ExecHandlerFunc {
-	return func(ctx context.Context, args []string) error {
-		cmd := args[0]
-
-		var cmdArgs []string
-		if len(args) > 1 {
-			cmdArgs = args[1:]
-		} else {
-			cmdArgs = []string{}
-		}
-
-		switch cmd {
-		case "zenity":
-			return ExecZenity(ctx, interp.HandlerCtx(ctx), cmdArgs)
-		default:
-			return interp.DefaultExecHandler(killTimeout)(ctx, args)
-		}
+// ExecZenityHandler zenity 命令处理器
+func ExecZenityHandler(ctx context.Context, hc interp.HandlerContext, args []string) error {
+	if len(args) == 0 {
+		fmt.Fprintln(hc.Stdout, "zenity: missing subcommand")
+		return nil
 	}
-}
 
-func ExecZenity(ctx context.Context, hc interp.HandlerContext, args []string) error {
 	subCmd := args[0]
-
-	if len(args) > 1 {
-		args = args[1:]
-	} else {
-		args = []string{}
+	restArgs := args[1:]
+	if len(restArgs) == 0 {
+		restArgs = []string{}
 	}
 
 	switch subCmd {
 	case "--error":
-		return ZenityError(ctx, hc, args)
+		return execZenityError(ctx, hc, restArgs)
 	case "--info":
-		return ZenityInfo(ctx, hc, args)
+		return execZenityInfo(ctx, hc, restArgs)
 	case "--warning":
-		return ZenityWarning(ctx, hc, args)
+		return execZenityWarning(ctx, hc, restArgs)
 	case "--question":
-		return ZenityWarning(ctx, hc, args)
+		return execZenityQuestion(ctx, hc, restArgs)
 	default:
-		fmt.Fprintln(hc.Stdout, "unknown sub command")
+		fmt.Fprintln(hc.Stdout, "zenity: unknown subcommand:", subCmd)
 		return nil
 	}
 }
 
-func ZenityError(ctx context.Context, hc interp.HandlerContext, args []string) error {
-	var text string
+func execZenityError(ctx context.Context, hc interp.HandlerContext, args []string) error {
+	text := ""
 	if len(args) > 0 {
 		text = args[0]
-	} else {
-		text = ""
 	}
-
 	return zenity.Error(text)
 }
 
-func ZenityInfo(ctx context.Context, hc interp.HandlerContext, args []string) error {
-	var text string
+func execZenityInfo(ctx context.Context, hc interp.HandlerContext, args []string) error {
+	text := ""
 	if len(args) > 0 {
 		text = args[0]
-	} else {
-		text = ""
 	}
-
 	return zenity.Info(text)
 }
 
-func ZenityWarning(ctx context.Context, hc interp.HandlerContext, args []string) error {
-	var text string
+func execZenityWarning(ctx context.Context, hc interp.HandlerContext, args []string) error {
+	text := ""
 	if len(args) > 0 {
 		text = args[0]
-	} else {
-		text = ""
 	}
-
 	return zenity.Warning(text)
 }
 
-func ZenityQuestion(ctx context.Context, hc interp.HandlerContext, args []string) error {
-	var text string
+func execZenityQuestion(ctx context.Context, hc interp.HandlerContext, args []string) error {
+	text := ""
 	if len(args) > 0 {
 		text = args[0]
-	} else {
-		text = ""
 	}
-
 	return zenity.Question(text)
 }

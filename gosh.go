@@ -3,16 +3,10 @@ package comm
 import (
 	"context"
 	"io"
-	"os"
 	"strings"
-	"time"
-
-	"github.com/pkg/errors"
-	"mvdan.cc/sh/v3/expand"
-	"mvdan.cc/sh/v3/interp"
-	"mvdan.cc/sh/v3/syntax"
 )
 
+// RunGoshCommandP 执行 shell 命令（失败时 panic）
 func RunGoshCommandP(vars map[string]string, dir string, cmd string, passwordInput FnInput) CommandOutput {
 	r, err := RunGoshCommand(vars, dir, cmd, passwordInput)
 	if err != nil {
@@ -21,6 +15,7 @@ func RunGoshCommandP(vars map[string]string, dir string, cmd string, passwordInp
 	return r
 }
 
+// RunGoshCommand 执行 shell 命令
 func RunGoshCommand(vars map[string]string, dir string, cmd string, passwordInput FnInput) (CommandOutput, error) {
 	var stdin io.Reader
 	if IsSudoCommand(cmd) {
@@ -31,48 +26,17 @@ func RunGoshCommand(vars map[string]string, dir string, cmd string, passwordInpu
 		}
 	}
 
-	sf, err := syntax.NewParser().Parse(strings.NewReader(cmd), "")
-	if err != nil {
-		return nil, errors.Wrapf(err, "parse command: \n%s", cmd)
-	}
+	// 创建默认配置，注册 zenity 处理器
+	config := DefaultGoshConfig().
+		WithGoHandler("zenity", ExecZenityHandler)
+
+	executor := NewGoshExecutor(config)
 
 	out := strings.Builder{}
-
-	envList, err := EnvironList(vars)
+	err := executor.RunWithVars(context.TODO(), vars, dir, cmd, stdin, &out, &out)
 	if err != nil {
 		return nil, err
 	}
-	environ := append(os.Environ(), envList...)
 
-	opts := []interp.RunnerOption{
-		interp.Params("-e"),
-		interp.Env(expand.ListEnviron(environ...)),
-		interp.ExecHandler(GoshExecHandler(6 * time.Second)),
-		interp.OpenHandler(openHandler),
-		interp.StdIO(stdin, &out, &out),
-	}
-	if len(dir) > 0 {
-		opts = append(opts, interp.Dir(dir))
-	}
-
-	var runner *interp.Runner
-	if runner, err = interp.New(opts...); err != nil {
-		return nil, errors.Wrapf(err, "create runner for command: \n%s", cmd)
-	}
-
-	if err = runner.Run(context.TODO(), sf); err != nil {
-		return nil, errors.Wrapf(err, "run command: \n%s", cmd)
-	}
-
-	r, err := ParseCommandOutput(out.String())
-	if err != nil {
-		for vName, v := range runner.Vars {
-			if v.Exported {
-				vv := v.String()
-				r.Vars[vName] = vv
-			}
-		}
-		return nil, err
-	}
-	return r, nil
+	return ParseCommandOutput(out.String())
 }

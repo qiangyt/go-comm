@@ -44,17 +44,20 @@ func TestGetLanguage(t *testing.T) {
 	// Test default language when no env vars
 	os.Unsetenv("LANG")
 	os.Unsetenv("LANGUAGE")
+	InitI18n(DetectLanguage())
 	lang := GetLanguage()
 	a.Equal("en", lang)
 
 	// Test LANG environment variable
 	os.Setenv("LANG", "zh_CN.UTF-8")
+	InitI18n(DetectLanguage())
 	lang = GetLanguage()
 	a.Equal("zh", lang)
 
 	// Test LANGUAGE environment variable
 	os.Unsetenv("LANG")
 	os.Setenv("LANGUAGE", "en_US.UTF-8")
+	InitI18n(DetectLanguage())
 	lang = GetLanguage()
 	a.Equal("en", lang)
 
