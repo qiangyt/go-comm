@@ -37,14 +37,16 @@ func TestGoshConfig_WithBlacklist(t *testing.T) {
 	a := require.New(t)
 
 	config := DefaultGoshConfig().
-		WithBlacklist(NewCommandRule("rm", "-rf")).
+		WithBlacklist(NewCommandRule("rm", MatchExact).WithArgsFilter(
+			ArgMatcher{Position: -1, Pattern: "-rf", Mode: MatchGlob},
+		)).
 		WithBlacklistSimple("dd", "mkfs")
 
 	a.Len(config.Blacklist, 3)
 	a.Equal("rm", config.Blacklist[0].Pattern)
-	a.Equal([]string{"-rf"}, config.Blacklist[0].ArgsFilter)
+	a.Len(config.Blacklist[0].ArgsMatchers, 1)
 	a.Equal("dd", config.Blacklist[1].Pattern)
-	a.Empty(config.Blacklist[1].ArgsFilter)
+	a.Len(config.Blacklist[1].ArgsMatchers, 0)
 }
 
 func TestGoshConfig_WithWhitelist(t *testing.T) {
@@ -108,27 +110,35 @@ func TestMatchPattern_question(t *testing.T) {
 }
 
 // ============================================================
-// Args Matching Tests
+// Args Matching Tests (使用 SecurityChecker 测试)
 // ============================================================
 
 func TestMatchArgs_happy(t *testing.T) {
 	a := require.New(t)
-	e := NewGoshExecutor(nil)
 
-	args := []string{"-rf", "/tmp"}
-	filters := []string{"-rf", "-r*"}
+	checker := NewSecurityChecker().
+		WithBlacklist(NewCommandRule("rm", MatchExact).
+			WithArgsFilter(ArgMatcher{Position: -1, Pattern: "-rf", Mode: MatchGlob}))
 
-	a.True(e.matchArgs(args, filters))
+	cmds := []ExtractedCommand{
+		{Name: "rm", Args: []string{"-rf", "/tmp"}},
+	}
+	err := checker.Check(cmds)
+	a.Error(err) // 应该被阻止
 }
 
 func TestMatchArgs_noMatch(t *testing.T) {
 	a := require.New(t)
-	e := NewGoshExecutor(nil)
 
-	args := []string{"-i", "file.txt"}
-	filters := []string{"-rf", "-f"}
+	checker := NewSecurityChecker().
+		WithBlacklist(NewCommandRule("rm", MatchExact).
+			WithArgsFilter(ArgMatcher{Position: -1, Pattern: "-rf", Mode: MatchGlob}))
 
-	a.False(e.matchArgs(args, filters))
+	cmds := []ExtractedCommand{
+		{Name: "rm", Args: []string{"-i", "file.txt"}},
+	}
+	err := checker.Check(cmds)
+	a.NoError(err) // 不应该被阻止
 }
 
 // ============================================================
@@ -162,7 +172,7 @@ func TestGoshExecutor_Run_blacklistedCommand(t *testing.T) {
 func TestGoshExecutor_Run_blacklistWithWildcard(t *testing.T) {
 	a := require.New(t)
 
-	config := DefaultGoshConfig().WithBlacklist(NewCommandRule("rm*"))
+	config := DefaultGoshConfig().WithBlacklist(NewCommandRule("rm*", MatchGlob))
 	executor := NewGoshExecutor(config)
 
 	var out bytes.Buffer
@@ -180,7 +190,11 @@ func TestGoshExecutor_Run_blacklistWithArgs(t *testing.T) {
 	a := require.New(t)
 
 	// 只阻止 rm -rf，允许普通 rm
-	config := DefaultGoshConfig().WithBlacklist(NewCommandRule("rm", "-rf", "-r"))
+	config := DefaultGoshConfig().WithBlacklist(
+		NewCommandRule("rm", MatchExact).WithArgsFilter(
+			ArgMatcher{Position: -1, Pattern: "-r*", Mode: MatchGlob},
+		),
+	)
 	executor := NewGoshExecutor(config)
 
 	var out bytes.Buffer
@@ -196,7 +210,7 @@ func TestGoshExecutor_Run_blacklistWithArgs(t *testing.T) {
 	a.Contains(err.Error(), "blocked by blacklist")
 
 	// 普通 rm 不应该被黑名单阻止（但因为文件不存在会失败，所以我们用 --help 测试）
-	// 使用 rm --help 来测试命令不被阻止（--help 不匹配 -rf 或 -r*）
+	// 使用 rm --help 来测试命令不被阻止（--help 不匹配 -r*）
 	err = executor.Run(context.Background(), "", "rm --help", nil, &out, &out)
 	// 命令应该执行（不被黑名单阻止），但可能返回非零退出码
 	// 关键是检查错误信息不包含 "blocked by blacklist"

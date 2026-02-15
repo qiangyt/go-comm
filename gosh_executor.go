@@ -74,31 +74,6 @@ import (
 type GoCommandHandler func(ctx context.Context, hc interp.HandlerContext, args []string) error
 
 // ============================================================
-// CommandRule
-// ============================================================
-
-// CommandRuleT 命令规则（支持通配符和参数匹配）
-type CommandRuleT struct {
-	// Pattern 命令模式，支持通配符 (如 "rm*", "curl*")
-	Pattern string
-
-	// ArgsFilter 参数过滤器（可选），支持通配符
-	// 例如: ["-rf", "-r*"] 匹配 rm -rf, rm -r /path
-	// 空切片表示匹配所有参数
-	ArgsFilter []string
-}
-
-type CommandRule = *CommandRuleT
-
-// NewCommandRule 创建命令规则
-func NewCommandRule(pattern string, argsFilter ...string) CommandRule {
-	return &CommandRuleT{
-		Pattern:    pattern,
-		ArgsFilter: argsFilter,
-	}
-}
-
-// ============================================================
 // GoshConfig
 // ============================================================
 
@@ -151,7 +126,7 @@ func (me GoshConfig) WithBlacklist(rules ...CommandRule) GoshConfig {
 // WithBlacklistSimple 设置简单黑名单（仅命令名，精确匹配）
 func (me GoshConfig) WithBlacklistSimple(cmds ...string) GoshConfig {
 	for _, cmd := range cmds {
-		me.Blacklist = append(me.Blacklist, NewCommandRule(cmd))
+		me.Blacklist = append(me.Blacklist, NewCommandRule(cmd, MatchExact))
 	}
 	return me
 }
@@ -171,7 +146,7 @@ func (me GoshConfig) WithWhitelist(rules ...CommandRule) GoshConfig {
 // WithWhitelistSimple 设置简单白名单（仅命令名，精确匹配）
 func (me GoshConfig) WithWhitelistSimple(cmds ...string) GoshConfig {
 	for _, cmd := range cmds {
-		me.Whitelist = append(me.Whitelist, NewCommandRule(cmd))
+		me.Whitelist = append(me.Whitelist, NewCommandRule(cmd, MatchExact))
 	}
 	return me
 }
@@ -284,19 +259,17 @@ func (me GoshExecutor) createExecHandler() interp.ExecHandlerFunc {
 
 // matchesRules 检查命令是否匹配规则列表
 func (me GoshExecutor) matchesRules(cmd string, args []string, rules []CommandRule) (bool, CommandRule) {
+	checker := NewSecurityChecker()
+
 	for _, rule := range rules {
-		// 命令名匹配
-		if !me.matchPattern(rule.Pattern, cmd) {
-			continue
+		// 构造 ExtractedCommand 用于检查
+		extractedCmd := &ExtractedCommandT{
+			Name:   cmd,
+			Args:   args,
+			Source: SourceDirect,
 		}
 
-		// 如果没有参数过滤器，匹配成功
-		if len(rule.ArgsFilter) == 0 {
-			return true, rule
-		}
-
-		// 检查参数是否匹配
-		if me.matchArgs(args, rule.ArgsFilter) {
+		if checker.matchesRule(extractedCmd, rule) {
 			return true, rule
 		}
 	}
@@ -310,15 +283,3 @@ func (me GoshExecutor) matchPattern(pattern, s string) bool {
 	return matched
 }
 
-// matchArgs 检查参数是否匹配过滤条件
-// 只要任意一个参数匹配任意一个 filter 即可
-func (me GoshExecutor) matchArgs(args []string, filters []string) bool {
-	for _, arg := range args {
-		for _, filter := range filters {
-			if me.matchPattern(filter, arg) {
-				return true
-			}
-		}
-	}
-	return false
-}
