@@ -316,4 +316,3 @@ func TestStringArrayToAnyArray(t *testing.T) {
 	result = StringArrayToAnyArray([]string{})
 	a.Equal([]any{}, result)
 }
-

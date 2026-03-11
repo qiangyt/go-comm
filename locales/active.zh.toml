@@ -183,6 +183,14 @@ other = "复制文件失败"
 one = "复制后删除源文件失败"
 other = "复制后删除源文件失败"
 
+[FailedToRemoveLink]
+one = "删除现有链接失败"
+other = "删除现有链接失败"
+
+[FailedToRemoveFile]
+one = "删除文件失败"
+other = "删除文件失败"
+
 [FailedToCreateLinkDir]
 one = "创建链接目录失败"
 other = "创建链接目录失败"

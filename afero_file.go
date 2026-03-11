@@ -23,7 +23,7 @@ type AferoFile = *AferoFileT
 func NewAferoFileP(afs afero.Fs, apath string, credentials Credentials, timeout time.Duration) AferoFile {
 	r, err := NewAferoFile(afs, apath, credentials, timeout)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("create afero file", err))
 	}
 	return r
 }

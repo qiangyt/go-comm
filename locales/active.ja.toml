@@ -183,6 +183,14 @@ other = "ファイルのコピーに失敗しました"
 one = "コピー後のソースファイルの削除に失敗しました"
 other = "コピー後のソースファイルの削除に失敗しました"
 
+[FailedToRemoveLink]
+one = "既存リンクの削除に失敗しました"
+other = "既存リンクの削除に失敗しました"
+
+[FailedToRemoveFile]
+one = "ファイルの削除に失敗しました"
+other = "ファイルの削除に失敗しました"
+
 [FailedToCreateLinkDir]
 one = "リンクディレクトリの作成に失敗しました"
 other = "リンクディレクトリの作成に失敗しました"

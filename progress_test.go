@@ -44,7 +44,6 @@ func TestProgressReader_Read(t *testing.T) {
 
 	buf := make([]byte, 5)
 	n, err := pr.Read(buf)
-
 	if err != nil {
 		t.Fatalf("Read error: %v", err)
 	}
@@ -86,7 +85,7 @@ func TestProgressReader_GetStatistics(t *testing.T) {
 
 	// Read some data
 	buf := make([]byte, 2)
-	pr.Read(buf)
+	_, _ = pr.Read(buf)
 
 	// Give it a moment to ensure duration > 0
 	time.Sleep(1 * time.Millisecond)
@@ -123,7 +122,7 @@ func TestProgressReader_Finish(t *testing.T) {
 
 	// Read all content
 	buf := make([]byte, 10)
-	pr.Read(buf)
+	_, _ = pr.Read(buf)
 
 	// Finish should trigger progress report
 	pr.Finish()
@@ -189,7 +188,6 @@ func TestProgressWriter_Write(t *testing.T) {
 
 	data := []byte("hello world")
 	n, err := pw.Write(data)
-
 	if err != nil {
 		t.Fatalf("Write error: %v", err)
 	}
@@ -212,7 +210,7 @@ func TestProgressWriter_GetStatistics(t *testing.T) {
 
 	// Write some data
 	data := []byte("test")
-	pw.Write(data)
+	_, _ = pw.Write(data)
 
 	// Give it a moment
 	time.Sleep(1 * time.Millisecond)
@@ -247,7 +245,7 @@ func TestProgressWriter_Finish(t *testing.T) {
 	pw := NewProgressWriter(&buf, 10, onProgress)
 
 	// Write some data
-	pw.Write([]byte("test"))
+	_, _ = pw.Write([]byte("test"))
 
 	// Finish should trigger progress report
 	pw.Finish()
@@ -264,7 +262,6 @@ func TestProgressWriter_NilCallback(t *testing.T) {
 
 	data := []byte("test content")
 	n, err := pw.Write(data)
-
 	if err != nil {
 		t.Fatalf("Write error: %v", err)
 	}

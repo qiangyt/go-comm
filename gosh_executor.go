@@ -179,14 +179,15 @@ func NewGoshExecutor(config GoshConfig) GoshExecutor {
 
 // Run 执行命令
 func (me GoshExecutor) Run(ctx context.Context, dir string, cmd string,
-	stdin io.Reader, stdout, stderr io.Writer) error {
+	stdin io.Reader, stdout, stderr io.Writer,
+) error {
 	return me.RunWithVars(ctx, nil, dir, cmd, stdin, stdout, stderr)
 }
 
 // RunWithVars 执行命令（带变量）
 func (me GoshExecutor) RunWithVars(ctx context.Context, vars map[string]string,
-	dir string, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
-
+	dir string, cmd string, stdin io.Reader, stdout, stderr io.Writer,
+) error {
 	// 解析命令
 	sf, err := syntax.NewParser().Parse(strings.NewReader(cmd), "")
 	if err != nil {
@@ -207,7 +208,7 @@ func (me GoshExecutor) RunWithVars(ctx context.Context, vars map[string]string,
 	opts := []interp.RunnerOption{
 		interp.Params("-e"),
 		interp.Env(expand.ListEnviron(environ...)),
-		interp.ExecHandler(me.createExecHandler()),
+		interp.ExecHandler(me.createExecHandler()), //nolint:staticcheck // deprecated but no replacement
 		interp.StdIO(stdin, stdout, stderr),
 	}
 	if dir != "" {
@@ -282,4 +283,3 @@ func (me GoshExecutor) matchPattern(pattern, s string) bool {
 	matched, _ := filepath.Match(pattern, s)
 	return matched
 }
-

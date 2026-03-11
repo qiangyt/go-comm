@@ -104,7 +104,7 @@ func TestMapP(t *testing.T) {
 	input := map[string]any{"key1": "value1", "key2": "value2"}
 	r, err := Map("test", input)
 	a.NoError(err)
-	expected := map[string]interface{}{"key1": "value1", "key2": "value2"}
+	expected := map[string]any{"key1": "value1", "key2": "value2"}
 	a.Equal(expected, r)
 
 	// Test that Map panicesr when the input value is not a map[string]any.
@@ -118,7 +118,7 @@ func TestMap(t *testing.T) {
 	input := map[string]any{"key1": "value1", "key2": "value2"}
 	r, err := Map("test", input)
 	a.NoError(err)
-	expected := map[string]interface{}{"key1": "value1", "key2": "value2"}
+	expected := map[string]any{"key1": "value1", "key2": "value2"}
 	a.Equal(expected, r)
 
 	// Test that Map returns an error when the input value is not a map[string]any.

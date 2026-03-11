@@ -183,6 +183,14 @@ other = "không thể sao chép tệp"
 one = "không thể xóa tệp nguồn sau khi sao chép"
 other = "không thể xóa tệp nguồn sau khi sao chép"
 
+[FailedToRemoveLink]
+one = "không thể xóa liên kết hiện có"
+other = "không thể xóa liên kết hiện có"
+
+[FailedToRemoveFile]
+one = "không thể xóa tệp"
+other = "không thể xóa tệp"
+
 [FailedToCreateLinkDir]
 one = "không thể tạo thư mục liên kết"
 other = "không thể tạo thư mục liên kết"

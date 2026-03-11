@@ -10,7 +10,7 @@ import (
 func RunGoshCommandP(vars map[string]string, dir string, cmd string, passwordInput FnInput) CommandOutput {
 	r, err := RunGoshCommand(vars, dir, cmd, passwordInput)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }

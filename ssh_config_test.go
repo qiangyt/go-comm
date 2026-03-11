@@ -124,7 +124,7 @@ func TestLoadSSHConfig(t *testing.T) {
 	// Create a temporary SSH config file
 	tmpDir := t.TempDir()
 	sshDir := filepath.Join(tmpDir, ".ssh")
-	err := os.MkdirAll(sshDir, 0700)
+	err := os.MkdirAll(sshDir, 0o700)
 	assert.NoError(t, err)
 
 	configPath := filepath.Join(sshDir, "config")
@@ -146,7 +146,7 @@ Host *
     ServerAliveInterval 60
     ServerAliveCountMax 3
 `
-	err = os.WriteFile(configPath, []byte(configContent), 0600)
+	err = os.WriteFile(configPath, []byte(configContent), 0o600)
 	assert.NoError(t, err)
 
 	// Load the SSH config
@@ -175,7 +175,7 @@ func TestSSHConfigToCredentials(t *testing.T) {
 	tmpDir := t.TempDir()
 	keyPath := filepath.Join(tmpDir, "test_key")
 	keyContent := "-----BEGIN PRIVATE KEY-----\ntest key content\n-----END PRIVATE KEY-----"
-	err := os.WriteFile(keyPath, []byte(keyContent), 0600)
+	err := os.WriteFile(keyPath, []byte(keyContent), 0o600)
 	assert.NoError(t, err)
 
 	hostConfig := &SSHHostConfig{

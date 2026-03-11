@@ -8,7 +8,7 @@ import (
 func RequiredMapP(hint string, key string, m map[string]any) map[string]any {
 	r, err := RequiredMap(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -26,7 +26,7 @@ func OptionalMapP(hint string, key string, m map[string]any, defaultresult map[s
 	var err error
 	result, has, err = OptionalMap(hint, key, m, defaultresult)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -46,7 +46,7 @@ func OptionalMap(hint string, key string, m map[string]any, defaultresult map[st
 func MapP(hint string, v any) map[string]any {
 	r, err := Map(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -62,7 +62,7 @@ func Map(hint string, v any) (map[string]any, error) {
 func RequiredMapArrayP(hint string, key string, m map[string]any) []map[string]any {
 	r, err := RequiredMapArray(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -80,7 +80,7 @@ func OptionalMapArrayP(hint string, key string, m map[string]any, defaultresult 
 	var err error
 	result, has, err = OptionalMapArray(hint, key, m, defaultresult)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -100,7 +100,7 @@ func OptionalMapArray(hint string, key string, m map[string]any, defaultresult [
 func MapArrayP(hint string, v any) []map[string]any {
 	r, err := MapArray(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }

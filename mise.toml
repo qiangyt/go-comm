@@ -1,0 +1,8 @@
+[tools]
+go = "1.25"
+
+[tasks]
+check = "gofumpt -l -w . && golangci-lint run"
+build = "go build ./... && python3 scripts/check_i18n.py"
+test = "go test ./..."
+deps = "go mod download && go mod tidy"

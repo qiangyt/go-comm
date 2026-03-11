@@ -11,7 +11,7 @@ import (
 func RequiredBoolP(hint string, key string, m map[string]any) bool {
 	r, err := RequiredBool(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -21,7 +21,7 @@ func RequiredBoolP(hint string, key string, m map[string]any) bool {
 func RequiredBool(hint string, key string, m map[string]any) (bool, error) {
 	v, has := m[key]
 	if !has {
-		return false, LocalizeError("error.required", map[string]interface{}{
+		return false, LocalizeError("error.required", map[string]any{
 			"Hint": hint,
 			"Key":  key,
 		})
@@ -36,7 +36,7 @@ func OptionalBoolP(hint string, key string, m map[string]any, devault bool) (res
 	var err error
 	result, has, err = OptionalBool(hint, key, m, devault)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -59,7 +59,7 @@ func OptionalBool(hint string, key string, m map[string]any, devault bool) (resu
 func BoolP(hint string, v any) bool {
 	r, err := Bool(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -77,7 +77,7 @@ func Bool(hint string, v any) (bool, error) {
 				return false, nil
 			}
 		}
-		return false, LocalizeError("error.type.bool", map[string]interface{}{
+		return false, LocalizeError("error.type.bool", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -89,7 +89,7 @@ func Bool(hint string, v any) (bool, error) {
 func BoolArrayP(hint string, v any) []bool {
 	r, err := BoolArray(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -111,7 +111,7 @@ func BoolArray(hint string, v any) ([]bool, error) {
 		} else if r0, err := Bool(hint, v); err == nil {
 			return []bool{r0}, nil
 		}
-		return nil, LocalizeError("error.type.bool_array", map[string]interface{}{
+		return nil, LocalizeError("error.type.bool_array", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -123,7 +123,7 @@ func BoolArray(hint string, v any) ([]bool, error) {
 func BoolMapP(hint string, v any) map[string]bool {
 	r, err := BoolMap(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -150,7 +150,7 @@ func BoolMap(hint string, v any) (map[string]bool, error) {
 				}
 			}
 		}
-		return nil, LocalizeError("error.type.bool_map", map[string]interface{}{
+		return nil, LocalizeError("error.type.bool_map", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,

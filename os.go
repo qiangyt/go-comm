@@ -26,7 +26,7 @@ func IsLinux() bool {
 func EnvironMapP(overrides map[string]string) map[string]string {
 	r, err := EnvironMap(overrides)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -49,7 +49,7 @@ func EnvironMap(overrides map[string]string) (map[string]string, error) {
 func EnvironListP(overrides map[string]string) []string {
 	r, err := EnvironList(overrides)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -70,7 +70,7 @@ func EnvironList(overrides map[string]string) ([]string, error) {
 func EnvSubstP(input string, env map[string]string) string {
 	r, err := EnvSubst(input, env)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -98,7 +98,7 @@ func EnvSubst(input string, env map[string]string) (string, error) {
 func EnvSubstSliceP(inputs []string, env map[string]string) []string {
 	r, err := EnvSubstSlice(inputs, env)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -122,7 +122,7 @@ func IsTerminal() bool {
 func ExecutableP() string {
 	r, err := Executable()
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -142,7 +142,7 @@ func Executable() (string, error) {
 func WorkingDirectoryP() string {
 	r, err := WorkingDirectory()
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }

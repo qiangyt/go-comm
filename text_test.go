@@ -173,7 +173,7 @@ func TestSubstVars_withKeysToSkip(t *testing.T) {
 	a := require.New(t)
 
 	m := map[string]any{
-		"keep": "original",
+		"keep":    "original",
 		"process": "value",
 	}
 

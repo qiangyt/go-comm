@@ -245,7 +245,7 @@ func TestAferoBlob_Fs(t *testing.T) {
 
 func TestAferoBlob_Read(t *testing.T) {
 	afs := afero.NewMemMapFs()
-	afs.Create("/path/to/file.txt")
+	_, _ = afs.Create("/path/to/file.txt")
 
 	ab := NewAferoBlob(afs, "/path/to/file.txt")
 	buf := make([]byte, 10)
@@ -274,7 +274,7 @@ func TestAferoBlob_Read_NotFound(t *testing.T) {
 
 func TestAferoBlob_Close(t *testing.T) {
 	afs := afero.NewMemMapFs()
-	afs.Create("/path/to/file.txt")
+	_, _ = afs.Create("/path/to/file.txt")
 
 	ab := NewAferoBlob(afs, "/path/to/file.txt")
 
@@ -287,11 +287,11 @@ func TestAferoBlob_Close(t *testing.T) {
 
 func TestAferoBlob_Close_AfterRead(t *testing.T) {
 	afs := afero.NewMemMapFs()
-	afero.WriteFile(afs, "/path/to/file.txt", []byte("hello"), 0644)
+	_ = afero.WriteFile(afs, "/path/to/file.txt", []byte("hello"), 0o644)
 
 	ab := NewAferoBlob(afs, "/path/to/file.txt")
 	buf := make([]byte, 10)
-	ab.Read(buf)
+	_, _ = ab.Read(buf)
 
 	err := ab.Close()
 	if err != nil {

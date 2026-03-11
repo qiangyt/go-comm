@@ -148,7 +148,6 @@ func TestHostnameP(t *testing.T) {
 	a.NotEmpty(hostname)
 }
 
-
 func TestBroadcastIpWithInterface_NoValidAddress(t *testing.T) {
 	a := require.New(t)
 

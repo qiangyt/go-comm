@@ -21,7 +21,7 @@ func TestReadLockFile_happy(t *testing.T) {
 		}
 	}()
 	WriteFileTextP(fs, "/test.lock", `{"pid": 1234, "data": "test data"}`)
-	ReadLockFile(fs, "/test.lock")
+	_, _, _ = ReadLockFile(fs, "/test.lock")
 	t.Error("ReadLockFile should panic due to type assertion bug")
 }
 

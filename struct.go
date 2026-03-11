@@ -12,7 +12,7 @@ func StructToMap(src any) map[string]any {
 func Map2StructP(src map[string]any, dest any) {
 	err := Map2Struct(src, dest)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 

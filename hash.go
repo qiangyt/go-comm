@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 )
@@ -23,13 +22,13 @@ func NewHashCalculator() HashCalculator {
 func (h HashCalculator) CalculateMD5(filePath string) string {
 	file, err := os.Open(filePath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to open file for MD5 calculation: %v", err))
+		panic(NewSystemError("open file for MD5 calculation", err))
 	}
 	defer file.Close()
 
 	hash := md5.New()
 	if _, err := io.Copy(hash, file); err != nil {
-		panic(fmt.Sprintf("failed to calculate MD5: %v", err))
+		panic(NewSystemError("calculate MD5", err))
 	}
 
 	return hex.EncodeToString(hash.Sum(nil))
@@ -39,13 +38,13 @@ func (h HashCalculator) CalculateMD5(filePath string) string {
 func (h HashCalculator) CalculateSHA256(filePath string) string {
 	file, err := os.Open(filePath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to open file for SHA256 calculation: %v", err))
+		panic(NewSystemError("open file for SHA256 calculation", err))
 	}
 	defer file.Close()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
-		panic(fmt.Sprintf("failed to calculate SHA256: %v", err))
+		panic(NewSystemError("calculate SHA256", err))
 	}
 
 	return hex.EncodeToString(hash.Sum(nil))
@@ -55,7 +54,7 @@ func (h HashCalculator) CalculateSHA256(filePath string) string {
 func (h HashCalculator) CalculateMD5FromReader(r io.Reader) string {
 	hash := md5.New()
 	if _, err := io.Copy(hash, r); err != nil {
-		panic(fmt.Sprintf("failed to calculate MD5 from reader: %v", err))
+		panic(NewSystemError("calculate MD5 from reader", err))
 	}
 	return hex.EncodeToString(hash.Sum(nil))
 }
@@ -64,7 +63,7 @@ func (h HashCalculator) CalculateMD5FromReader(r io.Reader) string {
 func (h HashCalculator) CalculateSHA256FromReader(r io.Reader) string {
 	hash := sha256.New()
 	if _, err := io.Copy(hash, r); err != nil {
-		panic(fmt.Sprintf("failed to calculate SHA256 from reader: %v", err))
+		panic(NewSystemError("calculate SHA256 from reader", err))
 	}
 	return hex.EncodeToString(hash.Sum(nil))
 }

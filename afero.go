@@ -16,7 +16,7 @@ var AppFs = afero.NewOsFs()
 func DefaultEtcHostsP() string {
 	r, err := DefaultEtcHosts()
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("get default etc hosts", err))
 	}
 	return r
 }
@@ -24,7 +24,7 @@ func DefaultEtcHostsP() string {
 func CopyFileP(fs afero.Fs, path string, newPath string) int64 {
 	r, err := CopyFile(fs, path, newPath)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("copy file", err))
 	}
 	return r
 }
@@ -56,7 +56,7 @@ func CopyFile(fs afero.Fs, path string, newPath string) (int64, error) {
 
 func RenameP(fs afero.Fs, path string, newPath string) {
 	if err := Rename(fs, path, newPath); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -71,7 +71,7 @@ func Rename(fs afero.Fs, path string, newPath string) error {
 func StatP(fs afero.Fs, path string, ensureExists bool) os.FileInfo {
 	r, err := Stat(fs, path, ensureExists)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -84,7 +84,7 @@ func Stat(fs afero.Fs, path string, ensureExists bool) (os.FileInfo, error) {
 			return nil, errors.Wrapf(err, "stat file: %s", path)
 		}
 		if ensureExists {
-			return nil, errors.Wrap(err, T("error.file.not_found", map[string]interface{}{
+			return nil, errors.Wrap(err, T("error.file.not_found", map[string]any{
 				"Path": path,
 			}))
 		}
@@ -97,7 +97,7 @@ func Stat(fs afero.Fs, path string, ensureExists bool) (os.FileInfo, error) {
 func FileExistsP(fs afero.Fs, path string) bool {
 	r, err := FileExists(fs, path)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -112,7 +112,7 @@ func FileExists(fs afero.Fs, path string) (bool, error) {
 		return false, nil
 	}
 	if fi.IsDir() {
-		return false, LocalizeError("error.file.expect_file_but_dir", map[string]interface{}{
+		return false, LocalizeError("error.file.expect_file_but_dir", map[string]any{
 			"Path": path,
 		})
 	}
@@ -121,7 +121,7 @@ func FileExists(fs afero.Fs, path string) (bool, error) {
 
 func EnsureFileExistsP(fs afero.Fs, path string) {
 	if err := EnsureFileExists(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -131,7 +131,7 @@ func EnsureFileExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if !exists {
-		return LocalizeError("error.file.not_found", map[string]interface{}{
+		return LocalizeError("error.file.not_found", map[string]any{
 			"Path": path,
 		})
 	}
@@ -140,7 +140,7 @@ func EnsureFileExists(fs afero.Fs, path string) error {
 
 func EnsureFileNotExistsP(fs afero.Fs, path string) {
 	if err := EnsureFileNotExists(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -150,7 +150,7 @@ func EnsureFileNotExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if exists {
-		return LocalizeError("error.file.already_exists", map[string]interface{}{
+		return LocalizeError("error.file.already_exists", map[string]any{
 			"Path": path,
 		})
 	}
@@ -160,7 +160,7 @@ func EnsureFileNotExists(fs afero.Fs, path string) error {
 func DirExistsP(fs afero.Fs, path string) bool {
 	r, err := DirExists(fs, path)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -175,7 +175,7 @@ func DirExists(fs afero.Fs, path string) (bool, error) {
 		return false, nil
 	}
 	if !fi.IsDir() {
-		return false, LocalizeError("error.file.expect_dir_but_file", map[string]interface{}{
+		return false, LocalizeError("error.file.expect_dir_but_file", map[string]any{
 			"Path": path,
 		})
 	}
@@ -184,7 +184,7 @@ func DirExists(fs afero.Fs, path string) (bool, error) {
 
 func EnsureDirExistsP(fs afero.Fs, path string) {
 	if err := EnsureDirExists(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -194,7 +194,7 @@ func EnsureDirExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if !exists {
-		return LocalizeError("error.dir.not_found", map[string]interface{}{
+		return LocalizeError("error.dir.not_found", map[string]any{
 			"Path": path,
 		})
 	}
@@ -203,7 +203,7 @@ func EnsureDirExists(fs afero.Fs, path string) error {
 
 func EnsureDirNotExistsP(fs afero.Fs, path string) {
 	if err := EnsureDirNotExists(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -213,7 +213,7 @@ func EnsureDirNotExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if exists {
-		return LocalizeError("error.dir.already_exists", map[string]interface{}{
+		return LocalizeError("error.dir.already_exists", map[string]any{
 			"Path": path,
 		})
 	}
@@ -222,7 +222,7 @@ func EnsureDirNotExists(fs afero.Fs, path string) error {
 
 func RemoveFileP(fs afero.Fs, path string) {
 	if err := RemoveFile(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -243,7 +243,7 @@ func RemoveFile(fs afero.Fs, path string) error {
 
 func RemoveDirP(fs afero.Fs, path string) {
 	if err := RemoveDir(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -285,7 +285,7 @@ func ReadFileBytes(fs afero.Fs, path string) ([]byte, error) {
 func ReadFileTextP(fs afero.Fs, path string) string {
 	r, err := ReadFileText(fs, path)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -301,7 +301,7 @@ func ReadFileText(fs afero.Fs, path string) (string, error) {
 func ReadFileLinesP(fs afero.Fs, path string) []string {
 	r, err := ReadFileLines(fs, path)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -323,7 +323,7 @@ func ReadFileLines(fs afero.Fs, path string) ([]string, error) {
 func WriteFileIfNotFoundP(fs afero.Fs, path string, content []byte) bool {
 	r, err := WriteFileIfNotFound(fs, path, content)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -345,13 +345,13 @@ func WriteFileIfNotFound(fs afero.Fs, path string, content []byte) (bool, error)
 
 func WriteFileP(fs afero.Fs, path string, content []byte) {
 	if err := WriteFile(fs, path, content); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
 func Mkdir4FileP(fs afero.Fs, filePath string) {
 	if err := Mkdir4File(fs, filePath); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -383,7 +383,7 @@ func WriteFile(fs afero.Fs, path string, content []byte) error {
 
 func WriteFileTextP(fs afero.Fs, path string, content string) {
 	if err := WriteFileText(fs, path, content); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -396,7 +396,7 @@ func WriteFileText(fs afero.Fs, path string, content string) error {
 func WriteFileTextIfNotFoundP(fs afero.Fs, path string, content string) bool {
 	r, err := WriteFileTextIfNotFound(fs, path, content)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -418,7 +418,7 @@ func WriteFileTextIfNotFound(fs afero.Fs, path string, content string) (bool, er
 // WriteLines ...
 func WriteFileLinesP(fs afero.Fs, path string, lines ...string) {
 	if err := WriteFileLines(fs, path, lines...); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -429,7 +429,7 @@ func WriteFileLines(fs afero.Fs, path string, lines ...string) error {
 func ExpandHomePathP(path string) string {
 	r, err := ExpandHomePath(path)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -448,7 +448,7 @@ func ExpandHomePath(path string) (string, error) {
 func UserHomeDirP() string {
 	r, err := UserHomeDir()
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -463,7 +463,7 @@ func UserHomeDir() (string, error) {
 
 func MkdirP(fs afero.Fs, path string) {
 	if err := Mkdir(fs, path); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -478,7 +478,7 @@ func Mkdir(fs afero.Fs, path string) error {
 func ListSuffixedFilesP(fs afero.Fs, targetDir string, suffix string, skipEmptyFile bool) map[string]string {
 	r, err := ListSuffixedFiles(fs, targetDir, suffix, skipEmptyFile)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -524,7 +524,7 @@ func ExtractTitle(filePath string) string {
 func TempFileP(fs afero.Fs, pattern string) string {
 	r, err := TempFile(fs, pattern)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -543,7 +543,7 @@ func TempFile(fs afero.Fs, pattern string) (string, error) {
 func TempTextFileP(fs afero.Fs, pattern string, content string) string {
 	r, err := TempTextFile(fs, pattern, content)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }

@@ -20,7 +20,7 @@ func DefaultOutput() io.Writer {
 func ReadBytesP(reader io.Reader) []byte {
 	r, err := ReadBytes(reader)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -38,7 +38,7 @@ func ReadBytes(reader io.Reader) ([]byte, error) {
 func ReadTextP(reader io.Reader) string {
 	r, err := ReadText(reader)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }

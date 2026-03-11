@@ -69,7 +69,7 @@ func TestFileCache_Put(t *testing.T) {
 
 	// Create a source file
 	srcFile := filepath.Join(os.TempDir(), "src-file.txt")
-	os.WriteFile(srcFile, []byte("test content"), 0644)
+	_ = os.WriteFile(srcFile, []byte("test content"), 0o644)
 	defer os.Remove(srcFile)
 
 	cache := NewFileCache(cacheDir)
@@ -85,7 +85,7 @@ func TestFileCache_Put_emptyKey(t *testing.T) {
 	defer os.RemoveAll(cacheDir)
 
 	srcFile := filepath.Join(os.TempDir(), "src-file2.txt")
-	os.WriteFile(srcFile, []byte("test"), 0644)
+	_ = os.WriteFile(srcFile, []byte("test"), 0o644)
 	defer os.Remove(srcFile)
 
 	cache := NewFileCache(cacheDir)
@@ -106,7 +106,7 @@ func TestFileCache_Put_duplicate(t *testing.T) {
 	defer os.RemoveAll(cacheDir)
 
 	srcFile := filepath.Join(os.TempDir(), "src-file3.txt")
-	os.WriteFile(srcFile, []byte("test content"), 0644)
+	_ = os.WriteFile(srcFile, []byte("test content"), 0o644)
 	defer os.Remove(srcFile)
 
 	cache := NewFileCache(cacheDir)
@@ -127,7 +127,7 @@ func TestFileCache_CopyTo(t *testing.T) {
 	defer os.Remove(destFile)
 
 	srcFile := filepath.Join(os.TempDir(), "src-file-copy.txt")
-	os.WriteFile(srcFile, []byte("test content"), 0644)
+	_ = os.WriteFile(srcFile, []byte("test content"), 0o644)
 	defer os.Remove(srcFile)
 
 	cache := NewFileCache(cacheDir)
@@ -165,7 +165,7 @@ func TestFileCache_Delete(t *testing.T) {
 	defer os.RemoveAll(cacheDir)
 
 	srcFile := filepath.Join(os.TempDir(), "src-file-del.txt")
-	os.WriteFile(srcFile, []byte("test"), 0644)
+	_ = os.WriteFile(srcFile, []byte("test"), 0o644)
 	defer os.Remove(srcFile)
 
 	cache := NewFileCache(cacheDir)
@@ -194,8 +194,8 @@ func TestFileCache_Clear(t *testing.T) {
 
 	srcFile1 := filepath.Join(os.TempDir(), "src-file1.txt")
 	srcFile2 := filepath.Join(os.TempDir(), "src-file2.txt")
-	os.WriteFile(srcFile1, []byte("test1"), 0644)
-	os.WriteFile(srcFile2, []byte("test2"), 0644)
+	_ = os.WriteFile(srcFile1, []byte("test1"), 0o644)
+	_ = os.WriteFile(srcFile2, []byte("test2"), 0o644)
 	defer os.Remove(srcFile1)
 	defer os.Remove(srcFile2)
 
@@ -219,7 +219,7 @@ func TestFileCache_Size(t *testing.T) {
 	defer os.RemoveAll(cacheDir)
 
 	srcFile := filepath.Join(os.TempDir(), "src-file-size.txt")
-	os.WriteFile(srcFile, []byte("test content"), 0644)
+	_ = os.WriteFile(srcFile, []byte("test content"), 0o644)
 	defer os.Remove(srcFile)
 
 	cache := NewFileCache(cacheDir)

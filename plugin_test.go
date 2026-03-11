@@ -8,14 +8,14 @@ import (
 
 // Mock plugin for testing
 type MockPlugin struct {
-	name          string
-	kind          PluginKind
-	major         int
-	minor         int
-	startCalled   bool
-	stopCalled    bool
-	shouldPanic   bool
-	panicMessage  string
+	name         string
+	kind         PluginKind
+	major        int
+	minor        int
+	startCalled  bool
+	stopCalled   bool
+	shouldPanic  bool
+	panicMessage string
 }
 
 func (m *MockPlugin) Name() string {
@@ -46,11 +46,11 @@ func (m *MockPlugin) Stop(logger Logger) {
 
 // Mock plugin loader for testing
 type MockPluginLoader struct {
-	namespace    string
-	plugins      map[string]Plugin
-	startCalled  bool
-	stopCalled   bool
-	shouldError  bool
+	namespace   string
+	plugins     map[string]Plugin
+	startCalled bool
+	stopCalled  bool
+	shouldError bool
 }
 
 func (m *MockPluginLoader) Namespace() string {
@@ -64,7 +64,7 @@ func (m *MockPluginLoader) Plugins() map[string]Plugin {
 func (m *MockPluginLoader) Start(logger Logger) error {
 	m.startCalled = true
 	if m.shouldError {
-		return LocalizeError("error.plugin.start_failed", map[string]interface{}{
+		return LocalizeError("error.plugin.start_failed", map[string]any{
 			"PluginId": m.namespace + "/test",
 			"Version":  "1.0",
 			"Cause":    "test error",
@@ -76,7 +76,7 @@ func (m *MockPluginLoader) Start(logger Logger) error {
 func (m *MockPluginLoader) Stop(logger Logger) error {
 	m.stopCalled = true
 	if m.shouldError {
-		return LocalizeError("error.plugin.stop_failed", map[string]interface{}{
+		return LocalizeError("error.plugin.stop_failed", map[string]any{
 			"PluginId": m.namespace + "/test",
 			"Version":  "1.0",
 			"Cause":    "test error",

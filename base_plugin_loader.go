@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -29,7 +28,7 @@ func (me BasePluginLoader) Register(plugin Plugin) {
 
 	name := plugin.Name()
 	if _, found := me.plugins[name]; found {
-		panic(fmt.Errorf("plugin %s is duplicated", PluginId(me.Namespace(), name)))
+		panic(NewBusinessErrorf("plugin %s is duplicated", PluginId(me.Namespace(), name)))
 	}
 	me.plugins[name] = plugin
 }
@@ -38,7 +37,7 @@ func (me BasePluginLoader) RegisterThenStart(logger Logger, plugin Plugin) {
 	me.Register(plugin)
 
 	if err := StartPlugin(me.Namespace(), plugin, logger); err != nil {
-		panic(err)
+		panic(NewSystemError("start plugin", err))
 	}
 }
 

@@ -261,4 +261,3 @@ func TestIntMapP(t *testing.T) {
 	// Test panic on invalid type
 	a.Panics(func() { IntMapP("test", []int{1, 2, 3}) })
 }
-

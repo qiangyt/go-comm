@@ -12,7 +12,7 @@ import (
 func RequiredIntP(hint string, key string, m map[string]any) int {
 	r, err := RequiredInt(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -22,7 +22,7 @@ func RequiredIntP(hint string, key string, m map[string]any) int {
 func RequiredInt(hint string, key string, m map[string]any) (int, error) {
 	v, has := m[key]
 	if !has {
-		return 0, LocalizeError("error.required", map[string]interface{}{
+		return 0, LocalizeError("error.required", map[string]any{
 			"Hint": hint,
 			"Key":  key,
 		})
@@ -37,7 +37,7 @@ func OptionalIntP(hint string, key string, m map[string]any, devault int) (resul
 	var err error
 	result, has, err = OptionalInt(hint, key, m, devault)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -61,7 +61,7 @@ func OptionalInt(hint string, key string, m map[string]any, devault int) (result
 func IntP(hint string, v any) int {
 	r, err := Int(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -81,7 +81,7 @@ func Int(hint string, v any) (int, error) {
 				return parsed, nil
 			}
 		}
-		return 0, LocalizeError("error.type.int", map[string]interface{}{
+		return 0, LocalizeError("error.type.int", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -93,7 +93,7 @@ func Int(hint string, v any) (int, error) {
 func IntArrayP(hint string, v any) []int {
 	r, err := IntArray(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -115,7 +115,7 @@ func IntArray(hint string, v any) ([]int, error) {
 		} else if r0, err := Int(hint, v); err == nil {
 			return []int{r0}, nil
 		}
-		return nil, LocalizeError("error.type.int_array", map[string]interface{}{
+		return nil, LocalizeError("error.type.int_array", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -127,7 +127,7 @@ func IntArray(hint string, v any) ([]int, error) {
 func IntMapP(hint string, v any) map[string]int {
 	r, err := IntMap(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -154,7 +154,7 @@ func IntMap(hint string, v any) (map[string]int, error) {
 				}
 			}
 		}
-		return nil, LocalizeError("error.type.int_map", map[string]interface{}{
+		return nil, LocalizeError("error.type.int_map", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,

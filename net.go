@@ -11,7 +11,7 @@ import (
 func HostnameP() string {
 	r, err := Hostname()
 	if err != nil {
-		panic(errors.Wrapf(err, "get hostname"))
+		panic(NewSystemError("get hostname", err))
 	}
 	return r
 }
@@ -23,7 +23,7 @@ func Hostname() (string, error) {
 func BroadcastInterfacesP(dump bool) []net.Interface {
 	r, err := BroadcastInterfaces(dump)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("get broadcast interfaces", err))
 	}
 	return r
 }
@@ -60,7 +60,7 @@ func BroadcastInterfaces(dump bool) ([]net.Interface, error) {
 func BroadcastIpWithInterfaceP(intf net.Interface) net.IP {
 	r, err := BroadcastIpWithInterface(intf)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("get broadcast IP", err))
 	}
 	return r
 }
@@ -94,7 +94,7 @@ func BroadcastIpWithInterface(intf net.Interface) (net.IP, error) {
 func ResolveBroadcastIpP(interfaces []net.Interface, interfaceName string) (net.IP, net.IP) {
 	localIp, broadcastIp, err := ResolveBroadcastIp(interfaces, interfaceName)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("resolve broadcast IP", err))
 	}
 	return localIp, broadcastIp
 }
@@ -131,7 +131,7 @@ func ResolveBroadcastIp(interfaces []net.Interface, interfaceName string) (net.I
 		}
 	}
 
-	return nil, nil, LocalizeError("error.net.interface_not_found", map[string]interface{}{
+	return nil, nil, LocalizeError("error.net.interface_not_found", map[string]any{
 		"Interface": interfaceName,
 	})
 }

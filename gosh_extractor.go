@@ -148,7 +148,7 @@ func (me CommandExtractor) extractFromCallExpr(call *syntax.CallExpr, source Com
 	args := call.Args
 
 	// 处理内联环境变量 (VAR=value cmd args...)
-	if call.Assigns != nil && len(call.Assigns) > 0 {
+	if len(call.Assigns) > 0 {
 		for _, assign := range call.Assigns {
 			envs = append(envs, assign.Name.Value+"="+me.wordToString(assign.Value))
 		}

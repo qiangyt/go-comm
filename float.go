@@ -12,7 +12,7 @@ import (
 func RequiredFloatP(hint string, key string, m map[string]any) float64 {
 	r, err := RequiredFloat(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -22,7 +22,7 @@ func RequiredFloatP(hint string, key string, m map[string]any) float64 {
 func RequiredFloat(hint string, key string, m map[string]any) (float64, error) {
 	v, has := m[key]
 	if !has {
-		return 0, LocalizeError("error.required", map[string]interface{}{
+		return 0, LocalizeError("error.required", map[string]any{
 			"Hint": hint,
 			"Key":  key,
 		})
@@ -37,7 +37,7 @@ func OptionalFloatP(hint string, key string, m map[string]any, devault float64) 
 	var err error
 	result, has, err = OptionalFloat(hint, key, m, devault)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -61,7 +61,7 @@ func OptionalFloat(hint string, key string, m map[string]any, devault float64) (
 func FloatP(hint string, v any) float64 {
 	r, err := Float(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -84,7 +84,7 @@ func Float(hint string, v any) (float64, error) {
 				return parsed, nil
 			}
 		}
-		return 0, LocalizeError("error.type.float", map[string]interface{}{
+		return 0, LocalizeError("error.type.float", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -96,7 +96,7 @@ func Float(hint string, v any) (float64, error) {
 func FloatArrayP(hint string, v any) []float64 {
 	r, err := FloatArray(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -118,7 +118,7 @@ func FloatArray(hint string, v any) ([]float64, error) {
 		} else if r0, err := Float(hint, v); err == nil {
 			return []float64{r0}, nil
 		}
-		return nil, LocalizeError("error.type.float_array", map[string]interface{}{
+		return nil, LocalizeError("error.type.float_array", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -130,7 +130,7 @@ func FloatArray(hint string, v any) ([]float64, error) {
 func FloatMapP(hint string, v any) map[string]float64 {
 	r, err := FloatMap(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -157,7 +157,7 @@ func FloatMap(hint string, v any) (map[string]float64, error) {
 				}
 			}
 		}
-		return nil, LocalizeError("error.type.float_map", map[string]interface{}{
+		return nil, LocalizeError("error.type.float_map", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,

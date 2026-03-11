@@ -36,7 +36,7 @@ type CommandOutput = *CommandOutputT
 func ParseCommandOutputP(outputText string) CommandOutput {
 	r, err := ParseCommandOutput(outputText)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -119,7 +119,7 @@ func openHandler(ctx context.Context, path string, flag int, perm os.FileMode) (
 func RunShellCommandP(vars map[string]string, dir string, sh string, cmd string, passwordInput FnInput) CommandOutput {
 	r, err := RunShellCommand(vars, dir, sh, cmd, passwordInput)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -138,7 +138,7 @@ func RunShellCommand(vars map[string]string, dir string, sh string, cmd string, 
 func RunUserCommandP(vars map[string]string, dir string, cmd string) CommandOutput {
 	r, err := RunUserCommand(vars, dir, cmd)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -165,7 +165,7 @@ func newExecCommand(vars map[string]string, dir string, cmd string, args ...stri
 func RunCommandNoInputP(vars map[string]string, dir string, cmd string, args ...string) CommandOutput {
 	r, err := RunCommandNoInput(vars, dir, cmd, args...)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }

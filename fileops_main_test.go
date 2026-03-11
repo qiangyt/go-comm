@@ -69,7 +69,11 @@ func TestFileOps_GetFileSize_NotFound(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			_ = a
-			a.Contains(r.(string), "FailedToGetFileSize")
+			if appErr, ok := r.(*AppError); ok {
+				a.Contains(appErr.Error(), "FailedToGetFileSize")
+			} else {
+				a.Contains(r.(string), "FailedToGetFileSize")
+			}
 		}
 	}()
 	ops.GetFileSize("/nonexistent.txt")
@@ -199,7 +203,11 @@ func TestFileOps_SetPermissions_Invalid(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
 				_ = a
-				a.Contains(r.(string), "InvalidChmodValue")
+				if appErr, ok := r.(*AppError); ok {
+					a.Contains(appErr.Error(), "InvalidChmodValue")
+				} else {
+					a.Contains(r.(string), "InvalidChmodValue")
+				}
 			}
 		}()
 		ops.SetPermissions("/test.txt", "invalid")

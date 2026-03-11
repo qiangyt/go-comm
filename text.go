@@ -15,7 +15,7 @@ import (
 func RenderWithTemplateP(w io.Writer, name string, tmpl string, data map[string]any) {
 	err := RenderWithTemplate(w, name, tmpl, data)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 }
 
@@ -35,7 +35,7 @@ func RenderWithTemplate(w io.Writer, name string, tmpl string, data map[string]a
 func RenderAsTemplateArrayP(tmplArray []string, data map[string]any) []string {
 	r, err := RenderAsTemplateArray(tmplArray, data)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -55,7 +55,7 @@ func RenderAsTemplateArray(tmplArray []string, data map[string]any) ([]string, e
 func RenderAsTemplateP(tmpl string, data map[string]any) string {
 	r, err := RenderAsTemplate(tmpl, data)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -79,7 +79,7 @@ func JoinedLinesAsBytes(lines ...string) []byte {
 func ToYamlP(hint string, me any) string {
 	r, err := ToYaml(hint, me)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -99,7 +99,7 @@ func ToYaml(hint string, me any) (string, error) {
 func SubstVarsP(useGoTemplate bool, m map[string]any, parentVars map[string]any, keysToSkip ...string) map[string]any {
 	r, err := SubstVars(useGoTemplate, m, parentVars, keysToSkip...)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -140,7 +140,7 @@ func SubstVars(useGoTemplate bool, m map[string]any, parentVars map[string]any, 
 				/*vYaml := ToYaml("", v)
 				vYaml = RenderAsTemplate(vYaml, newVars)
 				if err := yaml.Unmarshal([]byte(vYaml), &v); err != nil {
-					panic(errors.Wrapf(err, "parse yaml: %s", vYaml))
+					panic(NewConfigError("parse yaml", err))
 				}*/
 				mapNoVars[k] = v
 			}

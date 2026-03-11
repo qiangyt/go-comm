@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -55,11 +54,11 @@ func (f FileOps) SetPermissions(filePath, chmod string) {
 	chmod = strings.TrimPrefix(chmod, "0")
 	perm, err := strconv.ParseUint(chmod, 8, 32)
 	if err != nil {
-		panic(fmt.Sprintf("%s: %s", f.localize("InvalidChmodValue", map[string]any{"value": chmod}), err.Error()))
+		panic(NewConfigError(f.localize("InvalidChmodValue", map[string]any{"value": chmod}), err))
 	}
 
 	if err := f.fs.Chmod(filePath, os.FileMode(perm)); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToChmod"), err))
+		panic(NewSystemError(f.localize("FailedToChmod", nil), err))
 	}
 }
 
@@ -90,7 +89,7 @@ func (f FileOps) SetOwner(filePath, chown string, useSudo bool, sudoPassword str
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		panic(f.localize("FailedToChown", map[string]any{"output": string(output)}))
+		panic(NewBusinessError(f.localize("FailedToChown", map[string]any{"output": string(output)}), err))
 	}
 }
 
@@ -99,32 +98,34 @@ func (f FileOps) CopyFile(srcPath, destPath string) {
 	// 确保目标目录存在
 	destDir := filepath.Dir(destPath)
 	if err := f.fs.MkdirAll(destDir, 0o755); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToCreateDestDir"), err))
+		panic(NewSystemError(f.localize("FailedToCreateDestDir", nil), err))
 	}
 
 	// 打开源文件
 	srcFile, err := f.fs.Open(srcPath)
 	if err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToOpenSource"), err))
+		panic(NewSystemError(f.localize("FailedToOpenSource", nil), err))
 	}
 	defer srcFile.Close()
 
 	// 创建目标文件
 	destFile, err := f.fs.Create(destPath)
 	if err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToCreateDest"), err))
+		panic(NewSystemError(f.localize("FailedToCreateDest", nil), err))
 	}
 	defer destFile.Close()
 
 	// 复制内容
 	if _, err := io.Copy(destFile, srcFile); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToCopyFile"), err))
+		panic(NewSystemError(f.localize("FailedToCopyFile", nil), err))
 	}
 
 	// 复制文件权限
 	srcInfo, err := f.fs.Stat(srcPath)
 	if err == nil {
-		f.fs.Chmod(destPath, srcInfo.Mode())
+		if err := f.fs.Chmod(destPath, srcInfo.Mode()); err != nil {
+			panic(NewSystemError(f.localize("FailedToChmod", nil), err))
+		}
 	}
 }
 
@@ -139,7 +140,7 @@ func (f FileOps) MoveFile(srcPath, destPath string) {
 	f.CopyFile(srcPath, destPath)
 
 	if err := f.fs.Remove(srcPath); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToRemoveSource"), err))
+		panic(NewSystemError(f.localize("FailedToRemoveSource", nil), err))
 	}
 }
 
@@ -157,7 +158,7 @@ func (f FileOps) CreateSymlink(targetPath, linkPath string, useSudo bool, sudoPa
 	// 确保链接目录存在
 	linkDir := filepath.Dir(linkPath)
 	if err := f.fs.MkdirAll(linkDir, 0o755); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToCreateLinkDir"), err))
+		panic(NewSystemError(f.localize("FailedToCreateLinkDir", nil), err))
 	}
 
 	// 删除已存在的链接
@@ -170,9 +171,13 @@ func (f FileOps) CreateSymlink(targetPath, linkPath string, useSudo bool, sudoPa
 			} else {
 				cmd = exec.Command("sudo", "rm", "-f", linkPath)
 			}
-			cmd.Run()
+			if err := cmd.Run(); err != nil {
+				panic(NewBusinessError(f.localize("FailedToRemoveLink", nil), err))
+			}
 		} else {
-			f.fs.Remove(linkPath)
+			if err := f.fs.Remove(linkPath); err != nil {
+				panic(NewBusinessError(f.localize("FailedToRemoveLink", nil), err))
+			}
 		}
 	}
 
@@ -191,14 +196,14 @@ func (f FileOps) CreateSymlink(targetPath, linkPath string, useSudo bool, sudoPa
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		panic(f.localize("FailedToCreateSymlink", map[string]any{"output": string(output)}))
+		panic(NewBusinessError(f.localize("FailedToCreateSymlink", map[string]any{"output": string(output)}), err))
 	}
 }
 
 // EnsureDir 确保目录存在
 func (f FileOps) EnsureDir(dirPath string) {
 	if err := f.fs.MkdirAll(dirPath, 0o755); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToCreateDir"), err))
+		panic(NewSystemError(f.localize("FailedToCreateDir", nil), err))
 	}
 }
 
@@ -218,7 +223,7 @@ func (f FileOps) DirExists(dirPath string) bool {
 func (f FileOps) GetFileSize(filePath string) int64 {
 	info, err := f.fs.Stat(filePath)
 	if err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToGetFileSize"), err))
+		panic(NewSystemError(f.localize("FailedToGetFileSize", nil), err))
 	}
 	return info.Size()
 }
@@ -233,7 +238,7 @@ func (f FileOps) RenameFile(oldPath, newName string) string {
 	newPath := filepath.Join(dir, newName)
 
 	if err := f.fs.Rename(oldPath, newPath); err != nil {
-		panic(fmt.Sprintf("%s: %v", f.localize("FailedToRenameFile"), err))
+		panic(NewSystemError(f.localize("FailedToRenameFile", nil), err))
 	}
 
 	return newPath
@@ -252,11 +257,11 @@ func (f FileOps) CreateDirectory(dirPath string, chmod, chown string, useSudo bo
 		}
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			panic(f.localize("FailedToCreateDirSudo", map[string]any{"output": string(output)}))
+			panic(NewBusinessError(f.localize("FailedToCreateDirSudo", map[string]any{"output": string(output)}), err))
 		}
 	} else {
 		if err := f.fs.MkdirAll(dirPath, 0o755); err != nil {
-			panic(fmt.Sprintf("%s: %v", f.localize("FailedToCreateDir"), err))
+			panic(NewSystemError("create dir", err))
 		}
 	}
 
@@ -285,9 +290,14 @@ func (f FileOps) RemoveFile(filePath string, useSudo bool, sudoPassword string) 
 		} else {
 			cmd = exec.Command("sudo", "rm", "-f", filePath)
 		}
-		cmd.CombinedOutput()
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			panic(NewBusinessError(f.localize("FailedToRemoveFile", map[string]any{"output": string(output)}), err))
+		}
 	} else {
-		f.fs.Remove(filePath)
+		if err := f.fs.Remove(filePath); err != nil && !os.IsNotExist(err) {
+			panic(NewSystemError(f.localize("FailedToRemoveFile", nil), err))
+		}
 	}
 }
 

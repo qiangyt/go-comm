@@ -183,6 +183,14 @@ other = "파일 복사 실패"
 one = "복사 후 소스 파일 제거 실패"
 other = "복사 후 소스 파일 제거 실패"
 
+[FailedToRemoveLink]
+one = "기존 링크 제거 실패"
+other = "기존 링크 제거 실패"
+
+[FailedToRemoveFile]
+one = "파일 제거 실패"
+other = "파일 제거 실패"
+
 [FailedToCreateLinkDir]
 one = "링크 디렉터리 생성 실패"
 other = "링크 디렉터리 생성 실패"

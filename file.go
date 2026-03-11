@@ -49,7 +49,7 @@ type (
 func NewFileP(afs afero.Fs, url string, credentials Credentials, timeout time.Duration) File {
 	r, err := NewFile(afs, url, credentials, timeout)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -118,7 +118,7 @@ func ShortDescription(url string) string {
 func DownloadBytesP(logger Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) []byte {
 	r, err := DownloadBytes(logger, fallbackDir, fs, url, credentials, timeout)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -177,7 +177,7 @@ func downloadBytes(fs afero.Fs, url string, credentials Credentials, timeout tim
 func DownloadTextP(logger Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) string {
 	r, err := DownloadText(logger, fallbackDir, fs, url, credentials, timeout)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -193,7 +193,7 @@ func DownloadText(logger Logger, fallbackDir string, fs afero.Fs, url string, cr
 func MapFromYamlFileP(fs afero.Fs, path string, envsubt bool) map[string]any {
 	r, err := MapFromYamlFile(fs, path, envsubt)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -210,7 +210,7 @@ func MapFromYamlFile(fs afero.Fs, path string, envsubt bool) (map[string]any, er
 func MapFromYamlP(yamlText string, envsubt bool) map[string]any {
 	r, err := MapFromYaml(yamlText, envsubt)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -227,7 +227,7 @@ func MapFromYaml(yamlText string, envsubt bool) (map[string]any, error) {
 func MapFromJsonFileP(fs afero.Fs, path string, envsubt bool) map[string]any {
 	r, err := MapFromJsonFile(fs, path, envsubt)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -244,7 +244,7 @@ func MapFromJsonFile(fs afero.Fs, path string, envsubt bool) (map[string]any, er
 func MapFromJsonP(yamlText string, envsubt bool) map[string]any {
 	r, err := MapFromJson(yamlText, envsubt)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -260,7 +260,7 @@ func MapFromJson(yamlText string, envsubt bool) (map[string]any, error) {
 
 func FromYamlFileP(fs afero.Fs, path string, envsubt bool, result any) {
 	if err := FromYamlFile(fs, path, envsubt, result); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -278,7 +278,7 @@ func FromYamlFile(fs afero.Fs, path string, envsubt bool, result any) error {
 
 func FromYamlP(yamlText string, envsubt bool, result any) {
 	if err := FromYaml(yamlText, envsubt, result); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -298,7 +298,7 @@ func FromYaml(yamlText string, envsubt bool, result any) (err error) {
 
 func FromJsonFileP(fs afero.Fs, path string, envsubt bool, result any) {
 	if err := FromJsonFile(fs, path, envsubt, result); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 
@@ -316,7 +316,7 @@ func FromJsonFile(fs afero.Fs, path string, envsubt bool, result any) error {
 
 func FromJsonP(jsonText string, envsubt bool, result any) {
 	if err := FromJson(jsonText, envsubt, result); err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 }
 

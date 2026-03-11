@@ -183,6 +183,14 @@ other = "failed to copy file"
 one = "failed to remove source file after copy"
 other = "failed to remove source file after copy"
 
+[FailedToRemoveLink]
+one = "failed to remove existing link"
+other = "failed to remove existing link"
+
+[FailedToRemoveFile]
+one = "failed to remove file"
+other = "failed to remove file"
+
 [FailedToCreateLinkDir]
 one = "failed to create link directory"
 other = "failed to create link directory"

@@ -62,8 +62,8 @@ type CommandRule = *CommandRuleT
 // NewCommandRule 创建命令规则
 func NewCommandRule(pattern string, matchMode MatchMode) CommandRule {
 	return &CommandRuleT{
-		Pattern:     pattern,
-		MatchMode:   matchMode,
+		Pattern:      pattern,
+		MatchMode:    matchMode,
 		ArgsMatchers: []ArgMatcher{},
 		SourceFilter: []CommandSource{},
 	}

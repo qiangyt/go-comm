@@ -1,9 +1,9 @@
 package comm
 
 import (
+	"fmt"
 	"reflect"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
@@ -55,13 +55,13 @@ func (me ExternalGoPluginContext) Init(logger Logger, fs afero.Fs, codeFile stri
 
 	me.interpreter = interp.New(interp.Options{})
 	if err := me.interpreter.Use(stdlib.Symbols); err != nil {
-		panic(errors.Wrapf(err, "use stdlib failed: %s", codeFile))
+		panic(NewSystemError(fmt.Sprintf("use stdlib failed: %s", codeFile), err))
 	}
 
 	code := ReadFileTextP(fs, codeFile)
 	_, err := me.interpreter.Eval(code)
 	if err != nil {
-		panic(errors.Wrapf(err, "eval %s", codeFile))
+		panic(NewSystemError(fmt.Sprintf("eval code: %s", codeFile), err))
 	}
 
 	me.startFunc = resolveExternalGoPluginFunc(logger, me.interpreter, "plugin.PluginStart")

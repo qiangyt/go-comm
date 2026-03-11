@@ -183,6 +183,14 @@ other = "échec de la copie du fichier"
 one = "échec de la suppression du fichier source après copie"
 other = "échec de la suppression du fichier source après copie"
 
+[FailedToRemoveLink]
+one = "échec de la suppression du lien existant"
+other = "échec de la suppression du lien existant"
+
+[FailedToRemoveFile]
+one = "échec de la suppression du fichier"
+other = "échec de la suppression du fichier"
+
 [FailedToCreateLinkDir]
 one = "échec de la création du répertoire de lien"
 other = "échec de la création du répertoire de lien"

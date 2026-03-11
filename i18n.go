@@ -25,18 +25,18 @@ var (
 // 支持的语言标签映射
 var langTags = map[string]language.Tag{
 	"zh": language.SimplifiedChinese, // 中文
-	"en": language.English,            // 英语
-	"ru": language.Russian,            // 俄语
-	"fr": language.French,             // 法语
-	"es": language.Spanish,            // 西班牙语
-	"it": language.Italian,            // 意大利语
-	"de": language.German,             // 德语
-	"hu": language.Hungarian,          // 匈牙利语
-	"ko": language.Korean,             // 韩语
-	"ja": language.Japanese,           // 日语
-	"vi": language.Vietnamese,         // 越南语
-	"th": language.Thai,               // 泰语
-	"id": language.Indonesian,         // 印尼语
+	"en": language.English,           // 英语
+	"ru": language.Russian,           // 俄语
+	"fr": language.French,            // 法语
+	"es": language.Spanish,           // 西班牙语
+	"it": language.Italian,           // 意大利语
+	"de": language.German,            // 德语
+	"hu": language.Hungarian,         // 匈牙利语
+	"ko": language.Korean,            // 韩语
+	"ja": language.Japanese,          // 日语
+	"vi": language.Vietnamese,        // 越南语
+	"th": language.Thai,              // 泰语
+	"id": language.Indonesian,        // 印尼语
 }
 
 // 默认语言（英语）
@@ -146,8 +146,9 @@ func loadEmbeddedLocales() {
 
 // T translates a message ID with optional template data.
 // Usage:
-//   T("error.required", map[string]interface{}{"Hint": "config", "Key": "name"})
-func T(messageID string, templateData map[string]interface{}) string {
+//
+//	T("error.required", map[string]any{"Hint": "config", "Key": "name"})
+func T(messageID string, templateData map[string]any) string {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
@@ -168,7 +169,7 @@ func T(messageID string, templateData map[string]interface{}) string {
 
 // Tf translates a message ID with formatted arguments (printf-style).
 // This is a convenience function for simple string formatting.
-func Tf(messageID string, args ...interface{}) string {
+func Tf(messageID string, args ...any) string {
 	mutex.RLock()
 	defer mutex.RUnlock()
 
@@ -193,12 +194,12 @@ func Tf(messageID string, args ...interface{}) string {
 }
 
 // LocalizeError creates a localized error message.
-func LocalizeError(messageID string, templateData map[string]interface{}) error {
+func LocalizeError(messageID string, templateData map[string]any) error {
 	return fmt.Errorf("%s", T(messageID, templateData))
 }
 
 // LocalizeErrorf creates a localized error message with printf-style formatting.
-func LocalizeErrorf(messageID string, args ...interface{}) error {
+func LocalizeErrorf(messageID string, args ...any) error {
 	return fmt.Errorf("%s", Tf(messageID, args...))
 }
 
@@ -226,12 +227,10 @@ func localize(id string, args ...map[string]any) string {
 // LocalizeFunc is the i18n localization function type
 type LocalizeFunc func(id string, args ...map[string]any) string
 
-var (
-	// DefaultLocalizeFunc is the default localization function (returns id directly)
-	DefaultLocalizeFunc LocalizeFunc = func(id string, args ...map[string]any) string {
-		return id
-	}
-)
+// DefaultLocalizeFunc is the default localization function (returns id directly)
+var DefaultLocalizeFunc LocalizeFunc = func(id string, args ...map[string]any) string {
+	return id
+}
 
 // NewLocalizedFileOps creates a FileOps with built-in i18n support
 func NewLocalizedFileOps(fs afero.Fs) FileOps {

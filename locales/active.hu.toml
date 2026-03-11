@@ -183,6 +183,14 @@ other = "fájl másolása sikertelen"
 one = "forrásfájl eltávolítása másolás után sikertelen"
 other = "forrásfájl eltávolítása másolás után sikertelen"
 
+[FailedToRemoveLink]
+one = "meglévő hivatkozás eltávolítása sikertelen"
+other = "meglévő hivatkozás eltávolítása sikertelen"
+
+[FailedToRemoveFile]
+one = "fájl eltávolítása sikertelen"
+other = "fájl eltávolítása sikertelen"
+
 [FailedToCreateLinkDir]
 one = "linkkönyvtár létrehozása sikertelen"
 other = "linkkönyvtár létrehozása sikertelen"

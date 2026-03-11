@@ -183,6 +183,14 @@ other = "Datei kopieren fehlgeschlagen"
 one = "Quelldatei nach dem Kopieren entfernen fehlgeschlagen"
 other = "Quelldatei nach dem Kopieren entfernen fehlgeschlagen"
 
+[FailedToRemoveLink]
+one = "fehlgeschlagen, vorhandenen Link zu entfernen"
+other = "fehlgeschlagen, vorhandenen Link zu entfernen"
+
+[FailedToRemoveFile]
+one = "Datei entfernen fehlgeschlagen"
+other = "Datei entfernen fehlgeschlagen"
+
 [FailedToCreateLinkDir]
 one = "Link-Verzeichnis erstellen fehlgeschlagen"
 other = "Link-Verzeichnis erstellen fehlgeschlagen"

@@ -123,6 +123,7 @@ func TestHandlerRegistry_ExactMatch(t *testing.T) {
 	// echo 应该精确匹配
 	handler, ok := registry.Match("echo")
 	a.True(ok)
+	_ = handler
 
 	// echotest 不应该匹配
 	handler, ok = registry.Match("echotest")
@@ -142,10 +143,12 @@ func TestHandlerRegistry_RegexMatch(t *testing.T) {
 	// git 应该匹配
 	handler, ok := registry.Match("git")
 	a.True(ok)
+	_ = handler
 
 	// git-config 应该匹配
 	handler, ok = registry.Match("git-config")
 	a.True(ok)
+	_ = handler
 
 	// gitconfig 不应该匹配（没有连字符）
 	handler, ok = registry.Match("gitconfig")

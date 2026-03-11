@@ -85,7 +85,7 @@ func (me Logger) Error(err any) LogEntry {
 func NewLoggerP(console io.Writer, config LoggerConfig, fileName string) Logger {
 	r, err := NewLogger(console, config, fileName)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError("create logger", err))
 	}
 	return r
 }

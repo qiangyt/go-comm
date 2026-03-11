@@ -1,11 +1,12 @@
 package test
 
 import (
-	comm "github.com/qiangyt/go-comm/v2"
 	"bytes"
 	"io"
 	"strings"
 	"testing"
+
+	comm "github.com/qiangyt/go-comm/v2"
 )
 
 func TestProgressReader(t *testing.T) {
@@ -266,7 +267,7 @@ func TestProgressReaderSlowUpdate(t *testing.T) {
 	pr := comm.NewProgressReader(reader, int64(len(content)), onProgress)
 
 	// 快速读取所有内容（应该不会触发多次进度更新）
-	io.Copy(io.Discard, pr)
+	_, _ = io.Copy(io.Discard, pr)
 
 	// 由于读取速度快，可能不会触发间隔更新
 	// 但调用Finish应该触发一次
@@ -289,6 +290,6 @@ func TestProgressReaderZeroTotal(t *testing.T) {
 	})
 
 	buf := make([]byte, len(content))
-	pr.Read(buf)
+	_, _ = pr.Read(buf)
 	pr.Finish()
 }

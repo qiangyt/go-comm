@@ -1,10 +1,10 @@
 package comm
 
 import (
+	"fmt"
 	"path/filepath"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
 
@@ -147,7 +147,7 @@ func ResolveExternalPlugin(logger Logger, fs afero.Fs, pluginDir string) (result
 func ListExternalPlugins(logger Logger, afs afero.Fs, baseDir string) []ExternalPlugin {
 	pluginDirOrFiles, err := afero.ReadDir(afs, baseDir)
 	if err != nil {
-		panic(errors.Wrapf(err, "read plugins directories: %s", baseDir))
+		panic(NewSystemError(fmt.Sprintf("read plugins directories: %s", baseDir), err))
 	}
 
 	r := NewOrderedMap[ExternalPlugin](nil)

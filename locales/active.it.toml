@@ -183,6 +183,14 @@ other = "copia del file fallita"
 one = "impossibile rimuovere il file sorgente dopo la copia"
 other = "impossibile rimuovere il file sorgente dopo la copia"
 
+[FailedToRemoveLink]
+one = "impossibile rimuovere il collegamento esistente"
+other = "impossibile rimuovere il collegamento esistente"
+
+[FailedToRemoveFile]
+one = "impossibile rimuovere il file"
+other = "impossibile rimuovere il file"
+
 [FailedToCreateLinkDir]
 one = "impossibile creare la directory dei collegamenti"
 other = "impossibile creare la directory dei collegamenti"

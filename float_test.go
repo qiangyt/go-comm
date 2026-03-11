@@ -259,4 +259,3 @@ func TestFloatMapP(t *testing.T) {
 	// Test panic on invalid type
 	a.Panics(func() { FloatMapP("test", []float64{1.1, 2.2, 3.3}) })
 }
-

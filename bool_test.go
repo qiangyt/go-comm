@@ -300,4 +300,3 @@ func TestBoolMapP(t *testing.T) {
 	// Test panic on invalid type
 	a.Panics(func() { BoolMapP("test", []bool{true, false}) })
 }
-

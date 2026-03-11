@@ -21,7 +21,7 @@ func TestHashCalculator_CalculateMD5(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	testContent := []byte("hello world")
-	if err := os.WriteFile(testFile, testContent, 0644); err != nil {
+	if err := os.WriteFile(testFile, testContent, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -41,7 +41,7 @@ func TestHashCalculator_CalculateSHA256(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	testContent := []byte("hello world")
-	if err := os.WriteFile(testFile, testContent, 0644); err != nil {
+	if err := os.WriteFile(testFile, testContent, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -88,7 +88,7 @@ func TestHashCalculator_EmptyFile(t *testing.T) {
 	// Create empty file
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "empty.txt")
-	if err := os.WriteFile(testFile, []byte{}, 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte{}, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -129,7 +129,7 @@ func TestHashCalculator_LargeFile(t *testing.T) {
 
 	// Write 1MB of data
 	largeContent := bytes.Repeat([]byte("a"), 1024*1024)
-	if err := os.WriteFile(testFile, largeContent, 0644); err != nil {
+	if err := os.WriteFile(testFile, largeContent, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 

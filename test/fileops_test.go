@@ -1,10 +1,11 @@
 package test
 
 import (
-	comm "github.com/qiangyt/go-comm/v2"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	comm "github.com/qiangyt/go-comm/v2"
 
 	"github.com/spf13/afero"
 )
@@ -17,7 +18,7 @@ func TestFileOps_CopyFile(t *testing.T) {
 	// 创建源文件
 	srcFile := filepath.Join(tmpDir, "source.txt")
 	testContent := []byte("test content")
-	if err := afero.WriteFile(fs, srcFile, testContent, 0644); err != nil {
+	if err := afero.WriteFile(fs, srcFile, testContent, 0o644); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 
@@ -43,7 +44,7 @@ func TestFileOps_MoveFile(t *testing.T) {
 	// 创建源文件
 	srcFile := filepath.Join(tmpDir, "source.txt")
 	testContent := []byte("test content")
-	if err := afero.WriteFile(fs, srcFile, testContent, 0644); err != nil {
+	if err := afero.WriteFile(fs, srcFile, testContent, 0o644); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 
@@ -91,7 +92,7 @@ func TestFileOps_FileExists(t *testing.T) {
 
 	// 创建文件
 	testFile := filepath.Join(tmpDir, "test.txt")
-	if err := afero.WriteFile(fs, testFile, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -112,7 +113,9 @@ func TestFileOps_DirExists(t *testing.T) {
 	tmpDir := "/tmp"
 
 	// 创建目录
-	fs.MkdirAll(tmpDir, 0755)
+	if err := fs.MkdirAll(tmpDir, 0o755); err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
 
 	// 测试目录存在
 	if !ops.DirExists(tmpDir) {
@@ -126,7 +129,7 @@ func TestFileOps_DirExists(t *testing.T) {
 
 	// 测试文件（不是目录）
 	testFile := filepath.Join(tmpDir, "test.txt")
-	if err := afero.WriteFile(fs, testFile, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 	if ops.DirExists(testFile) {
@@ -142,7 +145,7 @@ func TestFileOps_GetFileSize(t *testing.T) {
 	// 创建文件
 	testFile := filepath.Join(tmpDir, "test.txt")
 	testContent := []byte("test content")
-	if err := afero.WriteFile(fs, testFile, testContent, 0644); err != nil {
+	if err := afero.WriteFile(fs, testFile, testContent, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -167,7 +170,7 @@ func TestFileOps_SetPermissions(t *testing.T) {
 
 	// 创建文件
 	testFile := filepath.Join(tmpDir, "test.txt")
-	if err := afero.WriteFile(fs, testFile, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -180,7 +183,7 @@ func TestFileOps_SetPermissions(t *testing.T) {
 		t.Fatalf("Failed to stat file: %v", err)
 	}
 
-	expectedMode := uint32(0755)
+	expectedMode := uint32(0o755)
 	actualMode := uint32(info.Mode().Perm())
 	if actualMode != expectedMode {
 		t.Errorf("File mode = %o, want %o", actualMode, expectedMode)
@@ -193,7 +196,7 @@ func TestFileOps_SetPermissionsEmpty(t *testing.T) {
 	tmpDir := "/tmp"
 
 	testFile := filepath.Join(tmpDir, "test.txt")
-	if err := afero.WriteFile(fs, testFile, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -213,7 +216,7 @@ func TestFileOps_CreateSymlink(t *testing.T) {
 
 	// 创建目标文件
 	targetFile := filepath.Join(tmpDir, "target.txt")
-	if err := afero.WriteFile(fs, targetFile, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, targetFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create target file: %v", err)
 	}
 
@@ -275,7 +278,7 @@ func TestFileOps_RenameFile(t *testing.T) {
 
 	// 创建测试文件
 	oldPath := filepath.Join(tmpDir, "old.txt")
-	if err := afero.WriteFile(fs, oldPath, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, oldPath, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -318,7 +321,7 @@ func TestFileOps_RemoveFile(t *testing.T) {
 
 	// 创建测试文件
 	testFile := filepath.Join(tmpDir, "test.txt")
-	if err := afero.WriteFile(fs, testFile, []byte("test"), 0644); err != nil {
+	if err := afero.WriteFile(fs, testFile, []byte("test"), 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 

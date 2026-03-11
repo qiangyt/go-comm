@@ -183,6 +183,14 @@ other = "gagal menyalin file"
 one = "gagal menghapus file sumber setelah menyalin"
 other = "gagal menghapus file sumber setelah menyalin"
 
+[FailedToRemoveLink]
+one = "gagal menghapus tautan yang ada"
+other = "gagal menghapus tautan yang ada"
+
+[FailedToRemoveFile]
+one = "gagal menghapus file"
+other = "gagal menghapus file"
+
 [FailedToCreateLinkDir]
 one = "gagal membuat direktori tautan"
 other = "gagal membuat direktori tautan"

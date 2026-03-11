@@ -43,7 +43,7 @@ func (me PluginRegistry) ValidatePlugin(namespace string, plugin Plugin) error {
 
 	major, _ := plugin.Version()
 	if major != me.supportedMajorVersion {
-		return LocalizeError("error.plugin.version_mismatch", map[string]interface{}{
+		return LocalizeError("error.plugin.version_mismatch", map[string]any{
 			"Namespace": namespace,
 			"Name":      name,
 			"Expected":  me.supportedMajorVersion,
@@ -53,7 +53,7 @@ func (me PluginRegistry) ValidatePlugin(namespace string, plugin Plugin) error {
 
 	kind := plugin.Kind()
 	if !me.IsSupportedPluginKind(kind) {
-		return LocalizeError("error.plugin.unsupported_kind", map[string]interface{}{
+		return LocalizeError("error.plugin.unsupported_kind", map[string]any{
 			"Namespace": namespace,
 			"Name":      name,
 			"Kind":      kind,
@@ -123,16 +123,11 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 
 	ns := loader.Namespace()
 	if len(ns) == 0 {
-		panic(LocalizeError("error.plugin.namespace_not_specified", map[string]interface{}{
-			"Loader": fmt.Sprintf("%+v", loader),
-		}))
+		panic(NewConfigErrorf("plugin loader namespace not specified: %s", fmt.Sprintf("%+v", loader)))
 	}
 
 	if existingLoader, alreadyRegistered := me.loaders[ns]; alreadyRegistered {
-		panic(LocalizeError("error.plugin.namespace_already_registered", map[string]interface{}{
-			"Namespace": ns,
-			"Loader":    fmt.Sprintf("%+v", existingLoader),
-		}))
+		panic(NewConfigErrorf("plugin loader namespace already registered: %s (existing: %s)", ns, fmt.Sprintf("%+v", existingLoader)))
 	}
 
 	newPlugins := loader.Plugins()
@@ -141,7 +136,7 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 
 	for name, plugin := range newPlugins {
 		if err := me.ValidatePlugin(ns, plugin); err != nil {
-			panic(err)
+			panic(NewConfigError("validate plugin", err))
 		}
 
 		kind := plugin.Kind()
@@ -154,11 +149,7 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 		}
 
 		if existingPlugin, found := pluginsWithKind[name]; found {
-			panic(LocalizeError("error.plugin.duplicated_kind", map[string]interface{}{
-				"Namespace": id,
-				"Kind":      kind,
-				"Loader":    fmt.Sprintf("%+v", existingPlugin),
-			}))
+			panic(NewBusinessErrorf("plugin kind duplicated: %s (namespace: %s, kind: %s, existing: %s)", id, ns, kind, fmt.Sprintf("%+v", existingPlugin)))
 		}
 		pluginsWithKind[name] = plugin
 	}

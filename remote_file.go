@@ -24,7 +24,7 @@ func init() {
 func NewRemoteFileP(url string, credentials Credentials, timeout time.Duration) RemoteFile {
 	r, err := NewRemoteFile(url, credentials, timeout)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -79,7 +79,7 @@ func (me RemoteFile) Timeout() time.Duration {
 func (me RemoteFile) DownloadP() Content {
 	r, err := me.Download()
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r
 }

@@ -115,7 +115,7 @@ func (me *ConfigConfig) ToMapstruct() *mapstructure.DecoderConfig {
 func DecodeWithYamlP[T any](yamlText string, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata) {
 	r, m, err := DecodeWithYaml(yamlText, cfgcfg, result, devault)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r, m
 }
@@ -132,7 +132,7 @@ func DecodeWithYaml[T any](yamlText string, cfgcfg *ConfigConfig, result *T, dev
 func DecodeWithMapP[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata) {
 	r, m, err := DecodeWithMap(input, cfgcfg, result, devault)
 	if err != nil {
-		panic(err)
+		panic(NewSystemError(err.Error(), err))
 	}
 	return r, m
 }

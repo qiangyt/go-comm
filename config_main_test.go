@@ -231,7 +231,7 @@ func TestLoadEnvScripts_withFilenames(t *testing.T) {
 	vars := map[string]string{}
 	// Use non-existent files - RunGoshCommand will error, but LoadEnvScripts should still return with error
 	result, err := LoadEnvScripts(fs, vars, "/nonexistent/file1", "/nonexistent/file2")
-	a.Error(err)  // Expected to have errors
+	a.Error(err) // Expected to have errors
 	a.NotNil(result)
 }
 

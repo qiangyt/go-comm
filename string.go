@@ -9,7 +9,7 @@ import (
 func RequiredStringP(hint string, key string, m map[string]any) string {
 	r, err := RequiredString(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -17,7 +17,7 @@ func RequiredStringP(hint string, key string, m map[string]any) string {
 func RequiredString(hint string, key string, m map[string]any) (string, error) {
 	v, has := m[key]
 	if !has {
-		return "", LocalizeError("error.required", map[string]interface{}{
+		return "", LocalizeError("error.required", map[string]any{
 			"Hint": hint,
 			"Key":  key,
 		})
@@ -30,7 +30,7 @@ func OptionalStringP(hint string, key string, m map[string]any, devault string) 
 	var err error
 	result, has, err = OptionalString(hint, key, m, devault)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -52,7 +52,7 @@ func OptionalString(hint string, key string, m map[string]any, devault string) (
 func StringP(hint string, v any) string {
 	r, err := String(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -60,7 +60,7 @@ func StringP(hint string, v any) string {
 func String(hint string, v any) (string, error) {
 	r, ok := v.(string)
 	if !ok {
-		return "", LocalizeError("error.type.string", map[string]interface{}{
+		return "", LocalizeError("error.type.string", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -72,7 +72,7 @@ func String(hint string, v any) (string, error) {
 func StringArrayValueP(hint string, key string, m map[string]any) []string {
 	r, err := StringArrayValue(hint, key, m)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -80,7 +80,7 @@ func StringArrayValueP(hint string, key string, m map[string]any) []string {
 func StringArrayValue(hint string, key string, m map[string]any) ([]string, error) {
 	v, has := m[key]
 	if !has {
-		return nil, LocalizeError("error.required", map[string]interface{}{
+		return nil, LocalizeError("error.required", map[string]any{
 			"Hint": hint,
 			"Key":  key,
 		})
@@ -93,7 +93,7 @@ func OptionalStringArrayValueP(hint string, key string, m map[string]any, devaul
 	var err error
 	result, has, err = OptionalStringArrayValue(hint, key, m, devault)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return result, has
 }
@@ -114,7 +114,7 @@ func OptionalStringArrayValue(hint string, key string, m map[string]any, devault
 func StringArrayP(hint string, v any) []string {
 	r, err := StringArray(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -136,7 +136,7 @@ func StringArray(hint string, v any) ([]string, error) {
 		} else if r0, err := String(hint, v); err == nil {
 			return []string{r0}, nil
 		}
-		return nil, LocalizeError("error.type.string_array", map[string]interface{}{
+		return nil, LocalizeError("error.type.string_array", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,
@@ -148,7 +148,7 @@ func StringArray(hint string, v any) ([]string, error) {
 func StringMapP(hint string, v any) map[string]string {
 	r, err := StringMap(hint, v)
 	if err != nil {
-		panic(err)
+		panic(NewConfigError(err.Error(), err))
 	}
 	return r
 }
@@ -175,7 +175,7 @@ func StringMap(hint string, v any) (map[string]string, error) {
 				}
 			}
 		}
-		return nil, LocalizeError("error.type.string_map", map[string]interface{}{
+		return nil, LocalizeError("error.type.string_map", map[string]any{
 			"Hint":  hint,
 			"Type":  reflect.TypeOf(v),
 			"Value": v,

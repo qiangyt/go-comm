@@ -183,6 +183,14 @@ other = "falló al copiar el archivo"
 one = "falló al eliminar el archivo fuente después de copiar"
 other = "falló al eliminar el archivo fuente después de copiar"
 
+[FailedToRemoveLink]
+one = "falló al eliminar enlace existente"
+other = "falló al eliminar enlace existente"
+
+[FailedToRemoveFile]
+one = "falló al eliminar archivo"
+other = "falló al eliminar archivo"
+
 [FailedToCreateLinkDir]
 one = "falló al crear el directorio de enlaces"
 other = "falló al crear el directorio de enlaces"

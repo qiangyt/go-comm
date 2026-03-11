@@ -1,10 +1,11 @@
 package test
 
 import (
-	comm "github.com/qiangyt/go-comm/v2"
 	"os"
 	"path/filepath"
 	"testing"
+
+	comm "github.com/qiangyt/go-comm/v2"
 )
 
 func TestFileCache(t *testing.T) {
@@ -20,7 +21,7 @@ func TestFileCache(t *testing.T) {
 	// 创建测试文件
 	testFile := filepath.Join(tmpDir, "test_source.txt")
 	testContent := []byte("test content for cache")
-	if err := os.WriteFile(testFile, testContent, 0644); err != nil {
+	if err := os.WriteFile(testFile, testContent, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
