@@ -1,9 +1,12 @@
 package comm
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	plog "github.com/phuslu/log"
 	"github.com/pkg/errors"
@@ -11,6 +14,7 @@ import (
 	eventloggers "github.com/qiangyt/go-event/loggers/phuslu"
 	"go.uber.org/atomic"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"log/slog"
 )
 
 func LogMapper(logger *plog.Entry, key string, mapper ToMap) *plog.Entry {
@@ -190,4 +194,99 @@ func (me EventLogger) LogEventInfo(enm event.LogEnum, lsner string, evnt event.E
 func (me EventLogger) LogEventError(enm event.LogEnum, lsner string, evnt event.Event, err any) {
 	entry := me.target.Error(err).Object("event", evnt).Str("listener", lsner)
 	entry.Msg(enm.String())
+}
+
+// SlogLogger 将 comm.Logger 包装为 slog.Logger
+type SlogLogger struct {
+	logger Logger
+	attrs  []slog.Attr
+	group  string
+}
+
+// NewSlogLogger 创建 slog.Logger
+func NewSlogLogger(logger Logger) *SlogLogger {
+	return &SlogLogger{logger: logger}
+}
+
+func (s *SlogLogger) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= slog.LevelInfo
+}
+
+func (s *SlogLogger) Handle(_ context.Context, r slog.Record) error {
+	var entry *plog.Entry
+	if r.Level == slog.LevelError {
+		entry = s.logger.Logger.Error()
+	} else if r.Level == slog.LevelWarn {
+		entry = s.logger.Logger.Warn()
+	} else if r.Level == slog.LevelDebug {
+		entry = s.logger.Logger.Debug()
+	} else {
+		entry = s.logger.Logger.Info()
+	}
+
+	// 添加时间
+	entry = entry.Time("time", r.Time)
+
+	// 添加级别
+	entry = entry.Str("level", r.Level.String())
+
+	// 添加消息
+	entry = entry.Str("msg", r.Message)
+
+	// 添加group
+	if s.group != "" {
+		entry = entry.Str("group", s.group)
+	}
+
+	// 添加保存的属性
+	for _, attr := range s.attrs {
+		entry = s.addAttr(entry, attr)
+	}
+
+	// 添加record的属性
+	r.Attrs(func(a slog.Attr) bool {
+		entry = s.addAttr(entry, a)
+		return true
+	})
+
+	entry.Msg("")
+	return nil
+}
+
+func (s *SlogLogger) addAttr(entry *plog.Entry, a slog.Attr) *plog.Entry {
+	switch v := a.Value.Any().(type) {
+	case string:
+		return entry.Str(a.Key, v)
+	case int:
+		return entry.Int64(a.Key, int64(v))
+	case int64:
+		return entry.Int64(a.Key, v)
+	case bool:
+		return entry.Bool(a.Key, v)
+	case time.Duration:
+		return entry.Str(a.Key, v.String())
+	case time.Time:
+		return entry.Time(a.Key, v)
+	default:
+		return entry.Str(a.Key, fmt.Sprintf("%+v", v))
+	}
+}
+
+func (s *SlogLogger) WithAttrs(attrs []slog.Attr) slog.Handler {
+	newLogger := &SlogLogger{
+		logger: s.logger,
+		attrs:  append([]slog.Attr{}, s.attrs...),
+		group:  s.group,
+	}
+	newLogger.attrs = append(newLogger.attrs, attrs...)
+	return newLogger
+}
+
+func (s *SlogLogger) WithGroup(name string) slog.Handler {
+	newLogger := &SlogLogger{
+		logger: s.logger,
+		attrs:  s.attrs,
+		group:  name,
+	}
+	return newLogger
 }
