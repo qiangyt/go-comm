@@ -220,3 +220,8 @@ func Text2Lines(text string) []string {
 	rdr := strings.NewReader(text)
 	return ReadLines(rdr)
 }
+
+// JoinLines 将行数组合并为文本，使用换行符连接
+func JoinLines(lines []string) string {
+	return strings.Join(lines, "\n")
+}
