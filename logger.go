@@ -294,97 +294,11 @@ func (me SlogLogger) WithGroup(name string) slog.Handler {
 	return newLogger
 }
 
-// slogToCommHandler 实现 slog.Handler 接口，将 slog 日志转发到 comm.Logger
-type slogToCommHandler struct {
-	logger Logger
-	attrs  []slog.Attr
-	group  string
-}
-
-func (h *slogToCommHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return level >= slog.LevelInfo
-}
-
-func (h *slogToCommHandler) Handle(_ context.Context, r slog.Record) error {
-	var entry *plog.Entry
-	if r.Level == slog.LevelError {
-		entry = h.logger.Logger.Error()
-	} else if r.Level == slog.LevelWarn {
-		entry = h.logger.Logger.Warn()
-	} else if r.Level == slog.LevelDebug {
-		entry = h.logger.Logger.Debug()
-	} else {
-		entry = h.logger.Logger.Info()
+// ToSlogLogger 将 comm.Logger 转换为 *slog.Logger
+// 使用 phuslu/log 的 Slog() 方法创建
+func ToSlogLogger(logger Logger) *slog.Logger {
+	if logger == nil {
+		return nil
 	}
-
-	entry = entry.Time("time", r.Time)
-	entry = entry.Str("level", r.Level.String())
-	entry = entry.Str("msg", r.Message)
-
-	if h.group != "" {
-		entry = entry.Str("group", h.group)
-	}
-
-	for _, attr := range h.attrs {
-		entry = h.addAttr(entry, attr)
-	}
-
-	r.Attrs(func(a slog.Attr) bool {
-		entry = h.addAttr(entry, a)
-		return true
-	})
-
-	entry.Msg("")
-	return nil
-}
-
-func (h *slogToCommHandler) addAttr(entry *plog.Entry, a slog.Attr) *plog.Entry {
-	switch v := a.Value.Any().(type) {
-	case string:
-		return entry.Str(a.Key, v)
-	case int:
-		return entry.Int64(a.Key, int64(v))
-	case int64:
-		return entry.Int64(a.Key, v)
-	case bool:
-		return entry.Bool(a.Key, v)
-	case float64:
-		return entry.Float64(a.Key, v)
-	case time.Time:
-		return entry.Time(a.Key, v)
-	default:
-		return entry.Str(a.Key, fmt.Sprintf("%+v", v))
-	}
-}
-
-func (h *slogToCommHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	newHandler := &slogToCommHandler{
-		logger: h.logger,
-		attrs:  append([]slog.Attr{}, h.attrs...),
-		group:  h.group,
-	}
-	newHandler.attrs = append(newHandler.attrs, attrs...)
-	return newHandler
-}
-
-func (h *slogToCommHandler) WithGroup(name string) slog.Handler {
-	return &slogToCommHandler{
-		logger: h.logger,
-		attrs:  h.attrs,
-		group:  name,
-	}
-}
-
-// NewLoggerFromSlog 创建 comm.Logger，从 slog.Logger 接收日志
-// 注意：返回的 comm.Logger 会将接收到的日志写入 targetLogger
-func NewLoggerFromSlog(_ *slog.Logger, targetLogger Logger) Logger {
-	if targetLogger == nil {
-		targetLogger = NewDiscardLogger()
-	}
-	// 创建新的 slog.Logger，使用我们的 handler 将日志转发到 targetLogger
-	handler := &slogToCommHandler{logger: targetLogger}
-	// 设置默认的 slog Logger 使用我们的 handler
-	slog.SetDefault(slog.New(handler))
-	// 返回 targetLogger，它现在会接收来自 slog 的日志
-	return targetLogger
+	return logger.Logger.Slog()
 }
