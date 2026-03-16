@@ -8,13 +8,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"log/slog"
+
 	plog "github.com/phuslu/log"
 	"github.com/pkg/errors"
 	"github.com/qiangyt/go-event"
 	eventloggers "github.com/qiangyt/go-event/loggers/phuslu"
 	"go.uber.org/atomic"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"log/slog"
 )
 
 func LogMapper(logger *plog.Entry, key string, mapper ToMap) *plog.Entry {
@@ -196,32 +197,34 @@ func (me EventLogger) LogEventError(enm event.LogEnum, lsner string, evnt event.
 	entry.Msg(enm.String())
 }
 
-// SlogLogger 将 comm.Logger 包装为 slog.Logger
-type SlogLogger struct {
+// SlogLoggerT 将 comm.Logger 包装为 slog.Logger
+type SlogLoggerT struct {
 	logger Logger
 	attrs  []slog.Attr
 	group  string
 }
 
+type SlogLogger = *SlogLoggerT
+
 // NewSlogLogger 创建 slog.Logger
-func NewSlogLogger(logger Logger) *SlogLogger {
-	return &SlogLogger{logger: logger}
+func NewSlogLogger(logger Logger) *SlogLoggerT {
+	return &SlogLoggerT{logger: logger}
 }
 
-func (s *SlogLogger) Enabled(_ context.Context, level slog.Level) bool {
+func (me SlogLogger) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= slog.LevelInfo
 }
 
-func (s *SlogLogger) Handle(_ context.Context, r slog.Record) error {
+func (me SlogLogger) Handle(_ context.Context, r slog.Record) error {
 	var entry *plog.Entry
 	if r.Level == slog.LevelError {
-		entry = s.logger.Logger.Error()
+		entry = me.logger.Logger.Error()
 	} else if r.Level == slog.LevelWarn {
-		entry = s.logger.Logger.Warn()
+		entry = me.logger.Logger.Warn()
 	} else if r.Level == slog.LevelDebug {
-		entry = s.logger.Logger.Debug()
+		entry = me.logger.Logger.Debug()
 	} else {
-		entry = s.logger.Logger.Info()
+		entry = me.logger.Logger.Info()
 	}
 
 	// 添加时间
@@ -234,18 +237,18 @@ func (s *SlogLogger) Handle(_ context.Context, r slog.Record) error {
 	entry = entry.Str("msg", r.Message)
 
 	// 添加group
-	if s.group != "" {
-		entry = entry.Str("group", s.group)
+	if me.group != "" {
+		entry = entry.Str("group", me.group)
 	}
 
 	// 添加保存的属性
-	for _, attr := range s.attrs {
-		entry = s.addAttr(entry, attr)
+	for _, attr := range me.attrs {
+		entry = me.addAttr(entry, attr)
 	}
 
 	// 添加record的属性
 	r.Attrs(func(a slog.Attr) bool {
-		entry = s.addAttr(entry, a)
+		entry = me.addAttr(entry, a)
 		return true
 	})
 
@@ -253,7 +256,7 @@ func (s *SlogLogger) Handle(_ context.Context, r slog.Record) error {
 	return nil
 }
 
-func (s *SlogLogger) addAttr(entry *plog.Entry, a slog.Attr) *plog.Entry {
+func (me SlogLogger) addAttr(entry *plog.Entry, a slog.Attr) *plog.Entry {
 	switch v := a.Value.Any().(type) {
 	case string:
 		return entry.Str(a.Key, v)
@@ -272,20 +275,20 @@ func (s *SlogLogger) addAttr(entry *plog.Entry, a slog.Attr) *plog.Entry {
 	}
 }
 
-func (s *SlogLogger) WithAttrs(attrs []slog.Attr) slog.Handler {
-	newLogger := &SlogLogger{
-		logger: s.logger,
-		attrs:  append([]slog.Attr{}, s.attrs...),
-		group:  s.group,
+func (me SlogLogger) WithAttrs(attrs []slog.Attr) slog.Handler {
+	newLogger := &SlogLoggerT{
+		logger: me.logger,
+		attrs:  append([]slog.Attr{}, me.attrs...),
+		group:  me.group,
 	}
 	newLogger.attrs = append(newLogger.attrs, attrs...)
 	return newLogger
 }
 
-func (s *SlogLogger) WithGroup(name string) slog.Handler {
-	newLogger := &SlogLogger{
-		logger: s.logger,
-		attrs:  s.attrs,
+func (me SlogLogger) WithGroup(name string) slog.Handler {
+	newLogger := &SlogLoggerT{
+		logger: me.logger,
+		attrs:  me.attrs,
 		group:  name,
 	}
 	return newLogger
@@ -298,14 +301,90 @@ type slogToCommHandler struct {
 	group  string
 }
 
+func (h *slogToCommHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= slog.LevelInfo
+}
+
+func (h *slogToCommHandler) Handle(_ context.Context, r slog.Record) error {
+	var entry *plog.Entry
+	if r.Level == slog.LevelError {
+		entry = h.logger.Logger.Error()
+	} else if r.Level == slog.LevelWarn {
+		entry = h.logger.Logger.Warn()
+	} else if r.Level == slog.LevelDebug {
+		entry = h.logger.Logger.Debug()
+	} else {
+		entry = h.logger.Logger.Info()
+	}
+
+	entry = entry.Time("time", r.Time)
+	entry = entry.Str("level", r.Level.String())
+	entry = entry.Str("msg", r.Message)
+
+	if h.group != "" {
+		entry = entry.Str("group", h.group)
+	}
+
+	for _, attr := range h.attrs {
+		entry = h.addAttr(entry, attr)
+	}
+
+	r.Attrs(func(a slog.Attr) bool {
+		entry = h.addAttr(entry, a)
+		return true
+	})
+
+	entry.Msg("")
+	return nil
+}
+
+func (h *slogToCommHandler) addAttr(entry *plog.Entry, a slog.Attr) *plog.Entry {
+	switch v := a.Value.Any().(type) {
+	case string:
+		return entry.Str(a.Key, v)
+	case int:
+		return entry.Int64(a.Key, int64(v))
+	case int64:
+		return entry.Int64(a.Key, v)
+	case bool:
+		return entry.Bool(a.Key, v)
+	case float64:
+		return entry.Float64(a.Key, v)
+	case time.Time:
+		return entry.Time(a.Key, v)
+	default:
+		return entry.Str(a.Key, fmt.Sprintf("%+v", v))
+	}
+}
+
+func (h *slogToCommHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	newHandler := &slogToCommHandler{
+		logger: h.logger,
+		attrs:  append([]slog.Attr{}, h.attrs...),
+		group:  h.group,
+	}
+	newHandler.attrs = append(newHandler.attrs, attrs...)
+	return newHandler
+}
+
+func (h *slogToCommHandler) WithGroup(name string) slog.Handler {
+	return &slogToCommHandler{
+		logger: h.logger,
+		attrs:  h.attrs,
+		group:  name,
+	}
+}
+
 // NewLoggerFromSlog 创建 comm.Logger，从 slog.Logger 接收日志
-func NewLoggerFromSlog(slogLogger *slog.Logger) Logger {
-	logger := &LoggerT{}
-	// 使用 slogLogger 作为 handler，将日志写入默认的 comm.Logger
-	// 这里我们使用一个简单的实现：通过 slog.Handler 接口将日志转发
-	_ = logger // 暂时不需要
-	// 返回一个使用 slog.Handler 的 Logger
-	// 由于 comm.Logger 底层使用 phuslu/log，需要一个适配器
-	// 这里先返回一个 DiscardLogger，后续完善
-	return NewDiscardLogger()
+// 注意：返回的 comm.Logger 会将接收到的日志写入 targetLogger
+func NewLoggerFromSlog(_ *slog.Logger, targetLogger Logger) Logger {
+	if targetLogger == nil {
+		targetLogger = NewDiscardLogger()
+	}
+	// 创建新的 slog.Logger，使用我们的 handler 将日志转发到 targetLogger
+	handler := &slogToCommHandler{logger: targetLogger}
+	// 设置默认的 slog Logger 使用我们的 handler
+	slog.SetDefault(slog.New(handler))
+	// 返回 targetLogger，它现在会接收来自 slog 的日志
+	return targetLogger
 }
