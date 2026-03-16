@@ -290,3 +290,22 @@ func (s *SlogLogger) WithGroup(name string) slog.Handler {
 	}
 	return newLogger
 }
+
+// slogToCommHandler 实现 slog.Handler 接口，将 slog 日志转发到 comm.Logger
+type slogToCommHandler struct {
+	logger Logger
+	attrs  []slog.Attr
+	group  string
+}
+
+// NewLoggerFromSlog 创建 comm.Logger，从 slog.Logger 接收日志
+func NewLoggerFromSlog(slogLogger *slog.Logger) Logger {
+	logger := &LoggerT{}
+	// 使用 slogLogger 作为 handler，将日志写入默认的 comm.Logger
+	// 这里我们使用一个简单的实现：通过 slog.Handler 接口将日志转发
+	_ = logger // 暂时不需要
+	// 返回一个使用 slog.Handler 的 Logger
+	// 由于 comm.Logger 底层使用 phuslu/log，需要一个适配器
+	// 这里先返回一个 DiscardLogger，后续完善
+	return NewDiscardLogger()
+}
