@@ -225,3 +225,40 @@ func Text2Lines(text string) []string {
 func JoinLines(lines []string) string {
 	return strings.Join(lines, "\n")
 }
+
+// BlockedCommands 定义被阻止的命令列表
+var BlockedCommands = map[string]bool{
+	"rm":         true, // 删除文件
+	"mkfs":       true, // 格式化
+	"dd":         true, // 磁盘操作
+	"fdisk":      true, // 分区
+	"shred":      true, // 安全删除
+	"partprobe":  true, // 通知内核分区变化
+	"sfdisk":     true, // 分区操作
+	"cfdisk":     true, // 分区工具
+	"cryptsetup": true, // 加密设备
+	"losetup":    true, // 循环设备
+	"init":       true, // 系统初始化
+	"shutdown":   true, // 关机
+	"reboot":     true, // 重启
+	"halt":       true, // 停止
+	"poweroff":   true, // 关机
+}
+
+// CheckTerminalCommand 检查终端命令是否允许执行
+// 使用 panic 替代 error 返回，符合项目 Error 处理规范
+func CheckTerminalCommand(command string, args []string) {
+	// 检查命令是否在黑名单中
+	if BlockedCommands[command] {
+		panic(NewSecurityErrorf("命令 '%s' 被安全策略阻止", command))
+	}
+
+	// 检查危险的 chmod -R 操作
+	if command == "chmod" {
+		for _, arg := range args {
+			if arg == "-R" || arg == "--recursive" {
+				panic(NewSecurityErrorf("递归 chmod 被安全策略阻止"))
+			}
+		}
+	}
+}
