@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"encoding/json"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -328,7 +327,7 @@ func FromJson(jsonText string, envsubt bool, result any) (err error) {
 		}
 	}
 
-	if err = json.Unmarshal([]byte(jsonText), result); err != nil {
+	if err = jsonUnmarshal([]byte(jsonText), result); err != nil {
 		return errors.Wrapf(err, "parse json: \n\n%s", jsonText)
 	}
 	return nil

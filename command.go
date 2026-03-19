@@ -2,7 +2,6 @@ package comm
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"os"
 	"os/exec"
@@ -51,7 +50,7 @@ func ParseCommandOutput(outputText string) (CommandOutput, error) {
 	if strings.HasPrefix(outputText, "$json$\n\n") {
 		jsonBody := outputText[len("$json$\n\n"):]
 
-		err := json.Unmarshal([]byte(jsonBody), &r.Json)
+		err := jsonUnmarshal([]byte(jsonBody), &r.Json)
 		if err != nil {
 			return nil, errors.Wrapf(err, "json: %s", jsonBody)
 		}

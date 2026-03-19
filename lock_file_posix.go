@@ -6,7 +6,6 @@ package comm
 // a revised copy of github.com/allan-simon/go-singleinstance v0.0.0-20210120080615-d0997106ab37
 
 import (
-	"encoding/json"
 	"os"
 	"syscall"
 
@@ -33,7 +32,7 @@ func CreateLockFile(fs afero.Fs, filename string, data any) (afero.File, error) 
 	// Write PID to lock file
 	pid := os.Getpid()
 
-	payload, err := json.Marshal(map[string]any{
+	payload, err := jsonMarshal(map[string]any{
 		"pid":  pid,
 		"data": data,
 	})
