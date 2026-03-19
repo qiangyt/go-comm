@@ -232,14 +232,91 @@ func TestGinLoggerConfig_Custom(t *testing.T) {
 }
 
 // mockLogger 用于测试的 mock logger
-type mockLogger struct{}
+type mockLogger struct {
+	infoCalls  []logCall
+	warnCalls  []logCall
+	errorCalls []logCall
+	debugCalls []logCall
+	traceCalls []logCall
+}
 
-func (m *mockLogger) Info(msg string, fields ...any)   {}
-func (m *mockLogger) Warn(msg string, fields ...any)   {}
-func (m *mockLogger) Error(msg string, fields ...any)  {}
-func (m *mockLogger) Debug(msg string, fields ...any)  {}
-func (m *mockLogger) Trace(msg string, fields ...any)  {}
-func (m *mockLogger) Fatal(msg string, fields ...any)  {}
-func (m *mockLogger) Panic(msg string, fields ...any)  {}
+type logCall struct {
+	msg    string
+	fields map[string]any
+}
+
+func newMockLogger() *mockLogger {
+	return &mockLogger{
+		infoCalls:  make([]logCall, 0),
+		warnCalls:  make([]logCall, 0),
+		errorCalls: make([]logCall, 0),
+		debugCalls: make([]logCall, 0),
+		traceCalls: make([]logCall, 0),
+	}
+}
+
+func fieldsToMap(fields []any) map[string]any {
+	result := make(map[string]any)
+	for i := 0; i < len(fields)-1; i += 2 {
+		if key, ok := fields[i].(string); ok {
+			result[key] = fields[i+1]
+		}
+	}
+	return result
+}
+
+func (m *mockLogger) Info(msg string, fields ...any) {
+	m.infoCalls = append(m.infoCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
+func (m *mockLogger) Warn(msg string, fields ...any) {
+	m.warnCalls = append(m.warnCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
+func (m *mockLogger) Error(msg string, fields ...any) {
+	m.errorCalls = append(m.errorCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
+func (m *mockLogger) Debug(msg string, fields ...any) {
+	m.debugCalls = append(m.debugCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
+func (m *mockLogger) Trace(msg string, fields ...any) {
+	m.traceCalls = append(m.traceCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
+func (m *mockLogger) Fatal(msg string, fields ...any) {
+	m.errorCalls = append(m.errorCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
+func (m *mockLogger) Panic(msg string, fields ...any) {
+	m.errorCalls = append(m.errorCalls, logCall{msg: msg, fields: fieldsToMap(fields)})
+}
+
 func (m *mockLogger) WithField(key string, value any) any { return m }
 func (m *mockLogger) WithFields(fields map[string]any) any { return m }
+
+func (m *mockLogger) getLastInfoCall() *logCall {
+	if len(m.infoCalls) == 0 {
+		return nil
+	}
+	return &m.infoCalls[len(m.infoCalls)-1]
+}
+
+func (m *mockLogger) getLastWarnCall() *logCall {
+	if len(m.warnCalls) == 0 {
+		return nil
+	}
+	return &m.warnCalls[len(m.warnCalls)-1]
+}
+
+func (m *mockLogger) getLastErrorCall() *logCall {
+	if len(m.errorCalls) == 0 {
+		return nil
+	}
+	return &m.errorCalls[len(m.errorCalls)-1]
+}
+
+func (m *mockLogger) getInfoCallsCount() int { return len(m.infoCalls) }
+func (m *mockLogger) getWarnCallsCount() int { return len(m.warnCalls) }
+func (m *mockLogger) getErrorCallsCount() int { return len(m.errorCalls) }
