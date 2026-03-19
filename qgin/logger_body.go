@@ -122,6 +122,12 @@ func filterHeaders(headers map[string][]string, cfg HeaderLogConfig) map[string]
 		return nil
 	}
 
+	// 确保 SensitiveConfig 不为 nil
+	sensitiveCfg := cfg.SensitiveConfig
+	if sensitiveCfg == nil {
+		sensitiveCfg = DefaultSensitiveHeaderConfig()
+	}
+
 	result := make(map[string]string)
 
 	switch cfg.Strategy {
@@ -129,8 +135,8 @@ func filterHeaders(headers map[string][]string, cfg HeaderLogConfig) map[string]
 		for k, v := range headers {
 			value := strings.Join(v, "; ")
 			// 检查是否为敏感 header
-			if isSensitiveHeader(k, cfg.SensitiveConfig) {
-				value = applySensitiveStrategy(value, *cfg.SensitiveConfig)
+			if isSensitiveHeader(k, sensitiveCfg) {
+				value = applySensitiveStrategy(value, *sensitiveCfg)
 				if value == "" {
 					continue // Exclude 策略时跳过
 				}
@@ -157,8 +163,8 @@ func filterHeaders(headers map[string][]string, cfg HeaderLogConfig) map[string]
 			// 没有黑名单，记录所有
 			for k, v := range headers {
 				value := strings.Join(v, "; ")
-				if isSensitiveHeader(k, cfg.SensitiveConfig) {
-					value = applySensitiveStrategy(value, *cfg.SensitiveConfig)
+				if isSensitiveHeader(k, sensitiveCfg) {
+					value = applySensitiveStrategy(value, *sensitiveCfg)
 					if value == "" {
 						continue
 					}
@@ -176,8 +182,8 @@ func filterHeaders(headers map[string][]string, cfg HeaderLogConfig) map[string]
 				continue
 			}
 			value := strings.Join(v, "; ")
-			if isSensitiveHeader(k, cfg.SensitiveConfig) {
-				value = applySensitiveStrategy(value, *cfg.SensitiveConfig)
+			if isSensitiveHeader(k, sensitiveCfg) {
+				value = applySensitiveStrategy(value, *sensitiveCfg)
 				if value == "" {
 					continue
 				}

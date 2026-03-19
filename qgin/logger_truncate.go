@@ -1,9 +1,5 @@
 package qgin
 
-import (
-	"fmt"
-)
-
 const truncatedMarker = "...(truncated)"
 const truncatedMiddleMarker = "...(truncated)..."
 
@@ -69,9 +65,4 @@ func applyTruncateStrategy(s string, cfg BodyLogConfig) string {
 	default:
 		return truncateHeadAndTail(s, n)
 	}
-}
-
-// formatTruncatedSize 格式化截取大小信息
-func formatTruncatedSize(originalLen int, truncatedLen int) string {
-	return fmt.Sprintf("original: %d bytes, truncated: %d bytes", originalLen, truncatedLen)
 }

@@ -256,12 +256,3 @@ func TestApplyTruncateStrategy_DefaultStrategy(t *testing.T) {
 	// 应该被截取
 	a.Contains(result, "...(truncated)...")
 }
-
-// ==================== formatTruncatedSize ====================
-
-func TestFormatTruncatedSize(t *testing.T) {
-	a := require.New(t)
-
-	result := formatTruncatedSize(1000, 100)
-	a.Equal("original: 1000 bytes, truncated: 100 bytes", result)
-}
