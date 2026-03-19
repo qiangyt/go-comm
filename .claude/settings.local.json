@@ -20,7 +20,9 @@
       "Bash(GOPROXY=https://goproxy.cn,direct go mod vendor 2>&1)",
       "Bash(tee benchmark_results.txt)",
       "Bash(GOPROXY=https://goproxy.cn,direct: 1 go get -u github.com/gin-gonic/gin@v1.12.0)",
-      "Bash(GOPROXY=https://goproxy.cn,direct go get github.com/gin-gonic/gin@v1.12.0)"
+      "Bash(GOPROXY=https://goproxy.cn,direct go get github.com/gin-gonic/gin@v1.12.0)",
+      "Bash(grep -r \"func.*Config.*Marshal\\\\|func.*Config.*Unmarshal\\\\|func.*Config.*NewEncoder\\\\|func.*Config.*NewDecoder\" vendor/github.com/bytedance/sonic/*.go)",
+      "Bash(grep -A 20 'type API interface' vendor/github.com/bytedance/sonic/*.go)"
     ]
   }
 }
