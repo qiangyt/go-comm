@@ -31,7 +31,13 @@
       "Bash(ls -la /data1/mobile-claude-workspace/go-comm/*.go)",
       "Bash(ls:*)",
       "Bash(mise test-all:*)",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(jq \".tests[] | select\\(.status == \"\"fail\"\"\\) | {name: .name, error: .error}\")",
+      "Bash(python3 scripts/build.py test-all --verbose)",
+      "Bash(grep -A 5 '\"\"action\"\": \"\"fail\"\"' reports/2026-03-20_01-14-41/integration-all.json)",
+      "Bash(for i:*)",
+      "Bash(do echo:*)",
+      "Bash(go clean:*)"
     ]
   }
 }

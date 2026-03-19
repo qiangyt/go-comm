@@ -16,7 +16,7 @@
 > **目的**：将现有代码按功能模块重新组织，提高代码可维护性
 
 ### Step 0.0: Phase 前回归
-- [ ] 0.0.1 运行 `go test ./...` 确保所有现有测试通过
+- [x] 0.0.1 运行 `go test ./...` 确保所有现有测试通过
 
 ### Step 0.1: 移动 gin 相关代码到 qgin/ 目录
 **涉及文件**:
@@ -24,30 +24,19 @@
 - `gin_sonic_test.go` → `qgin/sonic_test.go`
 
 **Red:**
-- [ ] 0.1.1 编写测试：验证 `github.com/qiangyt/go-comm/qgin` 包可导入且功能正常
-- [ ] 0.1.2 运行测试确认失败（包不存在）
+- [x] 0.1.1 编写测试：验证 `github.com/qiangyt/go-comm/qgin` 包可导入且功能正常
+- [x] 0.1.2 运行测试确认失败（包不存在）
 **Green:**
-- [ ] 0.1.3 创建 `qgin/` 目录（已存在）
-- [ ] 0.1.4 移动 `gin_sonic.go` 到 `qgin/sonic.go`，修改 package 声明
-- [ ] 0.1.5 移动 `gin_sonic_test.go` 到 `qgin/sonic_test.go`
-- [ ] 0.1.6 在 go-comm 根目录创建转发文件（保持向后兼容）
-- [ ] 0.1.7 运行测试确认通过
+- [x] 0.1.3 创建 `qgin/` 目录（已存在）
+- [x] 0.1.4 移动 `gin_sonic.go` 到 `qgin/sonic.go`，修改 package 声明
+- [x] 0.1.5 移动 `gin_sonic_test.go` 到 `qgin/sonic_test.go`
+- [x] 0.1.6 在 go-comm 根目录创建转发文件（保持向后兼容）
+- [x] 0.1.7 运行测试确认通过
 **Refactor:**
-- [ ] 0.1.8 检查并清理代码
+- [x] 0.1.8 检查并清理代码
 
 ### Step 0.2: 移动 config 相关代码到 qconfig/ 目录
-**涉及文件**:
-- `config.go` → `qconfig/config.go`
-- `config_main_test.go` → `qconfig/config_main_test.go`
-
-**Red:**
-- [ ] 0.2.1 编写测试：验证 `github.com/qiangyt/go-comm/qconfig` 包可导入且功能正常
-- [ ] 0.2.2 运行测试确认失败（包不存在）
-**Green:**
-- [ ] 0.2.3 创建 `qconfig/` 目录（已存在）
-- [ ] 0.2.4 移动 `config.go` 到 `qconfig/config.go`，修改 package 声明
-- [ ] 0.2.5 移动 `config_main_test.go` 到 `qconfig/config_main_test.go`
-- [ ] 0.2.6 在 go-comm 根目录创建转发文件（保持向后兼容）
+> **跳过**：存在循环依赖问题，config.go 依赖 comm 包中的其他函数
 - [ ] 0.2.7 运行测试确认通过
 **Refactor:**
 - [ ] 0.2.8 检查并清理代码
@@ -105,59 +94,59 @@
 
 > **代码位置**：所有 gin logger 相关代码放在 `qgin/` 目录下
 > - 类型定义：`qgin/logger_config.go`
-> - 工具函数：`qgin/logger_truncate.go`, `qgin/logger_mask.go`
+> - 工具函数：`qgin/logger_truncate.go`, `qgin/logger_body.go`
 > - 中间件：`qgin/logger.go`
 > - 测试文件：`qgin/logger_*_test.go`
 
 ### Step 1.0: Phase 前回归
-- [ ] 1.0.1 运行 `go test ./...` 确保所有现有测试通过
+- [x] 1.0.1 运行 `go test ./...` 确保所有现有测试通过
 
 ### Step 1.1: BodyTruncateStrategy 枚举
 **Red:**
-- [ ] 1.1.1 编写测试：验证 BodyTruncateStrategy 所有枚举值
-- [ ] 1.1.2 运行测试确认失败
+- [x] 1.1.1 编写测试：验证 BodyTruncateStrategy 所有枚举值
+- [x] 1.1.2 运行测试确认失败
 **Green:**
-- [ ] 1.1.3 实现 BodyTruncateStrategy 枚举（None, Full, Head, Tail, HeadAndTail）
-- [ ] 1.1.4 运行测试确认通过
+- [x] 1.1.3 实现 BodyTruncateStrategy 枚举（None, Full, Head, Tail, HeadAndTail）
+- [x] 1.1.4 运行测试确认通过
 **Refactor:**
-- [ ] 1.1.5 检查并优化代码结构
+- [x] 1.1.5 检查并优化代码结构
 
 ### Step 1.2: BodyLogConfig 结构体
 **Red:**
-- [ ] 1.2.1 编写测试：验证 BodyLogConfig 字段和默认值
-- [ ] 1.2.2 运行测试确认失败
+- [x] 1.2.1 编写测试：验证 BodyLogConfig 字段和默认值
+- [x] 1.2.2 运行测试确认失败
 **Green:**
-- [ ] 1.2.3 实现 BodyLogConfig 结构体（Strategy, TruncateSize 默认 1024）
-- [ ] 1.2.4 运行测试确认通过
+- [x] 1.2.3 实现 BodyLogConfig 结构体（Strategy, TruncateSize 默认 1024）
+- [x] 1.2.4 运行测试确认通过
 **Refactor:**
-- [ ] 1.2.5 检查并优化代码结构
+- [x] 1.2.5 检查并优化代码结构
 
 ### Step 1.3: HeaderLogStrategy 枚举
 **Red:**
-- [ ] 1.3.1 编写测试：验证 HeaderLogStrategy 所有枚举值
-- [ ] 1.3.2 运行测试确认失败
+- [x] 1.3.1 编写测试：验证 HeaderLogStrategy 所有枚举值
+- [x] 1.3.2 运行测试确认失败
 **Green:**
-- [ ] 1.3.3 实现 HeaderLogStrategy 枚举（None, All, Whitelist, Blacklist），All 为默认值
-- [ ] 1.3.4 运行测试确认通过
+- [x] 1.3.3 实现 HeaderLogStrategy 枚举（None, All, Whitelist, Blacklist），All 为默认值
+- [x] 1.3.4 运行测试确认通过
 **Refactor:**
-- [ ] 1.3.5 检查并优化代码结构
+- [x] 1.3.5 检查并优化代码结构
 
 ### Step 1.4: SensitiveHeaderStrategy 枚举和配置
 **Red:**
-- [ ] 1.4.1 编写测试：验证 SensitiveHeaderStrategy 所有枚举值
-- [ ] 1.4.2 编写测试：验证 SensitiveHeaderConfig 字段和默认值
-- [ ] 1.4.3 运行测试确认失败
+- [x] 1.4.1 编写测试：验证 SensitiveHeaderStrategy 所有枚举值
+- [x] 1.4.2 编写测试：验证 SensitiveHeaderConfig 字段和默认值
+- [x] 1.4.3 运行测试确认失败
 **Green:**
-- [ ] 1.4.4 实现 SensitiveHeaderStrategy 枚举（Full, Exclude, MaskAll, MaskHead, MaskTail）
-- [ ] 1.4.5 实现 SensitiveHeaderConfig 结构体（Strategy, MaskSize 默认 4, SensitiveList）
-- [ ] 1.4.6 运行测试确认通过
+- [x] 1.4.4 实现 SensitiveHeaderStrategy 枚举（Full, Exclude, MaskAll, MaskHead, MaskTail）
+- [x] 1.4.5 实现 SensitiveHeaderConfig 结构体（Strategy, MaskSize 默认 4, SensitiveList）
+- [x] 1.4.6 运行测试确认通过
 **Refactor:**
-- [ ] 1.4.7 检查并优化代码结构
+- [x] 1.4.7 检查并优化代码结构
 
 ### Step 1.5: HeaderLogConfig 结构体
 **Red:**
-- [ ] 1.5.1 编写测试：验证 HeaderLogConfig 字段（Strategy, HeaderList, SensitiveConfig）
-- [ ] 1.5.2 运行测试确认失败
+- [x] 1.5.1 编写测试：验证 HeaderLogConfig 字段（Strategy, HeaderList, SensitiveConfig）
+- [x] 1.5.2 运行测试确认失败
 **Green:**
 - [ ] 1.5.3 实现 HeaderLogConfig 结构体
 - [ ] 1.5.4 运行测试确认通过
