@@ -14,4 +14,6 @@ gin-logger-integration 已全部完成：
 
 ## 下一步
 
-运行 `/opsx:archive` 归档此变更
+**运行**: `/opsx:archive gin-logger-integration`
+
+这是最后一步 - 归档已完成的变更。
