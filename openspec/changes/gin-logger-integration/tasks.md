@@ -539,9 +539,9 @@
 
 ## Phase 11: 发布 go-comm
 
-- [ ] 11.1 提交 go-comm 的 gin logger 变更
-- [ ] 11.2 打 tag v2.7.2
-- [ ] 11.3 push commit 和 tag 到远程仓库
+- [x] 11.1 提交 go-comm 的 gin logger 变更（已通过 PR #2-#6 合并到 master）
+- [ ] 11.2 打 tag v2.7.2（需要人工操作）
+- [ ] 11.3 push commit 和 tag 到远程仓库（需要人工操作）
 
 ---
 
