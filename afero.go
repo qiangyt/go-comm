@@ -558,3 +558,62 @@ func TempTextFile(fs afero.Fs, pattern string, content string) (string, error) {
 	}
 	return r, nil
 }
+
+// EnsureDirWithSubdirsP 确保目录及其子目录存在（panic 版本）
+func EnsureDirWithSubdirsP(fs afero.Fs, mainDir string, subdirs ...string) {
+	if err := EnsureDirWithSubdirs(fs, mainDir, subdirs...); err != nil {
+		panic(NewSystemError(err.Error(), err))
+	}
+}
+
+// EnsureDirWithSubdirs 确保目录及其子目录存在
+func EnsureDirWithSubdirs(fs afero.Fs, mainDir string, subdirs ...string) error {
+	// 创建主目录
+	if err := Mkdir(fs, mainDir); err != nil {
+		return err
+	}
+	// 创建子目录
+	for _, subdir := range subdirs {
+		fullPath := filepath.Join(mainDir, subdir)
+		if err := Mkdir(fs, fullPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// EnsureFileWithContentP 确保文件存在，如果不存在则使用指定内容创建（panic 版本）
+// 返回 true 表示文件是新创建的，false 表示文件已存在
+func EnsureFileWithContentP(fs afero.Fs, path string, defaultContent []byte, subdirs ...string) bool {
+	r, err := EnsureFileWithContent(fs, path, defaultContent, subdirs...)
+	if err != nil {
+		panic(NewSystemError(err.Error(), err))
+	}
+	return r
+}
+
+// EnsureFileWithContent 确保文件存在，如果不存在则使用指定内容创建
+// 返回 true 表示文件是新创建的，false 表示文件已存在
+// subdirs: 需要在文件父目录下创建的子目录列表
+func EnsureFileWithContent(fs afero.Fs, path string, defaultContent []byte, subdirs ...string) (bool, error) {
+	// 检查文件是否存在
+	exists, err := FileExists(fs, path)
+	if err != nil {
+		return false, err
+	}
+	if exists {
+		return false, nil
+	}
+
+	// 确保父目录及其子目录存在
+	parentDir := filepath.Dir(path)
+	if err := EnsureDirWithSubdirs(fs, parentDir, subdirs...); err != nil {
+		return false, err
+	}
+
+	// 写入默认内容
+	if err := WriteFile(fs, path, defaultContent); err != nil {
+		return false, err
+	}
+	return true, nil
+}
