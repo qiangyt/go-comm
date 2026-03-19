@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/qiangyt/go-comm/v2"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,4 +32,40 @@ func Test_Text2Lines_happy(t *testing.T) {
 	a := require.New(t)
 
 	a.Equal([]string{"A", "B", "C"}, comm.Text2Lines("A\nB\nC"))
+}
+
+// CloseQuietly 测试
+
+type mockCloser struct {
+	closed bool
+	err    error
+}
+
+func (m *mockCloser) Close() error {
+	m.closed = true
+	if m.err != nil {
+		return m.err
+	}
+	return nil
+}
+
+func Test_CloseQuietly_happy(t *testing.T) {
+	a := require.New(t)
+
+	// 正常关闭
+	mc := &mockCloser{}
+	comm.CloseQuietly(mc)
+	a.True(mc.closed)
+
+	// nil closer 不应该 panic
+	comm.CloseQuietly(nil)
+}
+
+func Test_CloseQuietly_withError(t *testing.T) {
+	a := require.New(t)
+
+	// Close 返回错误时应该忽略错误
+	mc := &mockCloser{err: assert.AnError}
+	comm.CloseQuietly(mc)
+	a.True(mc.closed)
 }

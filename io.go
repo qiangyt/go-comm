@@ -63,3 +63,11 @@ func ReadLines(reader io.Reader) []string {
 
 	return r
 }
+
+// CloseQuietly 关闭 io.Closer，忽略错误
+// 用于资源可能已经关闭的场景，nil closer 不会 panic
+func CloseQuietly(c io.Closer) {
+	if c != nil {
+		c.Close()
+	}
+}

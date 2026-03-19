@@ -104,3 +104,54 @@ func NanoIDWithSizeP(size int) string {
 	}
 	return result
 }
+
+// DefaultPasswordCharset 默认密码字符集 (字母数字混合)
+const DefaultPasswordCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+// GeneratePasswordP 生成指定长度的随机密码
+// 使用指定的字符集，如果 charset 为空则使用默认字符集
+// 失败时 panic
+func GeneratePasswordP(length int, charset string) string {
+	result, err := GeneratePassword(length, charset)
+	if err != nil {
+		panic(NewSystemError("生成随机密码失败", err))
+	}
+	return result
+}
+
+// GeneratePassword 生成指定长度的随机密码
+// 使用指定的字符集，如果 charset 为空则使用默认字符集
+// 使用拒绝采样确保均匀分布
+func GeneratePassword(length int, charset string) (string, error) {
+	if length < 0 {
+		return "", fmt.Errorf("密码长度不能为负数: %d", length)
+	}
+	if length == 0 {
+		return "", nil
+	}
+
+	if charset == "" {
+		charset = DefaultPasswordCharset
+	}
+
+	charsetLen := int64(len(charset))
+	maxValid := 256 - (256 % charsetLen) // 确保均匀分布
+
+	result := make([]byte, length)
+	for i := range result {
+		// 拒绝采样：如果随机值会导致偏置，则重新生成
+		for {
+			randBytes := make([]byte, 1)
+			_, err := rand.Read(randBytes)
+			if err != nil {
+				return "", fmt.Errorf("生成随机密码失败: %w", err)
+			}
+			b := randBytes[0]
+			if b < byte(maxValid) {
+				result[i] = charset[int(b)%int(charsetLen)]
+				break
+			}
+		}
+	}
+	return string(result), nil
+}

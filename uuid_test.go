@@ -152,3 +152,87 @@ func TestNanoIDWithSizeP_PanicOnError(t *testing.T) {
 	result := NanoIDWithSizeP(21)
 	assert.Len(t, result, 21)
 }
+
+// GeneratePassword 测试
+
+func TestGeneratePassword(t *testing.T) {
+	// 测试默认字符集
+	result, err := GeneratePassword(16, "")
+	assert.Nil(t, err)
+	assert.Len(t, result, 16)
+
+	// 验证只包含默认字符集字符 (a-z, A-Z, 0-9)
+	matched, _ := regexp.MatchString("^[a-zA-Z0-9]{16}$", result)
+	assert.True(t, matched, "GeneratePassword should only contain alphanumeric characters")
+}
+
+func TestGeneratePasswordP(t *testing.T) {
+	result := GeneratePasswordP(16, "")
+	assert.Len(t, result, 16)
+
+	// 验证只包含默认字符集字符
+	matched, _ := regexp.MatchString("^[a-zA-Z0-9]{16}$", result)
+	assert.True(t, matched, "GeneratePasswordP should only contain alphanumeric characters")
+}
+
+func TestGeneratePassword_CustomCharset(t *testing.T) {
+	// 测试自定义字符集
+	charset := "abcdef"
+	result, err := GeneratePassword(10, charset)
+	assert.Nil(t, err)
+	assert.Len(t, result, 10)
+
+	// 验证只包含指定字符集
+	for _, c := range result {
+		assert.Contains(t, charset, string(c))
+	}
+}
+
+func TestGeneratePasswordP_CustomCharset(t *testing.T) {
+	charset := "XYZ123"
+	result := GeneratePasswordP(20, charset)
+	assert.Len(t, result, 20)
+
+	// 验证只包含指定字符集
+	for _, c := range result {
+		assert.Contains(t, charset, string(c))
+	}
+}
+
+func TestGeneratePassword_Uniqueness(t *testing.T) {
+	// 生成多个密码，确保它们互不相同
+	passwords := make(map[string]bool)
+	for i := 0; i < 100; i++ {
+		password := GeneratePasswordP(16, "")
+		assert.False(t, passwords[password], "GeneratePassword should be unique")
+		passwords[password] = true
+	}
+}
+
+func TestGeneratePassword_ZeroLength(t *testing.T) {
+	// 长度为 0 时应该返回空字符串
+	result, err := GeneratePassword(0, "")
+	assert.Nil(t, err)
+	assert.Empty(t, result)
+}
+
+func TestGeneratePasswordP_ZeroLength(t *testing.T) {
+	result := GeneratePasswordP(0, "")
+	assert.Empty(t, result)
+}
+
+func TestGeneratePassword_NegativeLength(t *testing.T) {
+	// 负数长度应该返回错误
+	result, err := GeneratePassword(-1, "")
+	assert.NotNil(t, err)
+	assert.Empty(t, result)
+}
+
+func TestGeneratePasswordP_NegativeLength_Panic(t *testing.T) {
+	defer func() {
+		r := recover()
+		assert.NotNil(t, r, "GeneratePasswordP with negative length should panic")
+	}()
+
+	GeneratePasswordP(-1, "")
+}
