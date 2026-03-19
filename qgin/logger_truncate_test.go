@@ -239,3 +239,29 @@ func TestApplyTruncateStrategy_DefaultTruncateSize(t *testing.T) {
 	// 应该被截取
 	a.Contains(result, "...(truncated)...")
 }
+
+func TestApplyTruncateStrategy_DefaultStrategy(t *testing.T) {
+	a := require.New(t)
+
+	// 创建一个足够长的字符串
+	s := make([]byte, 3000)
+	for i := range s {
+		s[i] = 'a'
+	}
+
+	cfg := BodyLogConfig{Strategy: BodyTruncateStrategy(999), TruncateSize: 5}
+	// 未知策略应该使用默认值 HeadAndTail
+	result := applyTruncateStrategy(string(s), cfg)
+
+	// 应该被截取
+	a.Contains(result, "...(truncated)...")
+}
+
+// ==================== formatTruncatedSize ====================
+
+func TestFormatTruncatedSize(t *testing.T) {
+	a := require.New(t)
+
+	result := formatTruncatedSize(1000, 100)
+	a.Equal("original: 1000 bytes, truncated: 100 bytes", result)
+}

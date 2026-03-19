@@ -37,7 +37,11 @@
       "Bash(grep -A 5 '\"\"action\"\": \"\"fail\"\"' reports/2026-03-20_01-14-41/integration-all.json)",
       "Bash(for i:*)",
       "Bash(do echo:*)",
-      "Bash(go clean:*)"
+      "Bash(go clean:*)",
+      "Bash(cd:*)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(mv internal/node/config_logging_test.go internal/node/config/logging_test.go)",
+      "Bash(mv internal/node/config_embed_test.go internal/node/config/embed_test.go)"
     ]
   }
 }
