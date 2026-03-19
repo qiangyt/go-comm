@@ -25,7 +25,13 @@
       "Bash(grep -A 20 'type API interface' vendor/github.com/bytedance/sonic/*.go)",
       "Bash(grep -n \"func.*Json\\\\|func.*JSON\" /data1/mobile-claude-workspace/go-comm/*.go)",
       "Bash(grep -n \"func.*Marshal\\\\|func.*marshal\\\\|func ToJson\" /data1/mobile-claude-workspace/go-comm/*.go)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(openspec validate:*)",
+      "Bash(wc:*)",
+      "Bash(ls -la /data1/mobile-claude-workspace/go-comm/*.go)",
+      "Bash(ls:*)",
+      "Bash(mise test-all:*)",
+      "Bash(xargs -I{} basename {})"
     ]
   }
 }
