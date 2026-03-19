@@ -43,11 +43,6 @@ func isTextContentType(contentType string) bool {
 		return true
 	}
 
-	// SSE
-	if mediaType == "text/event-stream" {
-		return true
-	}
-
 	return false
 }
 
