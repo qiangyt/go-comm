@@ -540,8 +540,8 @@
 ## Phase 11: 发布 go-comm
 
 - [x] 11.1 提交 go-comm 的 gin logger 变更（已通过 PR #2-#6 合并到 master）
-- [ ] 11.2 打 tag v2.7.2（需要人工操作）
-- [ ] 11.3 push commit 和 tag 到远程仓库（需要人工操作）
+- [x] 11.2 打 tag v2.7.2（本地已创建）
+- [x] 11.3 push commit 和 tag 到远程仓库
 
 ---
 
@@ -550,36 +550,36 @@
 > **重要规则**：在本 Phase 的任何阶段发现测试失败，即使不是本次修改导致的，也要**无条件立刻修复**，不可以以任何理由回避
 
 ### Step 12.0: Phase 前准备
-- [ ] 12.0.1 切换到 mobile-claude 项目目录
-- [ ] 12.0.2 确认当前 mobile-claude 代码已提交或暂存
+- [x] 12.0.1 切换到 mobile-claude 项目目录
+- [x] 12.0.2 确认当前 mobile-claude 代码已提交或暂存
 
 ### Step 12.1: Phase 前全量回归（mise test-all）
-- [ ] 12.1.1 运行 `mise test-all` 进行全量回归测试
-- [ ] 12.1.2 如有任何测试失败，**无条件立刻修复**（即使不是本次修改导致）
-- [ ] 12.1.3 确认 `mise test-all` 完全通过后再继续
+- [x] 12.1.1 运行 `mise test-all` 进行全量回归测试
+- [x] 12.1.2 如有任何测试失败，**无条件立刻修复**（即使不是本次修改导致）
+- [x] 12.1.3 确认 `mise test-all` 完全通过后再继续
 
 ### Step 12.2: 更新依赖和 import 引用
 **Red:**
-- [ ] 12.2.1 编写测试：验证新 gin logger 中间件的使用（预期失败，依赖未更新）
-- [ ] 12.2.2 运行测试确认失败
+- [x] 12.2.1 编写测试：验证新 gin logger 中间件的使用（预期失败，依赖未更新）
+- [x] 12.2.2 运行测试确认失败
 **Green:**
-- [ ] 12.2.3 更新 go-comm 依赖到 v2.7.2
-- [ ] 12.2.4 更新所有 import 引用：
+- [x] 12.2.3 更新 go-comm 依赖到 v2.7.2
+- [x] 12.2.4 更新所有 import 引用：
   - `github.com/qiangyt/go-comm` 中的 gin 相关 → `github.com/qiangyt/go-comm/qgin`
   - `github.com/qiangyt/go-comm` 中的 config 相关 → `github.com/qiangyt/go-comm/qconfig`
   - `github.com/qiangyt/go-comm` 中的 io/file 相关 → `github.com/qiangyt/go-comm/qio`
-- [ ] 12.2.5 替换原有的 gin logger，使用 go-comm/qgin 的新 gin logger 中间件
-- [ ] 12.2.6 运行测试确认通过
+- [x] 12.2.5 替换原有的 gin logger，使用 go-comm/qgin 的新 gin logger 中间件
+- [x] 12.2.6 运行测试确认通过
 **Refactor:**
-- [ ] 12.2.7 检查并优化代码结构
-- [ ] 12.2.8 如有任何问题，**无条件立刻修复**
+- [x] 12.2.7 检查并优化代码结构
+- [x] 12.2.8 如有任何问题，**无条件立刻修复**
 
 ### Step 12.3: Phase 后全量回归（mise test-all）
-- [ ] 12.3.1 运行 `mise test-all` 进行全量回归测试
-- [ ] 12.3.2 如有任何测试失败，**无条件立刻修复**（即使不是本次修改导致）
-- [ ] 12.3.3 确保行覆盖率和分支覆盖率均为 100%
-- [ ] 12.3.4 确认 `mise test-all` 完全通过
+- [x] 12.3.1 运行 `mise test-all` 进行全量回归测试
+- [x] 12.3.2 如有任何测试失败，**无条件立刻修复**（即使不是本次修改导致）
+- [x] 12.3.3 确保行覆盖率和分支覆盖率均为 100%
+- [x] 12.3.4 确认 `mise test-all` 完全通过
 
 ### Step 12.4: 提交变更
-- [ ] 12.4.1 提交 mobile-claude 的变更
+- [x] 12.4.1 提交 mobile-claude 的变更
 
