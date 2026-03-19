@@ -37,9 +37,9 @@
 
 ### Step 0.2: 移动 config 相关代码到 qconfig/ 目录
 > **跳过**：存在循环依赖问题，config.go 依赖 comm 包中的其他函数
-- [ ] 0.2.7 运行测试确认通过
+- [x] 0.2.7 运行测试确认通过（跳过）
 **Refactor:**
-- [ ] 0.2.8 检查并清理代码
+- [x] 0.2.8 检查并清理代码（跳过）
 
 ### Step 0.3: 移动 io/file/afero 相关代码到 qio/ 目录
 **涉及文件**:
@@ -148,261 +148,261 @@
 - [x] 1.5.1 编写测试：验证 HeaderLogConfig 字段（Strategy, HeaderList, SensitiveConfig）
 - [x] 1.5.2 运行测试确认失败
 **Green:**
-- [ ] 1.5.3 实现 HeaderLogConfig 结构体
-- [ ] 1.5.4 运行测试确认通过
+- [x] 1.5.3 实现 HeaderLogConfig 结构体
+- [x] 1.5.4 运行测试确认通过
 **Refactor:**
-- [ ] 1.5.5 检查并优化代码结构
+- [x] 1.5.5 检查并优化代码结构
 
 ### Step 1.6: SSELogConfig 结构体
 **Red:**
-- [ ] 1.6.1 编写测试：验证 SSELogConfig 字段（Strategy, TruncateSize 默认 10）
-- [ ] 1.6.2 运行测试确认失败
+- [x] 1.6.1 编写测试：验证 SSELogConfig 字段（Strategy, TruncateSize 默认 10）
+- [x] 1.6.2 运行测试确认失败
 **Green:**
-- [ ] 1.6.3 实现 SSETruncateStrategy 枚举（None, Full, Head, Tail, HeadAndTail）
-- [ ] 1.6.4 实现 SSELogConfig 结构体
-- [ ] 1.6.5 运行测试确认通过
+- [x] 1.6.3 实现 SSETruncateStrategy 枚举（None, Full, Head, Tail, HeadAndTail）
+- [x] 1.6.4 实现 SSELogConfig 结构体
+- [x] 1.6.5 运行测试确认通过
 **Refactor:**
-- [ ] 1.6.6 检查并优化代码结构
+- [x] 1.6.6 检查并优化代码结构
 
 ### Step 1.7: GinLoggerConfig 主配置
 **Red:**
-- [ ] 1.7.1 编写测试：验证 GinLoggerConfig 所有字段和默认值
-- [ ] 1.7.2 运行测试确认失败
+- [x] 1.7.1 编写测试：验证 GinLoggerConfig 所有字段和默认值
+- [x] 1.7.2 运行测试确认失败
 **Green:**
-- [ ] 1.7.3 实现 GinLoggerConfig 主配置结构体
-- [ ] 1.7.4 运行测试确认通过
+- [x] 1.7.3 实现 GinLoggerConfig 主配置结构体
+- [x] 1.7.4 运行测试确认通过
 **Refactor:**
-- [ ] 1.7.5 检查并优化代码结构
+- [x] 1.7.5 检查并优化代码结构
 
 ### Step 1.8: Phase 后回归
-- [ ] 1.8.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 1.8.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 1.8.1 运行 `go test ./...` 确保所有测试通过
+- [x] 1.8.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 
 ## Phase 2: Body 截取工具函数
 
 ### Step 2.0: Phase 前回归
-- [ ] 2.0.1 运行 `go test ./...` 确保所有测试通过
+- [x] 2.0.1 运行 `go test ./...` 确保所有测试通过
 
 ### Step 2.1: truncateHead 函数
 **Red:**
-- [ ] 2.1.1 编写测试：截取前 N 字符的各种场景（短字符串、长字符串、边界情况）
-- [ ] 2.1.2 运行测试确认失败
+- [x] 2.1.1 编写测试：截取前 N 字符的各种场景（短字符串、长字符串、边界情况）
+- [x] 2.1.2 运行测试确认失败
 **Green:**
-- [ ] 2.1.3 实现 truncateHead(s string, n int) string
-- [ ] 2.1.4 运行测试确认通过
+- [x] 2.1.3 实现 truncateHead(s string, n int) string
+- [x] 2.1.4 运行测试确认通过
 **Refactor:**
-- [ ] 2.1.5 检查并优化代码结构
+- [x] 2.1.5 检查并优化代码结构
 
 ### Step 2.2: truncateTail 函数
 **Red:**
-- [ ] 2.2.1 编写测试：截取后 N 字符的各种场景
-- [ ] 2.2.2 运行测试确认失败
+- [x] 2.2.1 编写测试：截取后 N 字符的各种场景
+- [x] 2.2.2 运行测试确认失败
 **Green:**
-- [ ] 2.2.3 实现 truncateTail(s string, n int) string
-- [ ] 2.2.4 运行测试确认通过
+- [x] 2.2.3 实现 truncateTail(s string, n int) string
+- [x] 2.2.4 运行测试确认通过
 **Refactor:**
-- [ ] 2.2.5 检查并优化代码结构
+- [x] 2.2.5 检查并优化代码结构
 
 ### Step 2.3: truncateHeadAndTail 函数
 **Red:**
-- [ ] 2.3.1 编写测试：截取前后各 N 字符的各种场景，**特别注意 overlap 边界情况**（len <= n*2 时不截取）
-- [ ] 2.3.2 运行测试确认失败
+- [x] 2.3.1 编写测试：截取前后各 N 字符的各种场景，**特别注意 overlap 边界情况**（len <= n*2 时不截取）
+- [x] 2.3.2 运行测试确认失败
 **Green:**
-- [ ] 2.3.3 实现 truncateHeadAndTail(s string, n int) string，正确处理 overlap
-- [ ] 2.3.4 运行测试确认通过
+- [x] 2.3.3 实现 truncateHeadAndTail(s string, n int) string，正确处理 overlap
+- [x] 2.3.4 运行测试确认通过
 **Refactor:**
-- [ ] 2.3.5 检查并优化代码结构
+- [x] 2.3.5 检查并优化代码结构
 
 ### Step 2.4: applyTruncateStrategy 统一入口
 **Red:**
-- [ ] 2.4.1 编写测试：验证所有截取策略的统一入口
-- [ ] 2.4.2 运行测试确认失败
+- [x] 2.4.1 编写测试：验证所有截取策略的统一入口
+- [x] 2.4.2 运行测试确认失败
 **Green:**
-- [ ] 2.4.3 实现 applyTruncateStrategy(s string, config BodyLogConfig) string
-- [ ] 2.4.4 运行测试确认通过
+- [x] 2.4.3 实现 applyTruncateStrategy(s string, config BodyLogConfig) string
+- [x] 2.4.4 运行测试确认通过
 **Refactor:**
-- [ ] 2.4.5 检查并优化代码结构
+- [x] 2.4.5 检查并优化代码结构
 
 ### Step 2.5: Phase 后回归
-- [ ] 2.5.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 2.5.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 2.5.1 运行 `go test ./...` 确保所有测试通过
+- [x] 2.5.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 
 ## Phase 3: Body 类型判断
 
 ### Step 3.0: Phase 前回归
-- [ ] 3.0.1 运行 `go test ./...` 确保所有测试通过
+- [x] 3.0.1 运行 `go test ./...` 确保所有测试通过
 
 ### Step 3.1: isTextContentType 函数
 **Red:**
-- [ ] 3.1.1 编写测试：验证各种 Content-Type 的判断（json, xml, text/*, form-urlencoded, sse, 二进制类型）
-- [ ] 3.1.2 运行测试确认失败
+- [x] 3.1.1 编写测试：验证各种 Content-Type 的判断（json, xml, text/*, form-urlencoded, sse, 二进制类型）
+- [x] 3.1.2 运行测试确认失败
 **Green:**
-- [ ] 3.1.3 实现 isTextContentType(contentType string) bool
-- [ ] 3.1.4 运行测试确认通过
+- [x] 3.1.3 实现 isTextContentType(contentType string) bool
+- [x] 3.1.4 运行测试确认通过
 **Refactor:**
-- [ ] 3.1.5 检查并优化代码结构
+- [x] 3.1.5 检查并优化代码结构
 
 ### Step 3.2: Phase 后回归
-- [ ] 3.2.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 3.2.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 3.2.1 运行 `go test ./...` 确保所有测试通过
+- [x] 3.2.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 
 ## Phase 4: Header 过滤和敏感 Header 处理
 
 ### Step 4.0: Phase 前回归
-- [ ] 4.0.1 运行 `go test ./...` 确保所有测试通过
+- [x] 4.0.1 运行 `go test ./...` 确保所有测试通过
 
 ### Step 4.1: maskAll 函数
 **Red:**
-- [ ] 4.1.1 编写测试：验证 mask 全部值为 ****
-- [ ] 4.1.2 运行测试确认失败
+- [x] 4.1.1 编写测试：验证 mask 全部值为 ****
+- [x] 4.1.2 运行测试确认失败
 **Green:**
-- [ ] 4.1.3 实现 maskAll(value string) string
-- [ ] 4.1.4 运行测试确认通过
+- [x] 4.1.3 实现 maskAll(value string) string
+- [x] 4.1.4 运行测试确认通过
 **Refactor:**
-- [ ] 4.1.5 检查并优化代码结构
+- [x] 4.1.5 检查并优化代码结构
 
 ### Step 4.2: maskHead 函数
 **Red:**
-- [ ] 4.2.1 编写测试：验证 mask 前 N 字符（含短值边界）
-- [ ] 4.2.2 运行测试确认失败
+- [x] 4.2.1 编写测试：验证 mask 前 N 字符（含短值边界）
+- [x] 4.2.2 运行测试确认失败
 **Green:**
-- [ ] 4.2.3 实现 maskHead(value string, n int) string
-- [ ] 4.2.4 运行测试确认通过
+- [x] 4.2.3 实现 maskHead(value string, n int) string
+- [x] 4.2.4 运行测试确认通过
 **Refactor:**
-- [ ] 4.2.5 检查并优化代码结构
+- [x] 4.2.5 检查并优化代码结构
 
 ### Step 4.3: maskTail 函数
 **Red:**
-- [ ] 4.3.1 编写测试：验证 mask 后 N 字符（含短值边界）
-- [ ] 4.3.2 运行测试确认失败
+- [x] 4.3.1 编写测试：验证 mask 后 N 字符（含短值边界）
+- [x] 4.3.2 运行测试确认失败
 **Green:**
-- [ ] 4.3.3 实现 maskTail(value string, n int) string
-- [ ] 4.3.4 运行测试确认通过
+- [x] 4.3.3 实现 maskTail(value string, n int) string
+- [x] 4.3.4 运行测试确认通过
 **Refactor:**
-- [ ] 4.3.5 检查并优化代码结构
+- [x] 4.3.5 检查并优化代码结构
 
 ### Step 4.4: applySensitiveStrategy 统一入口
 **Red:**
-- [ ] 4.4.1 编写测试：验证所有敏感策略的统一入口
-- [ ] 4.4.2 运行测试确认失败
+- [x] 4.4.1 编写测试：验证所有敏感策略的统一入口
+- [x] 4.4.2 运行测试确认失败
 **Green:**
-- [ ] 4.4.3 实现 applySensitiveStrategy(value string, config SensitiveHeaderConfig) string
-- [ ] 4.4.4 运行测试确认通过
+- [x] 4.4.3 实现 applySensitiveStrategy(value string, config SensitiveHeaderConfig) string
+- [x] 4.4.4 运行测试确认通过
 **Refactor:**
-- [ ] 4.4.5 检查并优化代码结构
+- [x] 4.4.5 检查并优化代码结构
 
 ### Step 4.5: filterHeaders 系列函数
 **Red:**
-- [ ] 4.5.1 编写测试：验证 filterHeadersNone
-- [ ] 4.5.2 编写测试：验证 filterHeadersAll（含敏感处理）
-- [ ] 4.5.3 编写测试：验证 filterHeadersWhitelist
-- [ ] 4.5.4 编写测试：验证 filterHeadersBlacklist（敏感 header mask）
-- [ ] 4.5.5 运行测试确认失败
+- [x] 4.5.1 编写测试：验证 filterHeadersNone
+- [x] 4.5.2 编写测试：验证 filterHeadersAll（含敏感处理）
+- [x] 4.5.3 编写测试：验证 filterHeadersWhitelist
+- [x] 4.5.4 编写测试：验证 filterHeadersBlacklist（敏感 header mask）
+- [x] 4.5.5 运行测试确认失败
 **Green:**
-- [ ] 4.5.6 实现 filterHeadersNone
-- [ ] 4.5.7 实现 filterHeadersAll
-- [ ] 4.5.8 实现 filterHeadersWhitelist
-- [ ] 4.5.9 实现 filterHeadersBlacklist
-- [ ] 4.5.10 实现 filterHeaders 统一入口
-- [ ] 4.5.11 运行测试确认通过
+- [x] 4.5.6 实现 filterHeadersNone
+- [x] 4.5.7 实现 filterHeadersAll
+- [x] 4.5.8 实现 filterHeadersWhitelist
+- [x] 4.5.9 实现 filterHeadersBlacklist
+- [x] 4.5.10 实现 filterHeaders 统一入口
+- [x] 4.5.11 运行测试确认通过
 **Refactor:**
-- [ ] 4.5.12 检查并优化代码结构
+- [x] 4.5.12 检查并优化代码结构
 
 ### Step 4.6: 默认敏感 header 列表
 **Red:**
-- [ ] 4.6.1 编写测试：验证默认敏感 header 列表
-- [ ] 4.6.2 运行测试确认失败
+- [x] 4.6.1 编写测试：验证默认敏感 header 列表
+- [x] 4.6.2 运行测试确认失败
 **Green:**
-- [ ] 4.6.3 定义 defaultSensitiveHeaders（Authorization, Cookie, Set-Cookie, X-Api-Key, X-Auth-Token）
-- [ ] 4.6.4 运行测试确认通过
+- [x] 4.6.3 定义 defaultSensitiveHeaders（Authorization, Cookie, Set-Cookie, X-Api-Key, X-Auth-Token）
+- [x] 4.6.4 运行测试确认通过
 **Refactor:**
-- [ ] 4.6.5 检查并优化代码结构
+- [x] 4.6.5 检查并优化代码结构
 
 ### Step 4.7: Phase 后回归
-- [ ] 4.7.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 4.7.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 4.7.1 运行 `go test ./...` 确保所有测试通过
+- [x] 4.7.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 
 ## Phase 5: Response Body 捕获
 
 ### Step 5.0: Phase 前回归
-- [ ] 5.0.1 运行 `go test ./...` 确保所有测试通过
+- [x] 5.0.1 运行 `go test ./...` 确保所有测试通过
 
 ### Step 5.1: bodyCaptureWriter 结构体
 **Red:**
-- [ ] 5.1.1 编写测试：验证 bodyCaptureWriter 捕获写入的数据
-- [ ] 5.1.2 编写测试：验证 bodyCaptureWriter 同时写入原始 ResponseWriter
-- [ ] 5.1.3 运行测试确认失败
+- [x] 5.1.1 编写测试：验证 bodyCaptureWriter 捕获写入的数据
+- [x] 5.1.2 编写测试：验证 bodyCaptureWriter 同时写入原始 ResponseWriter
+- [x] 5.1.3 运行测试确认失败
 **Green:**
-- [ ] 5.1.4 实现 bodyCaptureWriter 结构体
-- [ ] 5.1.5 实现 Write(b []byte) 方法
-- [ ] 5.1.6 实现 WriteString(s string) 方法
-- [ ] 5.1.7 运行测试确认通过
+- [x] 5.1.4 实现 bodyCaptureWriter 结构体
+- [x] 5.1.5 实现 Write(b []byte) 方法
+- [x] 5.1.6 实现 WriteString(s string) 方法
+- [x] 5.1.7 运行测试确认通过
 **Refactor:**
-- [ ] 5.1.8 检查并优化代码结构
+- [x] 5.1.8 检查并优化代码结构
 
 ### Step 5.2: Phase 后回归
-- [ ] 5.2.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 5.2.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 5.2.1 运行 `go test ./...` 确保所有测试通过
+- [x] 5.2.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 
 ## Phase 6: Request Body 读取
 
 ### Step 6.0: Phase 前回归
-- [ ] 6.0.1 运行 `go test ./...` 确保所有测试通过
+- [x] 6.0.1 运行 `go test ./...` 确保所有测试通过
 
 ### Step 6.1: readRequestBody 函数
 **Red:**
-- [ ] 6.1.1 编写测试：验证读取 request body 并保留供后续处理
-- [ ] 6.1.2 运行测试确认失败
+- [x] 6.1.1 编写测试：验证读取 request body 并保留供后续处理
+- [x] 6.1.2 运行测试确认失败
 **Green:**
-- [ ] 6.1.3 实现 readRequestBody 函数
-- [ ] 6.1.4 运行测试确认通过
+- [x] 6.1.3 实现 readRequestBody 函数
+- [x] 6.1.4 运行测试确认通过
 **Refactor:**
-- [ ] 6.1.5 检查并优化代码结构
+- [x] 6.1.5 检查并优化代码结构
 
 ### Step 6.2: Phase 后回归
-- [ ] 6.2.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 6.2.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 6.2.1 运行 `go test ./...` 确保所有测试通过
+- [x] 6.2.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 
 ## Phase 7: SSE 事件处理
 
 ### Step 7.0: Phase 前回归
-- [ ] 7.0.1 运行 `go test ./...` 确保所有测试通过
+- [x] 7.0.1 运行 `go test ./...` 确保所有测试通过
 
 ### Step 7.1: parseSSEEvents 函数
 **Red:**
-- [ ] 7.1.1 编写测试：解析 SSE 事件（以 \n\n 或 \r\n\r\n 分隔）
-- [ ] 7.1.2 运行测试确认失败
+- [x] 7.1.1 编写测试：解析 SSE 事件（以 \n\n 或 \r\n\r\n 分隔）
+- [x] 7.1.2 运行测试确认失败
 **Green:**
-- [ ] 7.1.3 实现 parseSSEEvents(body string) []string
-- [ ] 7.1.4 运行测试确认通过
+- [x] 7.1.3 实现 parseSSEEvents(body string) []string
+- [x] 7.1.4 运行测试确认通过
 **Refactor:**
-- [ ] 7.1.5 检查并优化代码结构
+- [x] 7.1.5 检查并优化代码结构
 
 ### Step 7.2: truncateSSEEvents 函数
 **Red:**
-- [ ] 7.2.1 编写测试：验证所有 SSE 截取策略（含 overlap 边界）
-- [ ] 7.2.2 运行测试确认失败
+- [x] 7.2.1 编写测试：验证所有 SSE 截取策略（含 overlap 边界）
+- [x] 7.2.2 运行测试确认失败
 **Green:**
-- [ ] 7.2.3 实现 truncateSSEEvents(events []string, config SSELogConfig) string
-- [ ] 7.2.4 运行测试确认通过
+- [x] 7.2.3 实现 truncateSSEEvents(events []string, config SSELogConfig) string
+- [x] 7.2.4 运行测试确认通过
 **Refactor:**
-- [ ] 7.2.5 检查并优化代码结构
+- [x] 7.2.5 检查并优化代码结构
 
 ### Step 7.3: Phase 后回归
-- [ ] 7.3.1 运行 `go test ./...` 确保所有测试通过
-- [ ] 7.3.2 确保行覆盖率和分支覆盖率均为 100%
+- [x] 7.3.1 运行 `go test ./...` 确保所有测试通过
+- [x] 7.3.2 确保行覆盖率和分支覆盖率均为 100%
 
 ---
 

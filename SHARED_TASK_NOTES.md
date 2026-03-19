@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-**进度**: Phase 1-4 部分完成 (基础类型定义和部分工具函数)
+**进度**: Phase 1-7 完成 (基础类型定义、工具函数、Body 捕获、Request 读取、SSE 处理)
 
 ## 已完成
 
@@ -38,19 +38,23 @@
 - [x] 4.5 filterHeaders() 系列函数
 - [x] 4.6 isSensitiveHeader() 函数
 
-## 下一步任务
-
 ### Phase 5: Response Body 捕获
-- [ ] bodyCaptureWriter 结构体
-- [ ] Write() 方法
-- [ ] WriteString() 方法
+- [x] bodyCaptureWriter 结构体
+- [x] Write() 方法
+- [x] WriteString() 方法
+- [x] CapturedBody() 方法
+- [x] Bytes() 方法
 
 ### Phase 6: Request Body 读取
-- [ ] readRequestBody() 函数
+- [x] readRequestBody() 函数
+- [x] 错误处理
+- [x] Body 恢复供后续处理
 
 ### Phase 7: SSE 事件处理
-- [ ] parseSSEEvents() 函数
-- [ ] truncateSSEEvents() 函数
+- [x] parseSSEEvents() 函数 - 解析 SSE 事件
+- [x] truncateSSEEvents() 函数 - SSE 事件截取
+
+## 下一步任务
 
 ### Phase 8-9: 核心中间件实现
 - [ ] GinLogger() 工厂函数
@@ -71,6 +75,8 @@
 1. **跳过 Phase 0.2-0.4**: config.go 和 io 相关代码与 comm 包有复杂的循环依赖，无法简单移动到子包
 2. **Logger 接口**: 定义了 Logger 接口，允许用户传入自己的 logger 实现
 3. **默认配置**: GinLoggerConfig.Logger 默认为 nil，需要用户显式设置
+4. **SSE 解析**: 只解析完整事件（末尾有分隔符的事件），不完整事件忽略
+5. **SSE 截取 overlap 处理**: 当事件数 < n*2 时返回全部，避免 overlap
 
 ## 测试命令
 
@@ -96,6 +102,12 @@ go test -cover ./...
 - `qgin/logger_truncate_test.go` - 截取函数测试
 - `qgin/logger_body.go` - body 处理函数
 - `qgin/logger_body_test.go` - body 处理测试
+- `qgin/logger_capture.go` - body 捕获 writer
+- `qgin/logger_capture_test.go` - body 捕获测试
+- `qgin/logger_request.go` - request body 读取
+- `qgin/logger_request_test.go` - request body 读取测试
+- `qgin/logger_sse.go` - SSE 事件处理
+- `qgin/logger_sse_test.go` - SSE 事件处理测试
 - `gin_sonic.go` - 向后兼容转发文件
 
 ## 注意事项

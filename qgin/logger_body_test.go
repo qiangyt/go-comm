@@ -60,6 +60,16 @@ func TestIsTextContentType_Other(t *testing.T) {
 	a.False(isTextContentType("application/zip"))
 }
 
+func TestIsTextContentType_InvalidMediaType(t *testing.T) {
+	a := require.New(t)
+	// 测试解析失败的 content-type，会走简单匹配分支
+	// 带有无效字符的 media type
+	a.True(isTextContentType("invalid json"))  // 包含 json
+	a.True(isTextContentType("invalid xml"))   // 包含 xml
+	a.True(isTextContentType("text/invalid"))  // 以 text/ 开头
+	a.False(isTextContentType("completely invalid")) // 不匹配任何条件
+}
+
 // ==================== maskAll ====================
 
 func TestMaskAll(t *testing.T) {
@@ -157,6 +167,28 @@ func TestApplySensitiveStrategy_MaskTail(t *testing.T) {
 	result := applySensitiveStrategy(value, cfg)
 
 	a.Equal("Bearer toke****", result)
+}
+
+func TestApplySensitiveStrategy_DefaultMaskSize(t *testing.T) {
+	a := require.New(t)
+
+	value := "Bearer token123"
+	cfg := SensitiveHeaderConfig{Strategy: SensitiveHeaderMaskHead, MaskSize: 0}
+	result := applySensitiveStrategy(value, cfg)
+
+	// MaskSize 为 0 时应使用默认值 4
+	a.Equal("****er token123", result)
+}
+
+func TestApplySensitiveStrategy_UnknownStrategy(t *testing.T) {
+	a := require.New(t)
+
+	value := "Bearer token123"
+	cfg := SensitiveHeaderConfig{Strategy: SensitiveHeaderStrategy(999)}
+	result := applySensitiveStrategy(value, cfg)
+
+	// 未知策略应该使用默认值 MaskAll
+	a.Equal("****", result)
 }
 
 // ==================== filterHeaders ====================
@@ -275,6 +307,107 @@ func TestFilterHeaders_MultipleValues(t *testing.T) {
 	a.NotNil(result)
 	// 多个值应该合并
 	a.Contains(result["Set-Cookie"], "session=abc")
+}
+
+func TestFilterHeaders_WhitelistEmpty(t *testing.T) {
+	a := require.New(t)
+
+	headers := map[string][]string{
+		"Content-Type": {"application/json"},
+	}
+	cfg := HeaderLogConfig{
+		Strategy:   HeaderLogWhitelist,
+		HeaderList: []string{}, // 空白名单
+	}
+	result := filterHeaders(headers, cfg)
+
+	a.NotNil(result)
+	a.Empty(result) // 空结果
+}
+
+func TestFilterHeaders_BlacklistEmpty(t *testing.T) {
+	a := require.New(t)
+
+	headers := map[string][]string{
+		"Content-Type": {"application/json"},
+	}
+	cfg := HeaderLogConfig{
+		Strategy:   HeaderLogBlacklist,
+		HeaderList: []string{}, // 空黑名单，记录所有
+		SensitiveConfig: &SensitiveHeaderConfig{
+			Strategy:      SensitiveHeaderFull,
+			SensitiveList: []string{},
+		},
+	}
+	result := filterHeaders(headers, cfg)
+
+	a.NotNil(result)
+	a.Equal("application/json", result["Content-Type"])
+}
+
+func TestFilterHeaders_BlacklistEmptyWithSensitiveExclude(t *testing.T) {
+	a := require.New(t)
+
+	headers := map[string][]string{
+		"Authorization": {"Bearer token"},
+		"Content-Type":  {"application/json"},
+	}
+	cfg := HeaderLogConfig{
+		Strategy:   HeaderLogBlacklist,
+		HeaderList: []string{}, // 空黑名单
+		SensitiveConfig: &SensitiveHeaderConfig{
+			Strategy:      SensitiveHeaderExclude, // Exclude 策略，跳过敏感 header
+			SensitiveList: []string{"Authorization"},
+		},
+	}
+	result := filterHeaders(headers, cfg)
+
+	a.NotNil(result)
+	a.NotContains(result, "Authorization") // Exclude 策略跳过
+	a.Equal("application/json", result["Content-Type"])
+}
+
+func TestFilterHeaders_BlacklistWithSensitiveExclude(t *testing.T) {
+	a := require.New(t)
+
+	headers := map[string][]string{
+		"Authorization": {"Bearer token"},
+		"Content-Type":  {"application/json"},
+	}
+	cfg := HeaderLogConfig{
+		Strategy:   HeaderLogBlacklist,
+		HeaderList: []string{"X-Other"}, // 黑名单中不包含这些
+		SensitiveConfig: &SensitiveHeaderConfig{
+			Strategy:      SensitiveHeaderExclude, // Exclude 策略，跳过敏感 header
+			SensitiveList: []string{"Authorization"},
+		},
+	}
+	result := filterHeaders(headers, cfg)
+
+	a.NotNil(result)
+	a.NotContains(result, "Authorization") // Exclude 策略跳过
+	a.Equal("application/json", result["Content-Type"])
+}
+
+func TestFilterHeaders_AllWithSensitiveExclude(t *testing.T) {
+	a := require.New(t)
+
+	headers := map[string][]string{
+		"Authorization": {"Bearer token"},
+		"Content-Type":  {"application/json"},
+	}
+	cfg := HeaderLogConfig{
+		Strategy: HeaderLogAll,
+		SensitiveConfig: &SensitiveHeaderConfig{
+			Strategy:      SensitiveHeaderExclude, // Exclude 策略，跳过敏感 header
+			SensitiveList: []string{"Authorization"},
+		},
+	}
+	result := filterHeaders(headers, cfg)
+
+	a.NotNil(result)
+	a.NotContains(result, "Authorization") // Exclude 策略跳过
+	a.Equal("application/json", result["Content-Type"])
 }
 
 // ==================== isSensitiveHeader ====================
