@@ -1,9 +1,12 @@
 package qgin
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -662,5 +665,657 @@ func TestGinLogger_NegativeBodySize(t *testing.T) {
 		if bodySizeInt < 0 {
 			t.Errorf("body_size = %d, 应该非负", bodySizeInt)
 		}
+	}
+}
+
+// ==================== Body 日志功能集成测试 ====================
+
+// TestGinLogger_RequestBody_LogsTextBody 测试 request body 日志记录（文本类型）
+func TestGinLogger_RequestBody_LogsTextBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestBody = BodyLogConfig{
+		Strategy:     BodyTruncateHead,
+		TruncateSize: 100,
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	body := `{"name":"test","value":"sample"}`
+	c.Request = httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证 request_body 字段存在
+	requestBody, ok := lastCall.fields["request_body"]
+	if !ok {
+		t.Error("日志记录缺少 request_body 字段")
+	}
+	if requestBodyStr, ok := requestBody.(string); ok {
+		if requestBodyStr == "" {
+			t.Error("request_body 不应该为空")
+		}
+	}
+}
+
+// TestGinLogger_RequestBody_Truncation 测试 request body 截取功能
+func TestGinLogger_RequestBody_Truncation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestBody = BodyLogConfig{
+		Strategy:     BodyTruncateHead,
+		TruncateSize: 10,
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	// 创建一个长 body
+	longBody := strings.Repeat("abcdefghij", 10) // 100 字符
+	c.Request = httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(longBody))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	requestBody, ok := lastCall.fields["request_body"]
+	if !ok {
+		t.Fatal("日志记录缺少 request_body 字段")
+	}
+	if requestBodyStr, ok := requestBody.(string); ok {
+		// 截取后应该包含 truncated 标记
+		if !strings.Contains(requestBodyStr, "...(truncated)") {
+			t.Errorf("request_body 应该被截取，实际值: %s", requestBodyStr)
+		}
+	}
+}
+
+// TestGinLogger_ResponseBody_LogsTextBody 测试 response body 日志记录（文本类型）
+func TestGinLogger_ResponseBody_LogsTextBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.ResponseBody = BodyLogConfig{
+		Strategy:     BodyTruncateFull,
+		TruncateSize: 100,
+	}
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/test", func(c *gin.Context) {
+		c.Header("Content-Type", "application/json")
+		c.String(200, `{"status":"ok"}`)
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证 response_body 字段存在
+	responseBody, ok := lastCall.fields["response_body"]
+	if !ok {
+		t.Error("日志记录缺少 response_body 字段")
+	}
+	if responseBodyStr, ok := responseBody.(string); ok {
+		if responseBodyStr == "" {
+			t.Error("response_body 不应该为空")
+		}
+	}
+}
+
+// TestGinLogger_Body_BinaryContentType 测试二进制 body 只记录类型和大小
+func TestGinLogger_Body_BinaryContentType(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestBody = BodyLogConfig{
+		Strategy:     BodyTruncateFull,
+		TruncateSize: 100,
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	binaryData := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A} // PNG header
+	c.Request = httptest.NewRequest(http.MethodPost, "/upload", bytes.NewReader(binaryData))
+	c.Request.Header.Set("Content-Type", "image/png")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 对于二进制类型，应该记录 request_body_type 和 request_body_size
+	bodyType, hasType := lastCall.fields["request_body_type"]
+	bodySize, hasSize := lastCall.fields["request_body_size"]
+
+	if hasType {
+		if bodyTypeStr, ok := bodyType.(string); ok {
+			if !strings.Contains(bodyTypeStr, "image/png") {
+				t.Errorf("request_body_type = %s, 期望包含 image/png", bodyTypeStr)
+			}
+		}
+	}
+
+	if hasSize {
+		if size, ok := bodySize.(int); ok {
+			if size != len(binaryData) {
+				t.Errorf("request_body_size = %d, 期望 %d", size, len(binaryData))
+			}
+		}
+	}
+
+	// 二进制内容不应该有 request_body 内容
+	if _, hasBody := lastCall.fields["request_body"]; hasBody {
+		body := lastCall.fields["request_body"]
+		if bodyStr, ok := body.(string); ok && bodyStr != "" {
+			t.Error("二进制 body 不应该记录 request_body 内容")
+		}
+	}
+}
+
+// TestGinLogger_Body_NoneStrategy 测试 None 策略不记录 body
+func TestGinLogger_Body_NoneStrategy(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestBody = BodyLogConfig{
+		Strategy: BodyTruncateNone,
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	body := `{"test":"data"}`
+	c.Request = httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// None 策略不应该记录 request_body
+	if _, hasBody := lastCall.fields["request_body"]; hasBody {
+		t.Error("BodyTruncateNone 策略不应该记录 request_body")
+	}
+}
+
+// ==================== Header 日志功能集成测试 ====================
+
+// ==================== 覆盖率补充测试 ====================
+
+// TestGinLogger_StatusZero 测试 status == 0 时的处理
+func TestGinLogger_StatusZero(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/no-status", func(c *gin.Context) {
+		// 不设置任何状态码，gin 默认会返回 0
+		// 但实际写入响应后会变成 200
+		c.Writer.Write([]byte("ok"))
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/no-status", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证状态码为 200（因为 0 会被转换为 200）
+	status, ok := lastCall.fields["status"]
+	if !ok {
+		t.Fatal("日志记录缺少 status 字段")
+	}
+	if statusInt, ok := status.(int); ok {
+		if statusInt != 200 {
+			t.Errorf("status = %d, 期望 200", statusInt)
+		}
+	}
+}
+
+// TestGinLogger_ResponseBody_BinaryType 测试 response body 二进制类型记录
+func TestGinLogger_ResponseBody_BinaryType(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.ResponseBody = BodyLogConfig{
+		Strategy:     BodyTruncateFull,
+		TruncateSize: 100,
+	}
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/binary", func(c *gin.Context) {
+		c.Header("Content-Type", "image/png")
+		c.Data(200, "image/png", []byte{0x89, 0x50, 0x4E, 0x47})
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/binary", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 二进制类型应该记录 response_body_type 和 response_body_size
+	bodyType, hasType := lastCall.fields["response_body_type"]
+	if !hasType {
+		t.Error("日志记录缺少 response_body_type 字段")
+	}
+	if bodyTypeStr, ok := bodyType.(string); ok {
+		if !strings.Contains(bodyTypeStr, "image/png") {
+			t.Errorf("response_body_type = %s, 期望包含 image/png", bodyTypeStr)
+		}
+	}
+
+	_, hasSize := lastCall.fields["response_body_size"]
+	if !hasSize {
+		t.Error("日志记录缺少 response_body_size 字段")
+	}
+}
+
+// ==================== SSE 日志功能集成测试 ====================
+
+// TestGinLogger_SSE_EventsTruncation 测试 SSE 响应的事件截取
+func TestGinLogger_SSE_EventsTruncation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.ResponseBody = BodyLogConfig{
+		Strategy:     BodyTruncateFull,
+		TruncateSize: 100,
+	}
+	config.SSEConfig = SSELogConfig{
+		Strategy:     SSETruncateHeadAndTail,
+		TruncateSize: 2, // 截取前后各 2 条事件
+	}
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/sse", func(c *gin.Context) {
+		c.Header("Content-Type", "text/event-stream")
+		// 写入 10 条 SSE 事件
+		for i := 0; i < 10; i++ {
+			c.String(200, "data: event %d\n\n", i)
+		}
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/sse", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证 response_body 字段存在
+	responseBody, ok := lastCall.fields["response_body"]
+	if !ok {
+		t.Fatal("日志记录缺少 response_body 字段")
+	}
+	if responseBodyStr, ok := responseBody.(string); ok {
+		// 应该包含截取标记
+		if !strings.Contains(responseBodyStr, "...(truncated)...") {
+			t.Errorf("SSE 响应应该被截取，实际值: %s", responseBodyStr)
+		}
+	}
+}
+
+// TestGinLogger_SSE_FullStrategy 测试 SSE Full 策略记录所有事件
+func TestGinLogger_SSE_FullStrategy(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.ResponseBody = BodyLogConfig{
+		Strategy: BodyTruncateFull,
+	}
+	config.SSEConfig = SSELogConfig{
+		Strategy: SSETruncateFull,
+	}
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/sse", func(c *gin.Context) {
+		c.Header("Content-Type", "text/event-stream")
+		c.String(200, "data: event1\n\ndata: event2\n\n")
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/sse", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	responseBody, ok := lastCall.fields["response_body"]
+	if !ok {
+		t.Fatal("日志记录缺少 response_body 字段")
+	}
+	if responseBodyStr, ok := responseBody.(string); ok {
+		// Full 策略不应该有截取标记
+		if strings.Contains(responseBodyStr, "...(truncated)") {
+			t.Errorf("SSE Full 策略不应该截取，实际值: %s", responseBodyStr)
+		}
+	}
+}
+
+// ==================== 错误处理测试 ====================
+
+// TestGinLogger_Errors_ExtractGinErrors 测试 gin.Errors 中的错误信息提取
+func TestGinLogger_Errors_ExtractGinErrors(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/error", func(c *gin.Context) {
+		c.Error(fmt.Errorf("test error 1"))
+		c.Error(fmt.Errorf("test error 2"))
+		c.String(500, "internal error")
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/error", nil)
+	r.ServeHTTP(w, req)
+
+	// 500 状态码会触发 Error 级别日志
+	lastCall := logger.getLastErrorCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证 error 字段存在
+	errField, ok := lastCall.fields["error"]
+	if !ok {
+		t.Error("日志记录缺少 error 字段")
+	}
+	if errStr, ok := errField.(string); ok {
+		if !strings.Contains(errStr, "test error 1") {
+			t.Errorf("error 字段应该包含 'test error 1'，实际值: %s", errStr)
+		}
+	}
+}
+
+// TestGinLogger_Errors_NoErrors 测试没有错误时不记录 error 字段
+func TestGinLogger_Errors_NoErrors(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/ok", func(c *gin.Context) {
+		c.String(200, "ok")
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/ok", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 没有 error 字段
+	if _, hasError := lastCall.fields["error"]; hasError {
+		t.Error("没有错误时不应该记录 error 字段")
+	}
+}
+func TestGinLogger_RequestHeader_LogsHeaders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestHeader = HeaderLogConfig{
+		Strategy: HeaderLogAll,
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+	c.Request.Header.Set("X-Custom-Header", "custom-value")
+	c.Request.Header.Set("Accept", "application/json")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证 request_headers 字段存在
+	requestHeaders, ok := lastCall.fields["request_headers"]
+	if !ok {
+		t.Error("日志记录缺少 request_headers 字段")
+	}
+	if headers, ok := requestHeaders.(map[string]string); ok {
+		if headers["X-Custom-Header"] != "custom-value" {
+			t.Errorf("X-Custom-Header = %s, 期望 custom-value", headers["X-Custom-Header"])
+		}
+	}
+}
+
+// TestGinLogger_RequestHeader_Whitelist 测试 request header 白名单模式
+func TestGinLogger_RequestHeader_Whitelist(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestHeader = HeaderLogConfig{
+		Strategy:   HeaderLogWhitelist,
+		HeaderList: []string{"X-Custom-Header"},
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+	c.Request.Header.Set("X-Custom-Header", "custom-value")
+	c.Request.Header.Set("Accept", "application/json")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	requestHeaders, ok := lastCall.fields["request_headers"]
+	if !ok {
+		t.Fatal("日志记录缺少 request_headers 字段")
+	}
+	headers, ok := requestHeaders.(map[string]string)
+	if !ok {
+		t.Fatal("request_headers 类型不正确")
+	}
+
+	// 白名单中的 header 应该存在
+	if headers["X-Custom-Header"] != "custom-value" {
+		t.Errorf("X-Custom-Header = %s, 期望 custom-value", headers["X-Custom-Header"])
+	}
+
+	// 不在白名单中的 header 不应该存在
+	if _, exists := headers["Accept"]; exists {
+		t.Error("Accept 不在白名单中，不应该被记录")
+	}
+}
+
+// TestGinLogger_RequestHeader_Sensitive 测试敏感 header 处理
+func TestGinLogger_RequestHeader_Sensitive(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestHeader = HeaderLogConfig{
+		Strategy: HeaderLogAll,
+		SensitiveConfig: &SensitiveHeaderConfig{
+			Strategy:      SensitiveHeaderMaskAll,
+			SensitiveList: []string{"Authorization"},
+		},
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+	c.Request.Header.Set("Authorization", "Bearer secret-token")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	requestHeaders, ok := lastCall.fields["request_headers"]
+	if !ok {
+		t.Fatal("日志记录缺少 request_headers 字段")
+	}
+	headers, ok := requestHeaders.(map[string]string)
+	if !ok {
+		t.Fatal("request_headers 类型不正确")
+	}
+
+	// 敏感 header 应该被 mask
+	if headers["Authorization"] != "****" {
+		t.Errorf("Authorization = %s, 期望 **** (被 mask)", headers["Authorization"])
+	}
+}
+
+// TestGinLogger_ResponseHeader_LogsHeaders 测试 response header 日志记录
+func TestGinLogger_ResponseHeader_LogsHeaders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.ResponseHeader = HeaderLogConfig{
+		Strategy: HeaderLogAll,
+	}
+
+	// 创建一个完整的 gin 引擎来测试
+	r := gin.New()
+	r.Use(GinLoggerWithConfig(config))
+	r.GET("/test", func(c *gin.Context) {
+		c.Header("X-Response-Header", "response-value")
+		c.String(200, "ok")
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	r.ServeHTTP(w, req)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// 验证 response_headers 字段存在
+	responseHeaders, ok := lastCall.fields["response_headers"]
+	if !ok {
+		t.Error("日志记录缺少 response_headers 字段")
+	}
+	if headers, ok := responseHeaders.(map[string]string); ok {
+		if headers["X-Response-Header"] != "response-value" {
+			t.Errorf("X-Response-Header = %s, 期望 response-value", headers["X-Response-Header"])
+		}
+	}
+}
+
+// TestGinLogger_Header_NoneStrategy 测试 None 策略不记录 headers
+func TestGinLogger_Header_NoneStrategy(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	logger := newMockLogger()
+	config := DefaultGinLoggerConfig()
+	config.Logger = logger
+	config.RequestHeader = HeaderLogConfig{
+		Strategy: HeaderLogNone,
+	}
+	handler := GinLoggerWithConfig(config)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/test", nil)
+	c.Request.Header.Set("X-Custom-Header", "custom-value")
+
+	handler(c)
+
+	lastCall := logger.getLastInfoCall()
+	if lastCall == nil {
+		t.Fatal("GinLogger() 没有记录日志")
+	}
+
+	// None 策略不应该记录 request_headers
+	if _, hasHeaders := lastCall.fields["request_headers"]; hasHeaders {
+		t.Error("HeaderLogNone 策略不应该记录 request_headers")
 	}
 }
