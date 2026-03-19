@@ -38,18 +38,6 @@ func DowncastMap[V any](m map[string]V) map[string]any {
 	return r
 }
 
-/*TODO
-func SliceString[T any](a []T) string {
-	if a == nil {
-		return "nil"
-	}
-	r := make([]string, len(a))
-	for i, t := range a {
-		r[i] = a.String()
-	}
-	return strings.Join(r, ", ")
-}*/
-
 func SliceEquals[T comparable](a []T, b []T) bool {
 	if len(a) != len(b) {
 		return false
