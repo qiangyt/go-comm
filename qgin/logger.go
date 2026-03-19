@@ -2,6 +2,7 @@ package qgin
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -76,8 +77,27 @@ func GinLoggerWithConfig(config *GinLoggerConfig) gin.HandlerFunc {
 		}
 		c.Set("trace_id", traceId)
 
+		// === Request Body 读取 ===
+		var requestBody string
+		var requestBodySize int
+		requestContentType := c.Request.Header.Get("Content-Type")
+		if config.RequestBody.Strategy != BodyTruncateNone && c.Request.Body != nil {
+			requestBody = readRequestBody(c)
+			requestBodySize = len(requestBody)
+		}
+
+		// === Response Body 捕获 ===
+		var captureWriter *bodyCaptureWriter
+		if config.ResponseBody.Strategy != BodyTruncateNone {
+			captureWriter = newBodyCaptureWriter(c.Writer)
+			c.Writer = captureWriter
+		}
+
 		// 处理请求
 		c.Next()
+
+		// 在 c.Next() 之后读取 response Content-Type（因为 handler 会设置它）
+		responseContentType := c.Writer.Header().Get("Content-Type")
 
 		// 计算延迟
 		latency := time.Since(startTime)
@@ -106,6 +126,72 @@ func GinLoggerWithConfig(config *GinLoggerConfig) gin.HandlerFunc {
 			"client_ip", clientIP,
 			"body_size", bodySize,
 			"trace_id", traceId,
+		}
+
+		// === 添加 Request Body 字段 ===
+		if config.RequestBody.Strategy != BodyTruncateNone && requestBody != "" {
+			if isTextContentType(requestContentType) {
+				truncatedBody := applyTruncateStrategy(requestBody, config.RequestBody)
+				if truncatedBody != "" {
+					fields = append(fields, "request_body", truncatedBody)
+				}
+			} else {
+				// 二进制类型只记录类型和大小
+				fields = append(fields, "request_body_type", requestContentType)
+				fields = append(fields, "request_body_size", requestBodySize)
+			}
+		}
+
+		// === 添加 Response Body 字段 ===
+		if config.ResponseBody.Strategy != BodyTruncateNone && captureWriter != nil {
+			responseBody := captureWriter.CapturedBody()
+			if responseBody != "" {
+				// 检查是否为 SSE 响应
+				if strings.Contains(responseContentType, "text/event-stream") {
+					// SSE 处理
+					events := parseSSEEvents(responseBody)
+					if len(events) > 0 {
+						truncatedSSE := truncateSSEEvents(events, config.SSEConfig)
+						if truncatedSSE != "" {
+							fields = append(fields, "response_body", truncatedSSE)
+						}
+					}
+				} else if isTextContentType(responseContentType) {
+					truncatedBody := applyTruncateStrategy(responseBody, config.ResponseBody)
+					if truncatedBody != "" {
+						fields = append(fields, "response_body", truncatedBody)
+					}
+				} else {
+					// 二进制类型只记录类型和大小
+					fields = append(fields, "response_body_type", responseContentType)
+					fields = append(fields, "response_body_size", len(responseBody))
+				}
+			}
+		}
+
+		// === 添加 Request Headers 字段 ===
+		if config.RequestHeader.Strategy != HeaderLogNone {
+			requestHeaders := filterHeaders(c.Request.Header, config.RequestHeader)
+			if len(requestHeaders) > 0 {
+				fields = append(fields, "request_headers", requestHeaders)
+			}
+		}
+
+		// === 添加 Response Headers 字段 ===
+		if config.ResponseHeader.Strategy != HeaderLogNone {
+			responseHeaders := filterHeaders(c.Writer.Header(), config.ResponseHeader)
+			if len(responseHeaders) > 0 {
+				fields = append(fields, "response_headers", responseHeaders)
+			}
+		}
+
+		// === 添加 gin.Errors 字段 ===
+		if len(c.Errors) > 0 {
+			var errorMessages []string
+			for _, err := range c.Errors {
+				errorMessages = append(errorMessages, err.Error())
+			}
+			fields = append(fields, "error", strings.Join(errorMessages, "; "))
 		}
 
 		// 添加自定义字段
