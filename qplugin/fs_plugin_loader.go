@@ -3,7 +3,8 @@ package qplugin
 import (
 	"path/filepath"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 )
 
@@ -16,15 +17,15 @@ type FsPluginLoaderT struct {
 
 type FsPluginLoader = *FsPluginLoaderT
 
-func NewLocalPluginLoader(logger comm.Logger, fs afero.Fs, dir string) PluginLoader {
+func NewLocalPluginLoader(logger qlog.Logger, fs afero.Fs, dir string) PluginLoader {
 	return NewFsPluginLoader(logger, fs, dir, "local")
 }
 
-func NewRemotePluginLoader(logger comm.Logger, fs afero.Fs, dir string) PluginLoader {
+func NewRemotePluginLoader(logger qlog.Logger, fs afero.Fs, dir string) PluginLoader {
 	return NewFsPluginLoader(logger, fs, dir, "remote")
 }
 
-func NewFsPluginLoader(logger comm.Logger, fs afero.Fs, dir string, namespace string) PluginLoader {
+func NewFsPluginLoader(logger qlog.Logger, fs afero.Fs, dir string, namespace string) PluginLoader {
 	return &FsPluginLoaderT{
 		BasePluginLoaderT: *NewPluginLoader(namespace),
 		fs:                fs,
@@ -32,7 +33,7 @@ func NewFsPluginLoader(logger comm.Logger, fs afero.Fs, dir string, namespace st
 	}
 }
 
-func (me FsPluginLoader) Start(logger comm.Logger) error {
+func (me FsPluginLoader) Start(logger qlog.Logger) error {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -41,7 +42,7 @@ func (me FsPluginLoader) Start(logger comm.Logger) error {
 		return nil
 	}
 
-	errs := comm.NewErrorGroup(false)
+	errs := qerr.NewErrorGroup(false)
 	ns := me.Namespace()
 
 	for _, plugin := range ListExternalPlugins(logger, me.fs, filepath.Join(me.dir, me.namespace)) {

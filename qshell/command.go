@@ -8,7 +8,11 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v2/qio"
+	"github.com/qiangyt/go-comm/v2/qjson"
+	"github.com/qiangyt/go-comm/v2/qlang"
+	"github.com/qiangyt/go-comm/v2/qsys"
 	"github.com/spf13/cast"
 	"mvdan.cc/sh/v3/interp"
 )
@@ -36,7 +40,7 @@ type CommandOutput = *CommandOutputT
 func ParseCommandOutputP(outputText string) CommandOutput {
 	r, err := ParseCommandOutput(outputText)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -51,7 +55,7 @@ func ParseCommandOutput(outputText string) (CommandOutput, error) {
 	if strings.HasPrefix(outputText, "$json$\n\n") {
 		jsonBody := outputText[len("$json$\n\n"):]
 
-		err := comm.JsonUnmarshal([]byte(jsonBody), &r.Json)
+		err := qjson.JsonUnmarshal([]byte(jsonBody), &r.Json)
 		if err != nil {
 			return nil, errors.Wrapf(err, "json: %s", jsonBody)
 		}
@@ -83,7 +87,7 @@ func Vars2Pair(vars map[string]string) []string {
 }
 
 func Text2Vars(text string) map[string]string {
-	pairs := comm.Text2Lines(text)
+	pairs := qlang.Text2Lines(text)
 	return Pair2Vars(pairs)
 }
 
@@ -111,7 +115,7 @@ func Pair2Vars(pairs []string) map[string]string {
 
 func OpenHandler(ctx context.Context, path string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
 	if path == "/dev/null" {
-		return comm.DevNull{}, nil
+		return qio.DevNull{}, nil
 	}
 	return interp.DefaultOpenHandler()(ctx, path, flag, perm)
 }
@@ -119,7 +123,7 @@ func OpenHandler(ctx context.Context, path string, flag int, perm os.FileMode) (
 func RunShellCommandP(vars map[string]string, dir string, sh string, cmd string, passwordInput FnInput) CommandOutput {
 	r, err := RunShellCommand(vars, dir, sh, cmd, passwordInput)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -138,7 +142,7 @@ func RunShellCommand(vars map[string]string, dir string, sh string, cmd string, 
 func RunUserCommandP(vars map[string]string, dir string, cmd string) CommandOutput {
 	r, err := RunUserCommand(vars, dir, cmd)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -153,7 +157,7 @@ func RunShellScriptFile(afs afero.Fs, url string, credentials Credentials, timeo
 
 func NewExecCommand(vars map[string]string, dir string, cmd string, args ...string) (*exec.Cmd, error) {
 	r := exec.Command(cmd, args...)
-	env, err := comm.EnvironList(vars)
+	env, err := qsys.EnvironList(vars)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +169,7 @@ func NewExecCommand(vars map[string]string, dir string, cmd string, args ...stri
 func RunCommandNoInputP(vars map[string]string, dir string, cmd string, args ...string) CommandOutput {
 	r, err := RunCommandNoInput(vars, dir, cmd, args...)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }

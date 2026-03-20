@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
 	"github.com/spf13/afero"
 )
 
@@ -24,7 +24,7 @@ type AferoFile = *AferoFileT
 func NewAferoFileP(afs afero.Fs, apath string, credentials Credentials, timeout time.Duration) AferoFile {
 	r, err := NewAferoFile(afs, apath, credentials, timeout)
 	if err != nil {
-		panic(comm.NewSystemError("create afero file", err))
+		panic(qerr.NewSystemError("create afero file", err))
 	}
 	return r
 }

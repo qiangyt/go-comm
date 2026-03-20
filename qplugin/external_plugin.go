@@ -5,13 +5,15 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qcoll"
+	"github.com/qiangyt/go-comm/v2/qerr"
 	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 )
 
 type ExternalPluginContext interface {
-	Init(logger comm.Logger, fs afero.Fs, codeFile string)
+	Init(logger qlog.Logger, fs afero.Fs, codeFile string)
 	Start() any
 	Stop() any
 }
@@ -46,7 +48,7 @@ func (me ExternalPlugin) IsStarted() bool {
 	return me.started
 }
 
-func (me ExternalPlugin) Start(logger comm.Logger) {
+func (me ExternalPlugin) Start(logger qlog.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -63,7 +65,7 @@ func (me ExternalPlugin) Kind() PluginKind {
 	return me.kind
 }
 
-func (me ExternalPlugin) Stop(logger comm.Logger) {
+func (me ExternalPlugin) Stop(logger qlog.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -92,7 +94,7 @@ func (me ExternalPlugin) CodeFile() string {
 	return me.codeFile
 }
 
-func ResolveExternalPlugin(logger comm.Logger, fs afero.Fs, pluginDir string) (result ExternalPlugin) {
+func ResolveExternalPlugin(logger qlog.Logger, fs afero.Fs, pluginDir string) (result ExternalPlugin) {
 	defer func() {
 		if p := recover(); p != nil {
 			logger.Error(p).Str("pluginDir", pluginDir).Msg("failed to resolve external plugin")
@@ -146,13 +148,13 @@ func ResolveExternalPlugin(logger comm.Logger, fs afero.Fs, pluginDir string) (r
 	return result
 }
 
-func ListExternalPlugins(logger comm.Logger, afs afero.Fs, baseDir string) []ExternalPlugin {
+func ListExternalPlugins(logger qlog.Logger, afs afero.Fs, baseDir string) []ExternalPlugin {
 	pluginDirOrFiles, err := afero.ReadDir(afs, baseDir)
 	if err != nil {
-		panic(comm.NewSystemError(fmt.Sprintf("read plugins directories: %s", baseDir), err))
+		panic(qerr.NewSystemError(fmt.Sprintf("read plugins directories: %s", baseDir), err))
 	}
 
-	r := comm.NewOrderedMap[ExternalPlugin](nil)
+	r := qcoll.NewOrderedMap[ExternalPlugin](nil)
 
 	for _, dirOrFile := range pluginDirOrFiles {
 		if !dirOrFile.IsDir() {

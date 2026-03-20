@@ -3,7 +3,7 @@ package qfile
 import (
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qconfig"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -179,7 +179,7 @@ func TestMapFromYamlP_happy(t *testing.T) {
 	a := require.New(t)
 
 	yamlText := "key1: value1\nkey2: value2"
-	result := comm.MapFromYamlP(yamlText, false)
+	result := qconfig.MapFromYamlP(yamlText, false)
 	a.NotNil(result)
 	a.Equal("value1", result["key1"])
 	a.Equal("value2", result["key2"])
@@ -213,7 +213,7 @@ func TestFromYamlP_happy(t *testing.T) {
 
 	yamlText := "name: test\nage: 30"
 	var result Config
-	comm.FromYamlP(yamlText, false, &result)
+	qconfig.FromYamlP(yamlText, false, &result)
 	a.Equal("test", result.Name)
 	a.Equal(30, result.Age)
 }

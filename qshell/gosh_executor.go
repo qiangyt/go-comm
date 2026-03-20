@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qsys"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
 	"mvdan.cc/sh/v3/syntax"
@@ -198,7 +198,7 @@ func (me GoshExecutor) RunWithVars(ctx context.Context, vars map[string]string,
 	// 构建环境变量
 	environ := os.Environ()
 	if vars != nil {
-		envList, err := comm.EnvironList(vars)
+		envList, err := qsys.EnvironList(vars)
 		if err != nil {
 			return err
 		}

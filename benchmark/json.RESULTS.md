@@ -95,10 +95,10 @@
 import package comm
 
 // 切换到标准库
-comm.JSONConfig.Backend = comm.JSONBackendStdlib
+qjson.JSONConfig.Backend = qjson.JSONBackendStdlib
 
 // 切换到 sonic（默认）
-comm.JSONConfig.Backend = comm.JSONBackendSonic
+qjson.JSONConfig.Backend = qjson.JSONBackendSonic
 ```
 
 ---

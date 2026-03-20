@@ -205,13 +205,6 @@ func Test_TempFile_happy(t *testing.T) {
 	a.NotEqual("xyz", actual)
 }
 
-func Test_ExpandHomePath_happy(t *testing.T) {
-	a := require.New(t)
-	a.Equal("none", ExpandHomePathP("none"))
-
-	a.Equal(UserHomeDirP(), ExpandHomePathP("~"))
-}
-
 func Test_Stat_happy(t *testing.T) {
 	a := require.New(t)
 	fs := afero.NewMemMapFs()
@@ -391,19 +384,6 @@ func Test_TempTextFile_happy(t *testing.T) {
 	// TempTextFileP
 	path = TempTextFileP(fs, "prefix2", "content2")
 	a.True(strings.Contains(path, "prefix2"))
-}
-
-func Test_UserHomeDir_happy(t *testing.T) {
-	a := require.New(t)
-
-	// UserHomeDir
-	dir, err := UserHomeDir()
-	a.NoError(err)
-	a.NotEmpty(dir)
-
-	// UserHomeDirP
-	dirP := UserHomeDirP()
-	a.Equal(dir, dirP)
 }
 
 func Test_Rename_error(t *testing.T) {
@@ -861,24 +841,6 @@ func TestTempTextFile_happy(t *testing.T) {
 
 	path = TempTextFileP(fs, "prefix2", "content2")
 	a.True(strings.Contains(path, "prefix2"))
-}
-
-func TestExpandHomePath_happy(t *testing.T) {
-	a := require.New(t)
-	a.Equal("none", ExpandHomePathP("none"))
-
-	a.Equal(UserHomeDirP(), ExpandHomePathP("~"))
-}
-
-func TestUserHomeDir_happy(t *testing.T) {
-	a := require.New(t)
-
-	dir, err := UserHomeDir()
-	a.NoError(err)
-	a.NotEmpty(dir)
-
-	dirP := UserHomeDirP()
-	a.Equal(dir, dirP)
 }
 
 func TestWriteFileLines_happy(t *testing.T) {

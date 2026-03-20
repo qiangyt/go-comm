@@ -8,7 +8,9 @@ import (
 
 	"github.com/goodsru/go-universal-network-adapter/models"
 	"github.com/goodsru/go-universal-network-adapter/services"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v2/qio"
+	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 )
 
@@ -47,7 +49,7 @@ type (
 func NewFileP(afs afero.Fs, url string, credentials Credentials, timeout time.Duration) File {
 	r, err := NewFile(afs, url, credentials, timeout)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -113,15 +115,15 @@ func ShortDescription(url string) string {
 	return protocol + r[:3] + "..." + r[lem-(8+1+5): /* 12345678.hosts */]
 }
 
-func DownloadBytesP(logger comm.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) []byte {
+func DownloadBytesP(logger qlog.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) []byte {
 	r, err := DownloadBytes(logger, fallbackDir, fs, url, credentials, timeout)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
 
-func DownloadBytes(logger comm.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) (result []byte, err error) {
+func DownloadBytes(logger qlog.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) (result []byte, err error) {
 	result, err = downloadBytes(fs, url, credentials, timeout)
 
 	if len(fallbackDir) > 0 {
@@ -169,18 +171,18 @@ func downloadBytes(fs afero.Fs, url string, credentials Credentials, timeout tim
 	blob := c.Blob
 	defer blob.Close()
 
-	return comm.ReadBytes(blob)
+	return qio.ReadBytes(blob)
 }
 
-func DownloadTextP(logger comm.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) string {
+func DownloadTextP(logger qlog.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) string {
 	r, err := DownloadText(logger, fallbackDir, fs, url, credentials, timeout)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
 
-func DownloadText(logger comm.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) (string, error) {
+func DownloadText(logger qlog.Logger, fallbackDir string, fs afero.Fs, url string, credentials Credentials, timeout time.Duration) (string, error) {
 	bytes, err := DownloadBytes(logger, fallbackDir, fs, url, credentials, timeout)
 	if err != nil {
 		return "", err

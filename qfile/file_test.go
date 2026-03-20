@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qsys"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ func Test_WorkDir_happy(t *testing.T) {
 	a.Equal("defaultDir", WorkDir("hello.txt", "defaultDir"))
 	a.Equal(filepath.Join("defaultDir", "home"), WorkDir("home/hello.txt", "defaultDir"))
 
-	if comm.IsWindows() {
+	if qsys.IsWindows() {
 		a.Equal("c:\\home", WorkDir("file://c:/home/hello.txt", "defaultDir"))
 		a.Equal("c:\\home", WorkDir("c:/home/hello.txt", "defaultDir"))
 

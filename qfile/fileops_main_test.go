@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +70,7 @@ func TestFileOps_GetFileSize_NotFound(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			_ = a
-			if appErr, ok := r.(*comm.AppError); ok {
+			if appErr, ok := r.(*qerr.AppError); ok {
 				a.Contains(appErr.Error(), "FailedToGetFileSize")
 			} else {
 				a.Contains(r.(string), "FailedToGetFileSize")
@@ -204,7 +204,7 @@ func TestFileOps_SetPermissions_Invalid(t *testing.T) {
 		defer func() {
 			if r := recover(); r != nil {
 				_ = a
-				if appErr, ok := r.(*comm.AppError); ok {
+				if appErr, ok := r.(*qerr.AppError); ok {
 					a.Contains(appErr.Error(), "InvalidChmodValue")
 				} else {
 					a.Contains(r.(string), "InvalidChmodValue")

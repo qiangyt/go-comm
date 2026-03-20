@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/q18n"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,7 +30,7 @@ func TestResolveBroadcastIp_Loopback(t *testing.T) {
 func TestResolveBroadcastIp_InvalidInterface(t *testing.T) {
 	a := require.New(t)
 
-	comm.InitI18n("en")
+	q18n.InitI18n("en")
 
 	interfaces, err := BroadcastInterfaces(false)
 	a.NoError(err)
@@ -49,7 +49,7 @@ func TestResolveBroadcastIp_I18n(t *testing.T) {
 	a.NoError(err)
 
 	// Test error message in English
-	comm.InitI18n("en")
+	q18n.InitI18n("en")
 	_, _, err = ResolveBroadcastIp(interfaces, "invalid-interface")
 	if err != nil {
 		a.Contains(err.Error(), "invalid-interface")
@@ -57,7 +57,7 @@ func TestResolveBroadcastIp_I18n(t *testing.T) {
 	}
 
 	// Test error message in Chinese
-	comm.InitI18n("zh")
+	q18n.InitI18n("zh")
 	_, _, err = ResolveBroadcastIp(interfaces, "invalid-interface")
 	if err != nil {
 		a.Contains(err.Error(), "invalid-interface")

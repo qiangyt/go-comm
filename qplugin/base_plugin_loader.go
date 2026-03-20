@@ -3,7 +3,8 @@ package qplugin
 import (
 	"sync"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
 type BasePluginLoaderT struct {
@@ -30,16 +31,16 @@ func (me BasePluginLoader) Register(plugin Plugin) {
 
 	name := plugin.Name()
 	if _, found := me.plugins[name]; found {
-		panic(comm.NewBusinessErrorf("plugin %s is duplicated", PluginId(me.Namespace(), name)))
+		panic(qerr.NewBusinessErrorf("plugin %s is duplicated", PluginId(me.Namespace(), name)))
 	}
 	me.plugins[name] = plugin
 }
 
-func (me BasePluginLoader) RegisterThenStart(logger comm.Logger, plugin Plugin) {
+func (me BasePluginLoader) RegisterThenStart(logger qlog.Logger, plugin Plugin) {
 	me.Register(plugin)
 
 	if err := StartPlugin(me.Namespace(), plugin, logger); err != nil {
-		panic(comm.NewSystemError("start plugin", err))
+		panic(qerr.NewSystemError("start plugin", err))
 	}
 }
 
@@ -51,7 +52,7 @@ func (me BasePluginLoader) Plugins() map[string]Plugin {
 	return me.plugins
 }
 
-func (me BasePluginLoader) Start(logger comm.Logger) error {
+func (me BasePluginLoader) Start(logger qlog.Logger) error {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -60,7 +61,7 @@ func (me BasePluginLoader) Start(logger comm.Logger) error {
 		return nil
 	}
 
-	errs := comm.NewErrorGroup(false)
+	errs := qerr.NewErrorGroup(false)
 	ns := me.Namespace()
 
 	for _, plugin := range me.plugins {
@@ -77,7 +78,7 @@ func (me BasePluginLoader) Start(logger comm.Logger) error {
 	return nil
 }
 
-func (me BasePluginLoader) Stop(logger comm.Logger) error {
+func (me BasePluginLoader) Stop(logger qlog.Logger) error {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -87,7 +88,7 @@ func (me BasePluginLoader) Stop(logger comm.Logger) error {
 	}
 	me.started = false
 
-	errs := comm.NewErrorGroup(false)
+	errs := qerr.NewErrorGroup(false)
 	ns := me.Namespace()
 
 	for _, plugin := range me.plugins {

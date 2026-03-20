@@ -9,7 +9,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qjson"
 	"github.com/spf13/afero"
 )
 
@@ -33,7 +33,7 @@ func CreateLockFile(fs afero.Fs, filename string, data any) (afero.File, error) 
 	// Write PID to lock file
 	pid := os.Getpid()
 
-	payload, err := comm.JsonMarshal(map[string]any{
+	payload, err := qjson.JsonMarshal(map[string]any{
 		"pid":  pid,
 		"data": data,
 	})

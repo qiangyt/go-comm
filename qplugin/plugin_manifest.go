@@ -3,7 +3,7 @@ package qplugin
 import (
 	"strings"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qconfig"
 	"github.com/qiangyt/go-comm/v2/qfile"
 	"github.com/spf13/afero"
 )
@@ -18,7 +18,7 @@ type PluginManifestT struct {
 type PluginManifest = *PluginManifestT
 
 func PluginManifestWithMap(manifestMap map[string]any) PluginManifest {
-	r, _ := comm.DecodeWithMapP(manifestMap, &comm.ConfigConfig{
+	r, _ := qconfig.DecodeWithMapP(manifestMap, &qconfig.ConfigConfig{
 		ErrorUnused:          true,
 		ErrorUnset:           false,
 		ZeroFields:           false,

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
 )
 
 // FileCache 文件缓存管理器
@@ -22,14 +22,14 @@ func NewFileCache(cacheDir string) FileCache {
 		// 获取用户缓存目录
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			panic(comm.NewSystemError("get user home directory", err))
+			panic(qerr.NewSystemError("get user home directory", err))
 		}
 		cacheDir = filepath.Join(homeDir, ".cache", "amcopy")
 	}
 
 	// 创建缓存目录
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
-		panic(comm.NewSystemError("create cache directory", err))
+		panic(qerr.NewSystemError("create cache directory", err))
 	}
 
 	return &FileCacheT{
@@ -68,7 +68,7 @@ func (me FileCache) Has(key string) bool {
 // Put 将文件添加到缓存
 func (me FileCache) Put(srcPath string, key string) {
 	if key == "" {
-		panic(comm.NewBusinessError("cache key is required", nil))
+		panic(qerr.NewBusinessError("cache key is required", nil))
 	}
 
 	cachedPath := me.getCachedPath(key)
@@ -81,20 +81,20 @@ func (me FileCache) Put(srcPath string, key string) {
 	// 复制文件到缓存目录
 	src, err := os.Open(srcPath)
 	if err != nil {
-		panic(comm.NewSystemError("open source file", err))
+		panic(qerr.NewSystemError("open source file", err))
 	}
 	defer src.Close()
 
 	dst, err := os.Create(cachedPath)
 	if err != nil {
-		panic(comm.NewSystemError("create cache file", err))
+		panic(qerr.NewSystemError("create cache file", err))
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, src); err != nil {
 		// 删除不完整的缓存文件
 		os.Remove(cachedPath)
-		panic(comm.NewSystemError("copy file to cache", err))
+		panic(qerr.NewSystemError("copy file to cache", err))
 	}
 }
 
@@ -102,31 +102,31 @@ func (me FileCache) Put(srcPath string, key string) {
 func (me FileCache) CopyTo(key string, destPath string) {
 	cachedPath := me.Get(key)
 	if cachedPath == "" {
-		panic(comm.NewBusinessError("file not found in cache", nil))
+		panic(qerr.NewBusinessError("file not found in cache", nil))
 	}
 
 	// 确保目标目录存在
 	destDir := filepath.Dir(destPath)
 	if err := os.MkdirAll(destDir, 0o755); err != nil {
-		panic(comm.NewSystemError("create destination directory", err))
+		panic(qerr.NewSystemError("create destination directory", err))
 	}
 
 	// 复制文件
 	src, err := os.Open(cachedPath)
 	if err != nil {
-		panic(comm.NewSystemError("open cached file", err))
+		panic(qerr.NewSystemError("open cached file", err))
 	}
 	defer src.Close()
 
 	dst, err := os.Create(destPath)
 	if err != nil {
-		panic(comm.NewSystemError("create destination file", err))
+		panic(qerr.NewSystemError("create destination file", err))
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, src); err != nil {
 		os.Remove(destPath)
-		panic(comm.NewSystemError("copy from cache", err))
+		panic(qerr.NewSystemError("copy from cache", err))
 	}
 }
 
@@ -138,7 +138,7 @@ func (me FileCache) Delete(key string) {
 
 	cachedPath := me.getCachedPath(key)
 	if err := os.Remove(cachedPath); err != nil && !os.IsNotExist(err) {
-		panic(comm.NewSystemError("delete cache file", err))
+		panic(qerr.NewSystemError("delete cache file", err))
 	}
 }
 
@@ -146,13 +146,13 @@ func (me FileCache) Delete(key string) {
 func (me FileCache) Clear() {
 	entries, err := os.ReadDir(me.cacheDir)
 	if err != nil {
-		panic(comm.NewSystemError("read cache directory", err))
+		panic(qerr.NewSystemError("read cache directory", err))
 	}
 
 	for _, entry := range entries {
 		path := me.getCachedPath(entry.Name())
 		if err := os.RemoveAll(path); err != nil {
-			panic(comm.NewSystemError("remove cache entry "+entry.Name(), err))
+			panic(qerr.NewSystemError("remove cache entry "+entry.Name(), err))
 		}
 	}
 }
@@ -176,7 +176,7 @@ func (me FileCache) Size() int64 {
 		return nil
 	})
 	if err != nil {
-		panic(comm.NewSystemError("calculate cache size", err))
+		panic(qerr.NewSystemError("calculate cache size", err))
 	}
 
 	return size

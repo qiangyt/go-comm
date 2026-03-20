@@ -5,14 +5,14 @@ import (
 	"io"
 	"strings"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
 )
 
 // RunGoshCommandP 执行 shell 命令（失败时 panic）
 func RunGoshCommandP(vars map[string]string, dir string, cmd string, passwordInput FnInput) CommandOutput {
 	r, err := RunGoshCommand(vars, dir, cmd, passwordInput)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }

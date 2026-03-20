@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/q18n"
+	"github.com/qiangyt/go-comm/v2/qerr"
 )
 
 func HostnameP() string {
 	r, err := Hostname()
 	if err != nil {
-		panic(comm.NewSystemError("get hostname", err))
+		panic(qerr.NewSystemError("get hostname", err))
 	}
 	return r
 }
@@ -24,7 +25,7 @@ func Hostname() (string, error) {
 func BroadcastInterfacesP(dump bool) []net.Interface {
 	r, err := BroadcastInterfaces(dump)
 	if err != nil {
-		panic(comm.NewSystemError("get broadcast interfaces", err))
+		panic(qerr.NewSystemError("get broadcast interfaces", err))
 	}
 	return r
 }
@@ -61,7 +62,7 @@ func BroadcastInterfaces(dump bool) ([]net.Interface, error) {
 func BroadcastIpWithInterfaceP(intf net.Interface) net.IP {
 	r, err := BroadcastIpWithInterface(intf)
 	if err != nil {
-		panic(comm.NewSystemError("get broadcast IP", err))
+		panic(qerr.NewSystemError("get broadcast IP", err))
 	}
 	return r
 }
@@ -95,7 +96,7 @@ func BroadcastIpWithInterface(intf net.Interface) (net.IP, error) {
 func ResolveBroadcastIpP(interfaces []net.Interface, interfaceName string) (net.IP, net.IP) {
 	localIp, broadcastIp, err := ResolveBroadcastIp(interfaces, interfaceName)
 	if err != nil {
-		panic(comm.NewSystemError("resolve broadcast IP", err))
+		panic(qerr.NewSystemError("resolve broadcast IP", err))
 	}
 	return localIp, broadcastIp
 }
@@ -132,7 +133,7 @@ func ResolveBroadcastIp(interfaces []net.Interface, interfaceName string) (net.I
 		}
 	}
 
-	return nil, nil, comm.LocalizeError("error.net.interface_not_found", map[string]any{
+	return nil, nil, q18n.LocalizeError("error.net.interface_not_found", map[string]any{
 		"Interface": interfaceName,
 	})
 }

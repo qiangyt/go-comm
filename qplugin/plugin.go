@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/q18n"
+	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
 type PluginLang = string
@@ -20,23 +21,23 @@ type PluginKind = string
 type Plugin interface {
 	Name() string
 	Kind() PluginKind
-	Start(logger comm.Logger)
-	Stop(logger comm.Logger)
+	Start(logger qlog.Logger)
+	Stop(logger qlog.Logger)
 	Version() (major int, minor int)
 }
 
 type PluginLoader interface {
 	Namespace() string
 	Plugins() map[string]Plugin
-	Start(logger comm.Logger) error
-	Stop(logger comm.Logger) error
+	Start(logger qlog.Logger) error
+	Stop(logger qlog.Logger) error
 }
 
 func PluginId(namespace string, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
-func StartPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error) {
+func StartPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error) {
 	major, minor := plugin.Version()
 	ver := fmt.Sprintf("%d/%d", major, minor)
 	pluginId := PluginId(namespace, plugin.Name())
@@ -46,13 +47,13 @@ func StartPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error
 			var err2 error
 			var isErr bool
 			if err2, isErr = p.(error); isErr {
-				err = errors.Wrap(err2, comm.T("error.plugin.start_failed", map[string]any{
+				err = errors.Wrap(err2, q18n.T("error.plugin.start_failed", map[string]any{
 					"PluginId": pluginId,
 					"Version":  ver,
 					"Cause":    err2,
 				}))
 			} else {
-				err = comm.LocalizeError("error.plugin.start_failed", map[string]any{
+				err = q18n.LocalizeError("error.plugin.start_failed", map[string]any{
 					"PluginId": pluginId,
 					"Version":  ver,
 					"Cause":    p,
@@ -61,7 +62,7 @@ func StartPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error
 		}
 	}()
 
-	logCtx := comm.NewLogContext(false)
+	logCtx := qlog.NewLogContext(false)
 	logCtx.Str("pluginId", pluginId).Str("version", ver)
 	subLogger := logger.NewSubLogger(logCtx)
 
@@ -72,7 +73,7 @@ func StartPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error
 	return err
 }
 
-func StopPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error) {
+func StopPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error) {
 	major, minor := plugin.Version()
 	ver := fmt.Sprintf("%d/%d", major, minor)
 	pluginId := PluginId(namespace, plugin.Name())
@@ -82,13 +83,13 @@ func StopPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error)
 			var err2 error
 			var isErr bool
 			if err2, isErr = p.(error); isErr {
-				err = errors.Wrap(err2, comm.T("error.plugin.stop_failed", map[string]any{
+				err = errors.Wrap(err2, q18n.T("error.plugin.stop_failed", map[string]any{
 					"PluginId": pluginId,
 					"Version":  ver,
 					"Cause":    err2,
 				}))
 			} else {
-				err = comm.LocalizeError("error.plugin.stop_failed", map[string]any{
+				err = q18n.LocalizeError("error.plugin.stop_failed", map[string]any{
 					"PluginId": pluginId,
 					"Version":  ver,
 					"Cause":    p,
@@ -97,7 +98,7 @@ func StopPlugin(namespace string, plugin Plugin, logger comm.Logger) (err error)
 		}
 	}()
 
-	logCtx := comm.NewLogContext(false)
+	logCtx := qlog.NewLogContext(false)
 	logCtx.Str("pluginId", pluginId).Str("version", ver)
 	subLogger := logger.NewSubLogger(logCtx)
 

@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/q18n"
+	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v2/qio"
+	"github.com/qiangyt/go-comm/v2/qlang"
 	"github.com/spf13/afero"
 )
 
@@ -17,7 +19,7 @@ var AppFs = afero.NewOsFs()
 func DefaultEtcHostsP() string {
 	r, err := DefaultEtcHosts()
 	if err != nil {
-		panic(comm.NewSystemError("get default etc hosts", err))
+		panic(qerr.NewSystemError("get default etc hosts", err))
 	}
 	return r
 }
@@ -25,7 +27,7 @@ func DefaultEtcHostsP() string {
 func CopyFileP(fs afero.Fs, path string, newPath string) int64 {
 	r, err := CopyFile(fs, path, newPath)
 	if err != nil {
-		panic(comm.NewSystemError("copy file", err))
+		panic(qerr.NewSystemError("copy file", err))
 	}
 	return r
 }
@@ -57,7 +59,7 @@ func CopyFile(fs afero.Fs, path string, newPath string) (int64, error) {
 
 func RenameP(fs afero.Fs, path string, newPath string) {
 	if err := Rename(fs, path, newPath); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -72,7 +74,7 @@ func Rename(fs afero.Fs, path string, newPath string) error {
 func StatP(fs afero.Fs, path string, ensureExists bool) os.FileInfo {
 	r, err := Stat(fs, path, ensureExists)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -85,7 +87,7 @@ func Stat(fs afero.Fs, path string, ensureExists bool) (os.FileInfo, error) {
 			return nil, errors.Wrapf(err, "stat file: %s", path)
 		}
 		if ensureExists {
-			return nil, errors.Wrap(err, comm.T("error.file.not_found", map[string]any{
+			return nil, errors.Wrap(err, q18n.T("error.file.not_found", map[string]any{
 				"Path": path,
 			}))
 		}
@@ -98,7 +100,7 @@ func Stat(fs afero.Fs, path string, ensureExists bool) (os.FileInfo, error) {
 func FileExistsP(fs afero.Fs, path string) bool {
 	r, err := FileExists(fs, path)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -113,7 +115,7 @@ func FileExists(fs afero.Fs, path string) (bool, error) {
 		return false, nil
 	}
 	if fi.IsDir() {
-		return false, comm.LocalizeError("error.file.expect_file_but_dir", map[string]any{
+		return false, q18n.LocalizeError("error.file.expect_file_but_dir", map[string]any{
 			"Path": path,
 		})
 	}
@@ -122,7 +124,7 @@ func FileExists(fs afero.Fs, path string) (bool, error) {
 
 func EnsureFileExistsP(fs afero.Fs, path string) {
 	if err := EnsureFileExists(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -132,7 +134,7 @@ func EnsureFileExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if !exists {
-		return comm.LocalizeError("error.file.not_found", map[string]any{
+		return q18n.LocalizeError("error.file.not_found", map[string]any{
 			"Path": path,
 		})
 	}
@@ -141,7 +143,7 @@ func EnsureFileExists(fs afero.Fs, path string) error {
 
 func EnsureFileNotExistsP(fs afero.Fs, path string) {
 	if err := EnsureFileNotExists(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -151,7 +153,7 @@ func EnsureFileNotExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if exists {
-		return comm.LocalizeError("error.file.already_exists", map[string]any{
+		return q18n.LocalizeError("error.file.already_exists", map[string]any{
 			"Path": path,
 		})
 	}
@@ -161,7 +163,7 @@ func EnsureFileNotExists(fs afero.Fs, path string) error {
 func DirExistsP(fs afero.Fs, path string) bool {
 	r, err := DirExists(fs, path)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -176,7 +178,7 @@ func DirExists(fs afero.Fs, path string) (bool, error) {
 		return false, nil
 	}
 	if !fi.IsDir() {
-		return false, comm.LocalizeError("error.file.expect_dir_but_file", map[string]any{
+		return false, q18n.LocalizeError("error.file.expect_dir_but_file", map[string]any{
 			"Path": path,
 		})
 	}
@@ -185,7 +187,7 @@ func DirExists(fs afero.Fs, path string) (bool, error) {
 
 func EnsureDirExistsP(fs afero.Fs, path string) {
 	if err := EnsureDirExists(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -195,7 +197,7 @@ func EnsureDirExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if !exists {
-		return comm.LocalizeError("error.dir.not_found", map[string]any{
+		return q18n.LocalizeError("error.dir.not_found", map[string]any{
 			"Path": path,
 		})
 	}
@@ -204,7 +206,7 @@ func EnsureDirExists(fs afero.Fs, path string) error {
 
 func EnsureDirNotExistsP(fs afero.Fs, path string) {
 	if err := EnsureDirNotExists(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -214,7 +216,7 @@ func EnsureDirNotExists(fs afero.Fs, path string) error {
 		return err
 	}
 	if exists {
-		return comm.LocalizeError("error.dir.already_exists", map[string]any{
+		return q18n.LocalizeError("error.dir.already_exists", map[string]any{
 			"Path": path,
 		})
 	}
@@ -223,7 +225,7 @@ func EnsureDirNotExists(fs afero.Fs, path string) error {
 
 func RemoveFileP(fs afero.Fs, path string) {
 	if err := RemoveFile(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -244,14 +246,14 @@ func RemoveFile(fs afero.Fs, path string) error {
 
 func RemoveDirP(fs afero.Fs, path string) {
 	if err := RemoveDir(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
 // RemoveDir ...
 func RemoveDir(fs afero.Fs, path string) error {
 	if path == "/" || path == "\\" {
-		return comm.LocalizeError("error.file.cannot_remove_root", nil)
+		return q18n.LocalizeError("error.file.cannot_remove_root", nil)
 	}
 	found, err := DirExists(fs, path)
 	if err != nil {
@@ -286,7 +288,7 @@ func ReadFileBytes(fs afero.Fs, path string) ([]byte, error) {
 func ReadFileTextP(fs afero.Fs, path string) string {
 	r, err := ReadFileText(fs, path)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -302,7 +304,7 @@ func ReadFileText(fs afero.Fs, path string) (string, error) {
 func ReadFileLinesP(fs afero.Fs, path string) []string {
 	r, err := ReadFileLines(fs, path)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -318,13 +320,13 @@ func ReadFileLines(fs afero.Fs, path string) ([]string, error) {
 	}
 	defer f.Close()
 
-	return comm.ReadLines(f), nil
+	return qio.ReadLines(f), nil
 }
 
 func WriteFileIfNotFoundP(fs afero.Fs, path string, content []byte) bool {
 	r, err := WriteFileIfNotFound(fs, path, content)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -346,13 +348,13 @@ func WriteFileIfNotFound(fs afero.Fs, path string, content []byte) (bool, error)
 
 func WriteFileP(fs afero.Fs, path string, content []byte) {
 	if err := WriteFile(fs, path, content); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
 func Mkdir4FileP(fs afero.Fs, filePath string) {
 	if err := Mkdir4File(fs, filePath); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -384,7 +386,7 @@ func WriteFile(fs afero.Fs, path string, content []byte) error {
 
 func WriteFileTextP(fs afero.Fs, path string, content string) {
 	if err := WriteFileText(fs, path, content); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -397,7 +399,7 @@ func WriteFileText(fs afero.Fs, path string, content string) error {
 func WriteFileTextIfNotFoundP(fs afero.Fs, path string, content string) bool {
 	r, err := WriteFileTextIfNotFound(fs, path, content)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -419,52 +421,17 @@ func WriteFileTextIfNotFound(fs afero.Fs, path string, content string) (bool, er
 // WriteLines ...
 func WriteFileLinesP(fs afero.Fs, path string, lines ...string) {
 	if err := WriteFileLines(fs, path, lines...); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
 func WriteFileLines(fs afero.Fs, path string, lines ...string) error {
-	return WriteFileText(fs, path, comm.JoinedLines(lines...))
-}
-
-func ExpandHomePathP(path string) string {
-	r, err := ExpandHomePath(path)
-	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
-	}
-	return r
-}
-
-// ExpandHomePath ...
-func ExpandHomePath(path string) (string, error) {
-	var r string
-	var err error
-
-	if r, err = homedir.Expand(path); err != nil {
-		return "", errors.Wrapf(err, "expand path: %s", path)
-	}
-	return r, nil
-}
-
-func UserHomeDirP() string {
-	r, err := UserHomeDir()
-	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
-	}
-	return r
-}
-
-func UserHomeDir() (string, error) {
-	r, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.Wrap(err, "get home path")
-	}
-	return r, nil
+	return WriteFileText(fs, path, qlang.JoinedLines(lines...))
 }
 
 func MkdirP(fs afero.Fs, path string) {
 	if err := Mkdir(fs, path); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -479,7 +446,7 @@ func Mkdir(fs afero.Fs, path string) error {
 func ListSuffixedFilesP(fs afero.Fs, targetDir string, suffix string, skipEmptyFile bool) map[string]string {
 	r, err := ListSuffixedFiles(fs, targetDir, suffix, skipEmptyFile)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -525,7 +492,7 @@ func ExtractTitle(filePath string) string {
 func TempFileP(fs afero.Fs, pattern string) string {
 	r, err := TempFile(fs, pattern)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -544,7 +511,7 @@ func TempFile(fs afero.Fs, pattern string) (string, error) {
 func TempTextFileP(fs afero.Fs, pattern string, content string) string {
 	r, err := TempTextFile(fs, pattern, content)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -563,7 +530,7 @@ func TempTextFile(fs afero.Fs, pattern string, content string) (string, error) {
 // EnsureDirWithSubdirsP 确保目录及其子目录存在（panic 版本）
 func EnsureDirWithSubdirsP(fs afero.Fs, mainDir string, subdirs ...string) {
 	if err := EnsureDirWithSubdirs(fs, mainDir, subdirs...); err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 }
 
@@ -588,7 +555,7 @@ func EnsureDirWithSubdirs(fs afero.Fs, mainDir string, subdirs ...string) error 
 func EnsureFileWithContentP(fs afero.Fs, path string, defaultContent []byte, subdirs ...string) bool {
 	r, err := EnsureFileWithContent(fs, path, defaultContent, subdirs...)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
 	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qlang"
+	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
@@ -28,13 +30,13 @@ func NewExternalGoPluginContext() ExternalGoPluginContext {
 	}
 }
 
-func resolveExternalGoPluginFunc(logger comm.Logger, Interpreter *interp.Interpreter, funcName string) *reflect.Value {
+func resolveExternalGoPluginFunc(logger qlog.Logger, Interpreter *interp.Interpreter, funcName string) *reflect.Value {
 	r, err := Interpreter.Eval(funcName)
 	if err != nil {
 		logger.Error(err).Msg("failed to eval " + funcName)
 		return nil
 	}
-	if comm.IsPrimitiveReflectValue(r) {
+	if qlang.IsPrimitiveReflectValue(r) {
 		logger.Error(err).Msg(funcName + " is a primitive value instead of a function")
 		return nil
 	}
@@ -50,20 +52,20 @@ func resolveExternalGoPluginFunc(logger comm.Logger, Interpreter *interp.Interpr
 	return &r
 }
 
-func (me ExternalGoPluginContext) Init(logger comm.Logger, fs afero.Fs, codeFile string) {
-	logCtx := comm.NewLogContext(false)
+func (me ExternalGoPluginContext) Init(logger qlog.Logger, fs afero.Fs, codeFile string) {
+	logCtx := qlog.NewLogContext(false)
 	logCtx.Str("codeFile", codeFile)
 	logger = logger.NewSubLogger(logCtx)
 
 	me.Interpreter = interp.New(interp.Options{})
 	if err := me.Interpreter.Use(stdlib.Symbols); err != nil {
-		panic(comm.NewSystemError(fmt.Sprintf("use stdlib failed: %s", codeFile), err))
+		panic(qerr.NewSystemError(fmt.Sprintf("use stdlib failed: %s", codeFile), err))
 	}
 
 	code := qfile.ReadFileTextP(fs, codeFile)
 	_, err := me.Interpreter.Eval(code)
 	if err != nil {
-		panic(comm.NewSystemError(fmt.Sprintf("eval code: %s", codeFile), err))
+		panic(qerr.NewSystemError(fmt.Sprintf("eval code: %s", codeFile), err))
 	}
 
 	me.StartFunc = resolveExternalGoPluginFunc(logger, me.Interpreter, "plugin.PluginStart")

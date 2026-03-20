@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qjson"
 	"github.com/qiangyt/go-comm/v2/qshell"
 )
 
@@ -434,55 +434,55 @@ func BenchmarkSonic_Marshal_concurrent16(b *testing.B) {
 // BenchmarkComm_FromJson_Stdlib 使用 go-comm 的 FromJson 函数（使用 stdlib）
 func BenchmarkComm_FromJson_Stdlib(b *testing.B) {
 	// 保存当前配置
-	currentBackend := comm.JSONConfig.Backend
+	currentBackend := qjson.JSONConfig.Backend
 	// 切换到 stdlib
-	comm.JSONConfig.Backend = comm.JSONBackendStdlib
+	qjson.JSONConfig.Backend = qjson.JSONBackendStdlib
 	var result map[string]any
 	for i := 0; i < b.N; i++ {
-		comm.FromJson(smallJson, false, &result)
+		qjson.FromJson(smallJson, false, &result)
 	}
 	// 恢复配置
-	comm.JSONConfig.Backend = currentBackend
+	qjson.JSONConfig.Backend = currentBackend
 }
 
 // BenchmarkComm_FromJson_Sonic 使用 go-comm 的 FromJson 函数（使用 sonic）
 func BenchmarkComm_FromJson_Sonic(b *testing.B) {
 	// 保存当前配置
-	currentBackend := comm.JSONConfig.Backend
+	currentBackend := qjson.JSONConfig.Backend
 	// 切换到 sonic
-	comm.JSONConfig.Backend = comm.JSONBackendSonic
+	qjson.JSONConfig.Backend = qjson.JSONBackendSonic
 	var result map[string]any
 	for i := 0; i < b.N; i++ {
-		comm.FromJson(smallJson, false, &result)
+		qjson.FromJson(smallJson, false, &result)
 	}
 	// 恢复配置
-	comm.JSONConfig.Backend = currentBackend
+	qjson.JSONConfig.Backend = currentBackend
 }
 
 // BenchmarkComm_ParseCommandOutput_Stdlib 使用 go-comm 的 ParseCommandOutput 函数（使用 stdlib）
 func BenchmarkComm_ParseCommandOutput_Stdlib(b *testing.B) {
 	// 保存当前配置
-	currentBackend := comm.JSONConfig.Backend
+	currentBackend := qjson.JSONConfig.Backend
 	// 切换到 stdlib
-	comm.JSONConfig.Backend = comm.JSONBackendStdlib
+	qjson.JSONConfig.Backend = qjson.JSONBackendStdlib
 	jsonOutput := "$json$\n\n" + smallJson
 	for i := 0; i < b.N; i++ {
 		qshell.ParseCommandOutput(jsonOutput)
 	}
 	// 恢复配置
-	comm.JSONConfig.Backend = currentBackend
+	qjson.JSONConfig.Backend = currentBackend
 }
 
 // BenchmarkComm_ParseCommandOutput_Sonic 使用 go-comm 的 ParseCommandOutput 函数（使用 sonic）
 func BenchmarkComm_ParseCommandOutput_Sonic(b *testing.B) {
 	// 保存当前配置
-	currentBackend := comm.JSONConfig.Backend
+	currentBackend := qjson.JSONConfig.Backend
 	// 切换到 sonic
-	comm.JSONConfig.Backend = comm.JSONBackendSonic
+	qjson.JSONConfig.Backend = qjson.JSONBackendSonic
 	jsonOutput := "$json$\n\n" + smallJson
 	for i := 0; i < b.N; i++ {
 		qshell.ParseCommandOutput(jsonOutput)
 	}
 	// 恢复配置
-	comm.JSONConfig.Backend = currentBackend
+	qjson.JSONConfig.Backend = currentBackend
 }

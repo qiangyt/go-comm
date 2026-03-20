@@ -7,7 +7,7 @@ import (
 	"github.com/goodsru/go-universal-network-adapter/models"
 	"github.com/goodsru/go-universal-network-adapter/services"
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qerr"
 )
 
 var _uniNwAdapter *services.UniversalNetworkAdapter
@@ -25,7 +25,7 @@ func init() {
 func NewRemoteFileP(url string, credentials Credentials, timeout time.Duration) RemoteFile {
 	r, err := NewRemoteFile(url, credentials, timeout)
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }
@@ -80,7 +80,7 @@ func (me RemoteFile) Timeout() time.Duration {
 func (me RemoteFile) DownloadP() Content {
 	r, err := me.Download()
 	if err != nil {
-		panic(comm.NewSystemError(err.Error(), err))
+		panic(qerr.NewSystemError(err.Error(), err))
 	}
 	return r
 }

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qjson"
 	"github.com/spf13/afero"
 )
 
@@ -18,7 +18,7 @@ func ReadLockFile(fs afero.Fs, filename string) (int, any, error) {
 	}
 
 	payload := map[string]any{}
-	if err = comm.JsonUnmarshal(contents, &payload); err != nil {
+	if err = qjson.JsonUnmarshal(contents, &payload); err != nil {
 		return 0, nil, err
 	}
 

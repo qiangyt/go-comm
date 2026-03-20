@@ -15,7 +15,7 @@ func RunSudoCommand(vars map[string]string, dir string, cmd string, passwordInpu
 func RunAppleScriptP(vars map[string]string, adminPassword string, dir string, script string) CommandOutput {
 	r, err := RunAppleScript(vars, adminPassword, dir, script)
 	if err != nil {
-		panic(NewSystemError("run apple script", err))
+		panic(qerr.NewSystemError("run apple script", err))
 	}
 	return r
 }

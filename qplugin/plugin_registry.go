@@ -5,8 +5,10 @@ import (
 	"sync"
 
 	"github.com/emirpasic/gods/sets/hashset"
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/q18n"
 	"github.com/qiangyt/go-comm/v2/qcoll"
+	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
 type PluginRegistryT struct {
@@ -45,7 +47,7 @@ func (me PluginRegistry) ValidatePlugin(namespace string, plugin Plugin) error {
 
 	major, _ := plugin.Version()
 	if major != me.supportedMajorVersion {
-		return comm.LocalizeError("error.plugin.version_mismatch", map[string]any{
+		return q18n.LocalizeError("error.plugin.version_mismatch", map[string]any{
 			"Namespace": namespace,
 			"Name":      name,
 			"Expected":  me.supportedMajorVersion,
@@ -55,7 +57,7 @@ func (me PluginRegistry) ValidatePlugin(namespace string, plugin Plugin) error {
 
 	kind := plugin.Kind()
 	if !me.IsSupportedPluginKind(kind) {
-		return comm.LocalizeError("error.plugin.unsupported_kind", map[string]any{
+		return q18n.LocalizeError("error.plugin.unsupported_kind", map[string]any{
 			"Namespace": namespace,
 			"Name":      name,
 			"Kind":      kind,
@@ -72,40 +74,40 @@ func (me PluginRegistry) ByKind(kind PluginKind) map[string]Plugin {
 	return me.pluginsByKind[kind]
 }
 
-func (me PluginRegistry) Init(logger comm.Logger) {
+func (me PluginRegistry) Init(logger qlog.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
 	for ns, loader := range me.loaders {
-		logCtx := comm.NewLogContext(false)
+		logCtx := qlog.NewLogContext(false)
 		logCtx.Str("namespace", ns)
 		subLogger := logger.NewSubLogger(logCtx)
 
-		subLogger.Info().Msg(comm.T("log.plugin.loader.starting", nil))
+		subLogger.Info().Msg(q18n.T("log.plugin.loader.starting", nil))
 		err := loader.Start(logger)
 		if err != nil {
-			subLogger.Error(err).Msg(comm.T("log.plugin.loader.start_failed", nil))
+			subLogger.Error(err).Msg(q18n.T("log.plugin.loader.start_failed", nil))
 		} else {
-			subLogger.Info().Msg(comm.T("log.plugin.loader.started", nil))
+			subLogger.Info().Msg(q18n.T("log.plugin.loader.started", nil))
 		}
 	}
 }
 
-func (me PluginRegistry) Destroy(logger comm.Logger) {
+func (me PluginRegistry) Destroy(logger qlog.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
 	for ns, loader := range me.loaders {
-		logCtx := comm.NewLogContext(false)
+		logCtx := qlog.NewLogContext(false)
 		logCtx.Str("namespace", ns)
 		subLogger := logger.NewSubLogger(logCtx)
 
-		subLogger.Info().Msg(comm.T("log.plugin.loader.stopping", nil))
+		subLogger.Info().Msg(q18n.T("log.plugin.loader.stopping", nil))
 		err := loader.Stop(logger)
 		if err != nil {
-			subLogger.Error(err).Msg(comm.T("log.plugin.loader.stop_failed", nil))
+			subLogger.Error(err).Msg(q18n.T("log.plugin.loader.stop_failed", nil))
 		} else {
-			subLogger.Info().Msg(comm.T("log.plugin.loader.stopped", nil))
+			subLogger.Info().Msg(q18n.T("log.plugin.loader.stopped", nil))
 		}
 	}
 
@@ -125,11 +127,11 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 
 	ns := loader.Namespace()
 	if len(ns) == 0 {
-		panic(comm.NewConfigErrorf("plugin loader namespace not specified: %s", fmt.Sprintf("%+v", loader)))
+		panic(qerr.NewConfigErrorf("plugin loader namespace not specified: %s", fmt.Sprintf("%+v", loader)))
 	}
 
 	if existingLoader, alreadyRegistered := me.loaders[ns]; alreadyRegistered {
-		panic(comm.NewConfigErrorf("plugin loader namespace already registered: %s (existing: %s)", ns, fmt.Sprintf("%+v", existingLoader)))
+		panic(qerr.NewConfigErrorf("plugin loader namespace already registered: %s (existing: %s)", ns, fmt.Sprintf("%+v", existingLoader)))
 	}
 
 	newPlugins := loader.Plugins()
@@ -138,7 +140,7 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 
 	for name, plugin := range newPlugins {
 		if err := me.ValidatePlugin(ns, plugin); err != nil {
-			panic(comm.NewConfigError("validate plugin", err))
+			panic(qerr.NewConfigError("validate plugin", err))
 		}
 
 		kind := plugin.Kind()
@@ -151,7 +153,7 @@ func (me PluginRegistry) Register(loader PluginLoader) {
 		}
 
 		if existingPlugin, found := pluginsWithKind[name]; found {
-			panic(comm.NewBusinessErrorf("plugin kind duplicated: %s (namespace: %s, kind: %s, existing: %s)", id, ns, kind, fmt.Sprintf("%+v", existingPlugin)))
+			panic(qerr.NewBusinessErrorf("plugin kind duplicated: %s (namespace: %s, kind: %s, existing: %s)", id, ns, kind, fmt.Sprintf("%+v", existingPlugin)))
 		}
 		pluginsWithKind[name] = plugin
 	}
