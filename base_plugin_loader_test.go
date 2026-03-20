@@ -3,6 +3,7 @@ package comm
 import (
 	"testing"
 
+	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,7 +50,7 @@ func TestPluginLoader_RegisterThenStart(t *testing.T) {
 	a := require.New(t)
 
 	plugin := &mockPlugin{name: "plugin1"}
-	logger := NewDiscardLogger()
+	logger := qlog.NewDiscardLogger()
 
 	loader.RegisterThenStart(logger, plugin)
 
@@ -65,7 +66,7 @@ func TestPluginLoader_Start(t *testing.T) {
 	loader.Register(plugin1)
 	loader.Register(plugin2)
 
-	logger := NewDiscardLogger()
+	logger := qlog.NewDiscardLogger()
 	err := loader.Start(logger)
 	a.NoError(err)
 	a.True(plugin1.started)
@@ -79,7 +80,7 @@ func TestPluginLoader_Start_alreadyStarted(t *testing.T) {
 	plugin := &mockPlugin{name: "plugin1"}
 	loader.Register(plugin)
 
-	logger := NewDiscardLogger()
+	logger := qlog.NewDiscardLogger()
 	err := loader.Start(logger)
 	a.NoError(err)
 
@@ -97,7 +98,7 @@ func TestPluginLoader_Stop(t *testing.T) {
 	loader.Register(plugin1)
 	loader.Register(plugin2)
 
-	logger := NewDiscardLogger()
+	logger := qlog.NewDiscardLogger()
 	err := loader.Start(logger)
 	a.NoError(err)
 
@@ -114,7 +115,7 @@ func TestPluginLoader_Stop_notStarted(t *testing.T) {
 	plugin := &mockPlugin{name: "plugin1"}
 	loader.Register(plugin)
 
-	logger := NewDiscardLogger()
+	logger := qlog.NewDiscardLogger()
 	err := loader.Stop(logger)
 	a.NoError(err)
 }
@@ -138,11 +139,11 @@ func (m *mockPlugin) Version() (major int, minor int) {
 	return 1, 0
 }
 
-func (m *mockPlugin) Start(logger Logger) {
+func (m *mockPlugin) Start(logger qlog.Logger) {
 	m.started = true
 }
 
-func (m *mockPlugin) Stop(logger Logger) {
+func (m *mockPlugin) Stop(logger qlog.Logger) {
 	m.stopped = true
 }
 

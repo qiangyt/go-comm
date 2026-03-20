@@ -2,6 +2,8 @@ package comm
 
 import (
 	"sync"
+
+	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
 type BasePluginLoaderT struct {
@@ -33,7 +35,7 @@ func (me BasePluginLoader) Register(plugin Plugin) {
 	me.plugins[name] = plugin
 }
 
-func (me BasePluginLoader) RegisterThenStart(logger Logger, plugin Plugin) {
+func (me BasePluginLoader) RegisterThenStart(logger qlog.Logger, plugin Plugin) {
 	me.Register(plugin)
 
 	if err := StartPlugin(me.Namespace(), plugin, logger); err != nil {
@@ -49,7 +51,7 @@ func (me BasePluginLoader) Plugins() map[string]Plugin {
 	return me.plugins
 }
 
-func (me BasePluginLoader) Start(logger Logger) error {
+func (me BasePluginLoader) Start(logger qlog.Logger) error {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -75,7 +77,7 @@ func (me BasePluginLoader) Start(logger Logger) error {
 	return nil
 }
 
-func (me BasePluginLoader) Stop(logger Logger) error {
+func (me BasePluginLoader) Stop(logger qlog.Logger) error {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 

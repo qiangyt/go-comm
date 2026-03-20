@@ -1,4 +1,4 @@
-package comm
+package qlog
 
 import (
 	"bytes"
