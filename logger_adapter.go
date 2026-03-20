@@ -1,18 +1,16 @@
-package qgin
+package comm
 
 import (
 	"fmt"
-
-	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
-// QlogLoggerAdapter 将 qlog.Logger 适配为 qgin.Logger 接口
+// QlogLoggerAdapter 将 comm.Logger 适配为 qgin.Logger 接口
 type QlogLoggerAdapter struct {
-	Logger qlog.Logger
+	Logger Logger
 }
 
 // NewQlogLoggerAdapter 创建适配器
-func NewQlogLoggerAdapter(logger qlog.Logger) *QlogLoggerAdapter {
+func NewQlogLoggerAdapter(logger Logger) *QlogLoggerAdapter {
 	return &QlogLoggerAdapter{Logger: logger}
 }
 
