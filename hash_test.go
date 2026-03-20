@@ -7,17 +7,10 @@ import (
 	"testing"
 )
 
-func TestNewHashCalculator(t *testing.T) {
-	calc := NewHashCalculator()
-	if calc == nil {
-		t.Fatal("NewHashCalculator returned nil")
-	}
-}
-
 func TestHashCalculator_CalculateMD5(t *testing.T) {
 	calc := NewHashCalculator()
 
-	// Create test file
+	// 创建测试文件
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	testContent := []byte("hello world")
@@ -25,7 +18,7 @@ func TestHashCalculator_CalculateMD5(t *testing.T) {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	// Calculate MD5
+	// 计算MD5
 	md5Hash := calc.CalculateMD5(testFile)
 	expected := "5eb63bbbe01eeed093cb22bb8f5acdc3" // MD5 of "hello world"
 
@@ -37,7 +30,7 @@ func TestHashCalculator_CalculateMD5(t *testing.T) {
 func TestHashCalculator_CalculateSHA256(t *testing.T) {
 	calc := NewHashCalculator()
 
-	// Create test file
+	// 创建测试文件
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	testContent := []byte("hello world")
@@ -45,7 +38,7 @@ func TestHashCalculator_CalculateSHA256(t *testing.T) {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	// Calculate SHA256
+	// 计算SHA256
 	sha256Hash := calc.CalculateSHA256(testFile)
 	expected := "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9" // SHA256 of "hello world"
 
@@ -85,7 +78,7 @@ func TestHashCalculator_CalculateSHA256FromReader(t *testing.T) {
 func TestHashCalculator_EmptyFile(t *testing.T) {
 	calc := NewHashCalculator()
 
-	// Create empty file
+	// 创建空文件
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "empty.txt")
 	if err := os.WriteFile(testFile, []byte{}, 0o644); err != nil {
@@ -110,7 +103,7 @@ func TestHashCalculator_EmptyFile(t *testing.T) {
 func TestHashCalculator_NonExistentFile(t *testing.T) {
 	calc := NewHashCalculator()
 
-	// Test non-existent file should panic
+	// 测试不存在的文件应该panic
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("CalculateMD5() with non-existent file should panic")
@@ -123,21 +116,21 @@ func TestHashCalculator_NonExistentFile(t *testing.T) {
 func TestHashCalculator_LargeFile(t *testing.T) {
 	calc := NewHashCalculator()
 
-	// Create a larger file
+	// 创建一个较大的文件
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "large.txt")
 
-	// Write 1MB of data
+	// 写入1MB的数据
 	largeContent := bytes.Repeat([]byte("a"), 1024*1024)
 	if err := os.WriteFile(testFile, largeContent, 0o644); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	// Calculate hashes
+	// 计算哈希值
 	md5Hash := calc.CalculateMD5(testFile)
 	sha256Hash := calc.CalculateSHA256(testFile)
 
-	// Verify hashes are not empty
+	// 验证哈希值不为空
 	if md5Hash == "" {
 		t.Error("CalculateMD5() should return non-empty hash for large file")
 	}
@@ -145,7 +138,7 @@ func TestHashCalculator_LargeFile(t *testing.T) {
 		t.Error("CalculateSHA256() should return non-empty hash for large file")
 	}
 
-	// Verify hash lengths
+	// 验证哈希长度
 	if len(md5Hash) != 32 {
 		t.Errorf("MD5 hash length = %d, want 32", len(md5Hash))
 	}

@@ -1,6 +1,8 @@
 package comm
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestNameOfKey(t *testing.T) {
 	// Test that NameOfKey returns the correct name when the key contains a period.

@@ -3,7 +3,6 @@ package comm
 import (
 	"testing"
 
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,10 +30,10 @@ func TestSetCommLang(t *testing.T) {
 	SetCommLang("en")
 }
 
-func TestNewLocalizedFileOps(t *testing.T) {
-	a := require.New(t)
+// func TestNewLocalizedFileOps(t *testing.T) {
+// 	a := require.New(t)
 
-	fs := afero.NewMemMapFs()
-	ops := NewLocalizedFileOps(fs)
-	a.NotNil(ops)
-}
+// 	fs := afero.NewMemMapFs()
+// 	ops := NewLocalizedFileOps(fs)
+// 	a.NotNil(ops)
+// }

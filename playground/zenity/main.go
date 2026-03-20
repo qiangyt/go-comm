@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qshell"
 )
 
 func main() {
@@ -13,6 +13,6 @@ func main() {
 			fmt.Printf("%+v", x)
 		}
 	}()
-	comm.RunShellCommandP(map[string]string{}, "", "bash", "sudo echo hi",
+	qshell.RunShellCommandP(map[string]string{}, "", "bash", "sudo echo hi",
 		func() string { return "changeit" })
 }

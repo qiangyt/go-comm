@@ -1,13 +1,10 @@
 package comm
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
+	"github.com/goccy/go-yaml"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"github.com/spf13/afero"
+	"github.com/qiangyt/go-comm/v2/qcoll"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -138,7 +135,7 @@ func DecodeWithMapP[T any](input map[string]any, cfgcfg *ConfigConfig, result *T
 }
 
 func DecodeWithMap[T any](input map[string]any, cfgcfg *ConfigConfig, result *T, devault map[string]any) (*T, *ConfigMetadata, error) {
-	backend := MergeMap(devault, input)
+	backend := qcoll.MergeMap(devault, input)
 
 	ms := cfgcfg.ToMapstruct()
 	ms.Result = result
@@ -173,122 +170,39 @@ func GetMapValue[T any](m map[string]any, key string, devault func() T) T {
 	return r
 }
 
-func LoadEnvScripts(fs afero.Fs, vars map[string]string, filenames ...string) (map[string]string, error) {
-	errs := NewErrorGroup(false)
-
-	if len(filenames) == 0 {
-		filenames = SysEnvFileNames(fs, "")
-	}
-
-	for _, filename := range filenames {
-		var err error
-		vars, err = LoadEnvScript(fs, vars, filename)
-		errs.Add(err)
-	}
-
-	return vars, errs.MayError()
-}
-
-func LoadEnvScript(fs afero.Fs, vars map[string]string, filename string) (map[string]string, error) {
-	if filename == "/etc/paths" {
-		paths, err := ReadFileLines(fs, filename)
-		if err == nil {
-			if len(vars["PATH"]) >= 0 {
-				paths = append([]string{vars["PATH"]}, paths...)
-			}
-			vars["PATH"] = strings.Join(paths, ":")
-		}
-		return vars, err
-	}
-
-	output, err := RunGoshCommand(vars, "", filename, nil)
+func MapFromYamlP(yamlText string, envsubt bool) map[string]any {
+	r, err := MapFromYaml(yamlText, envsubt)
 	if err != nil {
-		return vars, err
+		panic(NewSystemError(err.Error(), err))
 	}
-	return output.Vars, nil
+	return r
 }
 
-func SysEnvFileNames(fs afero.Fs, shell string) []string {
-	r := []string{}
-
-	if len(shell) == 0 {
-		shell = os.Getenv("SHELL")
+func MapFromYaml(yamlText string, envsubt bool) (map[string]any, error) {
+	r := map[string]any{}
+	if err := FromYaml(yamlText, envsubt, &r); err != nil {
+		return nil, err
 	}
 
-	home, _ := ExpandHomePath("~")
-	hasHome := (len(home) > 0)
+	return r, nil
+}
 
-	pth := filepath.Join("/etc/profile")
-	if exists, _ := FileExists(fs, pth); exists {
-		r = append(r, pth)
+func FromYamlP(yamlText string, envsubt bool, result any) {
+	if err := FromYaml(yamlText, envsubt, result); err != nil {
+		panic(NewSystemError(err.Error(), err))
 	}
+}
 
-	pth = filepath.Join("/etc/paths")
-	if exists, _ := FileExists(fs, pth); exists {
-		r = append(r, pth)
-	}
-
-	if !strings.Contains(shell, "zsh") {
-		if exists, _ := FileExists(fs, "/etc/bashrc"); exists {
-			r = append(r, pth)
-		}
-
-		if hasHome {
-			pth = filepath.Join(home, ".bashrc")
-			if exists, _ := FileExists(fs, pth); exists {
-				r = append(r, pth)
-			}
-
-			pth = filepath.Join(home, ".bash_profile")
-			if exists, _ := FileExists(fs, pth); exists {
-				r = append(r, pth)
-			} else {
-				pth = filepath.Join(home, ".bash_login")
-				if exists, _ := FileExists(fs, pth); exists {
-					r = append(r, pth)
-				}
-				pth = filepath.Join(home, ".profile")
-				if exists, _ := FileExists(fs, pth); exists {
-					r = append(r, pth)
-				}
-			}
-		}
-	} else {
-		if exists, _ := FileExists(fs, "/etc/zshrc"); exists {
-			r = append(r, pth)
-		}
-
-		if hasHome {
-			pth = filepath.Join(home, ".zshrc")
-			if exists, _ := FileExists(fs, pth); exists {
-				r = append(r, pth)
-			}
-
-			pth = filepath.Join(home, ".zshenv")
-			if exists, _ := FileExists(fs, pth); exists {
-				r = append(r, pth)
-			}
-
-			pth = filepath.Join(home, ".zprofile")
-			if exists, _ := FileExists(fs, pth); exists {
-				r = append(r, pth)
-			} else {
-				pth = filepath.Join(home, ".zsh_login")
-				if exists, _ := FileExists(fs, pth); exists {
-					r = append(r, pth)
-				}
-				pth = filepath.Join(home, ".profile")
-				if exists, _ := FileExists(fs, pth); exists {
-					r = append(r, pth)
-				}
-			}
+func FromYaml(yamlText string, envsubt bool, result any) (err error) {
+	if envsubt {
+		yamlText, err = EnvSubst(yamlText, nil)
+		if err != nil {
+			return err
 		}
 	}
 
-	pth = ".env"
-	if exists, _ := FileExists(fs, pth); exists {
-		r = append(r, pth)
+	if err = yaml.Unmarshal([]byte(yamlText), result); err != nil {
+		return errors.Wrapf(err, "parse yaml: \n\n%s", yamlText)
 	}
-
-	return r
+	return nil
 }

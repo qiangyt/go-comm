@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// parseIntDefault parses string to int with default value
-func parseIntDefault(s string, defaultValue int) int {
+// ParseIntDefault parses string to int with default value
+func ParseIntDefault(s string, defaultValue int) int {
 	if v, err := strconv.Atoi(s); err == nil {
 		return v
 	}
@@ -154,7 +154,7 @@ func LoadSSHConfigFromFile(path string) (*SSHConfig, error) {
 
 		case "port":
 			if currentHost != nil {
-				port := parseIntDefault(value, 22)
+				port := ParseIntDefault(value, 22)
 				currentHost.Port = port
 			}
 
@@ -202,12 +202,12 @@ func LoadSSHConfigFromFile(path string) (*SSHConfig, error) {
 
 		case "serveraliveinterval":
 			if currentHost != nil {
-				currentHost.ServerAliveInterval = parseIntDefault(value, 0)
+				currentHost.ServerAliveInterval = ParseIntDefault(value, 0)
 			}
 
 		case "serveralivecountmax":
 			if currentHost != nil {
-				currentHost.ServerAliveCountMax = parseIntDefault(value, 3)
+				currentHost.ServerAliveCountMax = ParseIntDefault(value, 3)
 			}
 
 		case "stricthostkeychecking":
@@ -222,7 +222,7 @@ func LoadSSHConfigFromFile(path string) (*SSHConfig, error) {
 
 		case "connecttimeout":
 			if currentHost != nil {
-				currentHost.ConnectTimeout = parseIntDefault(value, 0)
+				currentHost.ConnectTimeout = ParseIntDefault(value, 0)
 			}
 
 		case "passwordauthentication":
@@ -328,7 +328,7 @@ func (c *SSHConfig) GetHostConfig(host string) *SSHHostConfig {
 
 	// Try wildcard match
 	for pattern, config := range c.hosts {
-		if matchSSHPattern(pattern, host) {
+		if MatchSSHPattern(pattern, host) {
 			return config
 		}
 	}
@@ -336,9 +336,9 @@ func (c *SSHConfig) GetHostConfig(host string) *SSHHostConfig {
 	return nil
 }
 
-// matchSSHPattern matches host against SSH config pattern
+// MatchSSHPattern matches host against SSH config pattern
 // Supports * (matches zero or more characters) and ? (matches exactly one character)
-func matchSSHPattern(pattern, host string) bool {
+func MatchSSHPattern(pattern, host string) bool {
 	// Exact match
 	if pattern == host {
 		return true
@@ -374,11 +374,11 @@ func matchSSHPattern(pattern, host string) bool {
 	}
 
 	// For more complex patterns, use a simple matching algorithm
-	return simpleWildcardMatch(pattern, host)
+	return SimpleWildcardMatch(pattern, host)
 }
 
-// simpleWildcardMatch performs simple wildcard matching
-func simpleWildcardMatch(pattern, str string) bool {
+// SimpleWildcardMatch performs simple wildcard matching
+func SimpleWildcardMatch(pattern, str string) bool {
 	pi, si := 0, 0
 	starIdx, matchIdx := -1, 0
 
@@ -495,7 +495,7 @@ func ParseSSHURL(urlStr string) (protocol, user, hostname, path string, port int
 					// If we have only digits, or digits followed by /, it's a port
 					if portEndIdx > 0 && (portEndIdx == len(path) || path[portEndIdx] == '/') {
 						portStr := path[:portEndIdx]
-						port = parseIntDefault(portStr, 22)
+						port = ParseIntDefault(portStr, 22)
 						if portEndIdx < len(path) {
 							path = path[portEndIdx:] // Keep the / and path
 						} else {
@@ -537,7 +537,7 @@ func ParseSSHURL(urlStr string) (protocol, user, hostname, path string, port int
 	if strings.Contains(hostPort, ":") {
 		parts := strings.SplitN(hostPort, ":", 2)
 		hostname = parts[0]
-		port = parseIntDefault(parts[1], 22)
+		port = ParseIntDefault(parts[1], 22)
 	} else {
 		hostname = hostPort
 	}

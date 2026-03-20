@@ -8,7 +8,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"github.com/spf13/afero"
 	"golang.org/x/text/language"
 )
 
@@ -233,11 +232,11 @@ var DefaultLocalizeFunc LocalizeFunc = func(id string, args ...map[string]any) s
 }
 
 // NewLocalizedFileOps creates a FileOps with built-in i18n support
-func NewLocalizedFileOps(fs afero.Fs) FileOps {
-	ops := NewFileOps(fs)
+/*func NewLocalizedFileOps(fs afero.Fs) qfile.FileOps {
+	ops := qfile.NewFileOps(fs)
 	ops.SetLocalizeFunc(localize)
 	return ops
-}
+}*/
 
 // CommLocalize is an alias for localize, for backward compatibility
 func CommLocalize(id string, args ...map[string]any) string {

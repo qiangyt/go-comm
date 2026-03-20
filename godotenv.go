@@ -82,7 +82,7 @@ func ReadEnv(fs afero.Fs, filenames ...string) (envMap map[string]string, err er
 	envMap = make(map[string]string)
 
 	for _, filename := range filenames {
-		individualEnvMap, individualErr := readEnvFile(fs, filename)
+		individualEnvMap, individualErr := ReadEnvFile(fs, filename)
 
 		if individualErr != nil {
 			err = individualErr
@@ -189,7 +189,7 @@ func envFilenamesOrDefault(filenames []string) []string {
 }
 
 func loadEnvFile(fs afero.Fs, filename string, overload bool) error {
-	envMap, err := readEnvFile(fs, filename)
+	envMap, err := ReadEnvFile(fs, filename)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func loadEnvFile(fs afero.Fs, filename string, overload bool) error {
 	return nil
 }
 
-func readEnvFile(fs afero.Fs, filename string) (envMap map[string]string, err error) {
+func ReadEnvFile(fs afero.Fs, filename string) (envMap map[string]string, err error) {
 	file, err := fs.Open(filename)
 	if err != nil {
 		return envMap, err

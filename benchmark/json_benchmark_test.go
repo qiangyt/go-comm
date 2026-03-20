@@ -8,12 +8,13 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qshell"
 )
 
 // ==================== 测试数据 ====================
 
 var (
-	smallJson       = `{"name": "test", "value": 123}`                                                                   // 31 字节
+	smallJson       = `{"name": "test", "value": 123}`                                                                                          // 31 字节
 	mediumJson      = `{"name": "medium_test", "items": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "nested": {"level1": {"level2": {"level3": "deep"}}}}` // 128 字节
 	largeJson       string
 	smallJsonBytes  = 31
@@ -466,7 +467,7 @@ func BenchmarkComm_ParseCommandOutput_Stdlib(b *testing.B) {
 	comm.JSONConfig.Backend = comm.JSONBackendStdlib
 	jsonOutput := "$json$\n\n" + smallJson
 	for i := 0; i < b.N; i++ {
-		comm.ParseCommandOutput(jsonOutput)
+		qshell.ParseCommandOutput(jsonOutput)
 	}
 	// 恢复配置
 	comm.JSONConfig.Backend = currentBackend
@@ -480,7 +481,7 @@ func BenchmarkComm_ParseCommandOutput_Sonic(b *testing.B) {
 	comm.JSONConfig.Backend = comm.JSONBackendSonic
 	jsonOutput := "$json$\n\n" + smallJson
 	for i := 0; i < b.N; i++ {
-		comm.ParseCommandOutput(jsonOutput)
+		qshell.ParseCommandOutput(jsonOutput)
 	}
 	// 恢复配置
 	comm.JSONConfig.Backend = currentBackend

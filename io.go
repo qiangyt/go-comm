@@ -3,18 +3,9 @@ package comm
 import (
 	"bufio"
 	"io"
-	"os"
 
 	"github.com/pkg/errors"
 )
-
-func DefaultOutput() io.Writer {
-	if IsTerminal() {
-		return os.Stdout
-	} else {
-		return io.Discard
-	}
-}
 
 // ReadBytesP ...
 func ReadBytesP(reader io.Reader) []byte {

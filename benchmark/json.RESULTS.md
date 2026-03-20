@@ -92,7 +92,7 @@
 ## 配置切换 API
 
 ```go
-import "github.com/qiangyt/go-comm/v2"
+import package comm
 
 // 切换到标准库
 comm.JSONConfig.Backend = comm.JSONBackendStdlib

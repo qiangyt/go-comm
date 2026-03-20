@@ -72,7 +72,7 @@ Host *
 
 ```go
 import (
-    "github.com/qiangyt/go-comm/v2"
+    package comm
     "github.com/spf13/afero"
 )
 

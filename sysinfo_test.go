@@ -98,20 +98,20 @@ func TestMatchValues(t *testing.T) {
 	a := require.New(t)
 
 	// Empty expected always matches
-	a.True(matchValues("anything", ""))
+	a.True(MatchValues("anything", ""))
 
 	// Exact match
-	a.True(matchValues("linux", "linux"))
+	a.True(MatchValues("linux", "linux"))
 
 	// Non-match
-	a.False(matchValues("linux", "windows"))
+	a.False(MatchValues("linux", "windows"))
 
 	// Multiple values comma separated
-	a.True(matchValues("linux", "linux,windows,macos"))
-	a.True(matchValues("windows", "linux,windows,macos"))
-	a.False(matchValues("freebsd", "linux,windows,macos"))
+	a.True(MatchValues("linux", "linux,windows,macos"))
+	a.True(MatchValues("windows", "linux,windows,macos"))
+	a.False(MatchValues("freebsd", "linux,windows,macos"))
 
 	// Multiple values space separated
-	a.True(matchValues("linux", "linux windows macos"))
-	a.True(matchValues("macos", "linux windows macos"))
+	a.True(MatchValues("linux", "linux windows macos"))
+	a.True(MatchValues("macos", "linux windows macos"))
 }

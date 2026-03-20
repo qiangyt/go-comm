@@ -211,7 +211,7 @@ func TestMatchSSHPattern(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.host, func(t *testing.T) {
-			result := matchSSHPattern(tt.pattern, tt.host)
+			result := MatchSSHPattern(tt.pattern, tt.host)
 			assert.Equal(t, tt.want, result)
 		})
 	}
@@ -317,7 +317,7 @@ func TestParseIntDefault(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := parseIntDefault(tt.input, tt.defaultValue)
+			result := ParseIntDefault(tt.input, tt.defaultValue)
 			assert.Equal(t, tt.want, result)
 		})
 	}
@@ -399,7 +399,7 @@ func TestSimpleWildcardMatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.pattern+"_"+tt.str, func(t *testing.T) {
-			result := simpleWildcardMatch(tt.pattern, tt.str)
+			result := SimpleWildcardMatch(tt.pattern, tt.str)
 			assert.Equal(t, tt.want, result)
 		})
 	}

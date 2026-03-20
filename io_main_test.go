@@ -7,12 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDefaultOutput(t *testing.T) {
-	result := DefaultOutput()
-	a := require.New(t)
-	a.NotNil(result)
-}
-
 func TestReadBytes_happy(t *testing.T) {
 	a := require.New(t)
 

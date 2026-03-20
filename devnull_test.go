@@ -10,7 +10,7 @@ import (
 func TestDevNull_Read(t *testing.T) {
 	a := require.New(t)
 
-	var dn devNull
+	var dn DevNull
 	buf := make([]byte, 10)
 
 	n, err := dn.Read(buf)
@@ -21,7 +21,7 @@ func TestDevNull_Read(t *testing.T) {
 func TestDevNull_Write(t *testing.T) {
 	a := require.New(t)
 
-	var dn devNull
+	var dn DevNull
 	data := []byte("hello world")
 
 	n, err := dn.Write(data)
@@ -32,7 +32,7 @@ func TestDevNull_Write(t *testing.T) {
 func TestDevNull_Close(t *testing.T) {
 	a := require.New(t)
 
-	var dn devNull
+	var dn DevNull
 	err := dn.Close()
 	a.NoError(err)
 }
@@ -40,7 +40,7 @@ func TestDevNull_Close(t *testing.T) {
 func TestDevNull_Interface(t *testing.T) {
 	a := require.New(t)
 
-	// Test that devNull implements io.ReadWriteCloser
-	var _ io.ReadWriteCloser = devNull{}
+	// Test that DevNull implements io.ReadWriteCloser
+	var _ io.ReadWriteCloser = DevNull{}
 	a.True(true) // If we got here, the interface is implemented
 }

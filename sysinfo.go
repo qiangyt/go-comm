@@ -106,23 +106,23 @@ func (d SystemDetector) IsMacOS() bool {
 // MatchSystem 检查系统是否匹配指定条件
 // 支持逗号或空格分隔的多个值
 func (d SystemDetector) MatchSystem(os, dist, version, arch string) bool {
-	if os != "" && !matchValues(d.info.OS, os) {
+	if os != "" && !MatchValues(d.info.OS, os) {
 		return false
 	}
-	if dist != "" && !matchValues(d.info.Dist, dist) {
+	if dist != "" && !MatchValues(d.info.Dist, dist) {
 		return false
 	}
-	if version != "" && !matchValues(d.info.Version, version) {
+	if version != "" && !MatchValues(d.info.Version, version) {
 		return false
 	}
-	if arch != "" && !matchValues(d.info.Arch, arch) {
+	if arch != "" && !MatchValues(d.info.Arch, arch) {
 		return false
 	}
 	return true
 }
 
-// matchValues 检查值是否匹配（支持逗号或空格分隔的多个值）
-func matchValues(actual, expected string) bool {
+// MatchValues 检查值是否匹配（支持逗号或空格分隔的多个值）
+func MatchValues(actual, expected string) bool {
 	if expected == "" {
 		return true
 	}

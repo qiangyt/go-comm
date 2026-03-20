@@ -10,9 +10,9 @@ import (
 // ProgressReader 进度读取器，包装io.Reader并报告读取进度
 type ProgressReaderT struct {
 	reader      io.Reader
-	total       int64
-	transferred int64
-	onProgress  func(transferred, total int64, speed float64)
+	Total       int64
+	Transferred int64
+	onProgress  func(Transferred, Total int64, speed float64)
 	lastUpdate  time.Time
 	lastBytes   int64
 	startTime   time.Time
@@ -23,14 +23,14 @@ type ProgressReader = *ProgressReaderT
 
 // NewProgressReader 创建进度读取器
 // reader: 要包装的io.Reader
-// total: 总大小（如果未知则为0）
+// Total: 总大小（如果未知则为0）
 // onProgress: 进度回调函数，参数为(已传输字节数, 总字节数, 传输速度bytes/s)
-func NewProgressReader(reader io.Reader, total int64, onProgress func(transferred, total int64, speed float64)) ProgressReader {
+func NewProgressReader(reader io.Reader, Total int64, onProgress func(Transferred, Total int64, speed float64)) ProgressReader {
 	now := time.Now()
 	return &ProgressReaderT{
 		reader:      reader,
-		total:       total,
-		transferred: 0,
+		Total:       Total,
+		Transferred: 0,
 		onProgress:  onProgress,
 		lastUpdate:  now,
 		lastBytes:   0,
@@ -42,7 +42,7 @@ func (p ProgressReader) Read(buf []byte) (int, error) {
 	n, err := p.reader.Read(buf)
 
 	p.mu.Lock()
-	p.transferred += int64(n)
+	p.Transferred += int64(n)
 	p.mu.Unlock()
 
 	// 每秒更新一次进度
@@ -64,25 +64,25 @@ func (p ProgressReader) reportProgress() {
 	}
 
 	// 计算速度 (bytes/秒)
-	bytesSinceLastUpdate := p.transferred - p.lastBytes
+	bytesSinceLastUpdate := p.Transferred - p.lastBytes
 	speed := float64(bytesSinceLastUpdate) / elapsed
 
 	if p.onProgress != nil {
-		p.onProgress(p.transferred, p.total, speed)
+		p.onProgress(p.Transferred, p.Total, speed)
 	}
 
 	p.lastUpdate = now
-	p.lastBytes = p.transferred
+	p.lastBytes = p.Transferred
 }
 
 // GetStatistics 获取传输统计信息
-func (p ProgressReader) GetStatistics() (transferred int64, total int64, avgSpeed float64, duration time.Duration) {
+func (p ProgressReader) GetStatistics() (Transferred int64, Total int64, avgSpeed float64, duration time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	duration = time.Since(p.startTime)
-	avgSpeed = float64(p.transferred) / duration.Seconds()
-	return p.transferred, p.total, avgSpeed, duration
+	avgSpeed = float64(p.Transferred) / duration.Seconds()
+	return p.Transferred, p.Total, avgSpeed, duration
 }
 
 // Finish 完成传输，触发最后一次进度报告
@@ -93,9 +93,9 @@ func (p ProgressReader) Finish() {
 // ProgressWriter 进度写入器，包装io.Writer并报告写入进度
 type ProgressWriterT struct {
 	writer      io.Writer
-	total       int64
-	transferred int64
-	onProgress  func(transferred, total int64, speed float64)
+	Total       int64
+	Transferred int64
+	onProgress  func(Transferred, Total int64, speed float64)
 	lastUpdate  time.Time
 	lastBytes   int64
 	startTime   time.Time
@@ -105,12 +105,12 @@ type ProgressWriterT struct {
 type ProgressWriter = *ProgressWriterT
 
 // NewProgressWriter 创建进度写入器
-func NewProgressWriter(writer io.Writer, total int64, onProgress func(transferred, total int64, speed float64)) ProgressWriter {
+func NewProgressWriter(writer io.Writer, Total int64, onProgress func(Transferred, Total int64, speed float64)) ProgressWriter {
 	now := time.Now()
 	return &ProgressWriterT{
 		writer:      writer,
-		total:       total,
-		transferred: 0,
+		Total:       Total,
+		Transferred: 0,
 		onProgress:  onProgress,
 		lastUpdate:  now,
 		lastBytes:   0,
@@ -122,7 +122,7 @@ func (p ProgressWriter) Write(buf []byte) (int, error) {
 	n, err := p.writer.Write(buf)
 
 	p.mu.Lock()
-	p.transferred += int64(n)
+	p.Transferred += int64(n)
 	p.mu.Unlock()
 
 	// 每秒更新一次进度
@@ -144,25 +144,25 @@ func (p ProgressWriter) reportProgress() {
 	}
 
 	// 计算速度 (bytes/秒)
-	bytesSinceLastUpdate := p.transferred - p.lastBytes
+	bytesSinceLastUpdate := p.Transferred - p.lastBytes
 	speed := float64(bytesSinceLastUpdate) / elapsed
 
 	if p.onProgress != nil {
-		p.onProgress(p.transferred, p.total, speed)
+		p.onProgress(p.Transferred, p.Total, speed)
 	}
 
 	p.lastUpdate = now
-	p.lastBytes = p.transferred
+	p.lastBytes = p.Transferred
 }
 
 // GetStatistics 获取传输统计信息
-func (p ProgressWriter) GetStatistics() (transferred int64, total int64, avgSpeed float64, duration time.Duration) {
+func (p ProgressWriter) GetStatistics() (Transferred int64, Total int64, avgSpeed float64, duration time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	duration = time.Since(p.startTime)
-	avgSpeed = float64(p.transferred) / duration.Seconds()
-	return p.transferred, p.total, avgSpeed, duration
+	avgSpeed = float64(p.Transferred) / duration.Seconds()
+	return p.Transferred, p.Total, avgSpeed, duration
 }
 
 // Finish 完成传输，触发最后一次进度报告
