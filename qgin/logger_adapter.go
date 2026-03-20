@@ -3,17 +3,17 @@ package qgin
 import (
 	"fmt"
 
-	comm "github.com/qiangyt/go-comm/v2"
+	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
-// CommLoggerAdapter 将 comm.Logger 适配为 qgin.Logger 接口
-type CommLoggerAdapter struct {
-	Logger comm.Logger
+// QlogLoggerAdapter 将 qlog.Logger 适配为 qgin.Logger 接口
+type QlogLoggerAdapter struct {
+	Logger qlog.Logger
 }
 
-// NewCommLoggerAdapter 创建适配器
-func NewCommLoggerAdapter(logger comm.Logger) *CommLoggerAdapter {
-	return &CommLoggerAdapter{Logger: logger}
+// NewQlogLoggerAdapter 创建适配器
+func NewQlogLoggerAdapter(logger qlog.Logger) *QlogLoggerAdapter {
+	return &QlogLoggerAdapter{Logger: logger}
 }
 
 // parseFields 将 fields 解析为 map[string]any
@@ -29,7 +29,7 @@ func parseFields(fields []any) map[string]any {
 }
 
 // Info 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) Info(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Info(msg string, fields ...any) {
 	if len(fields) == 0 {
 		a.Logger.Info().Msg(msg)
 	} else {
@@ -38,7 +38,7 @@ func (a *CommLoggerAdapter) Info(msg string, fields ...any) {
 }
 
 // Warn 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) Warn(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Warn(msg string, fields ...any) {
 	if len(fields) == 0 {
 		a.Logger.Warn().Msg(msg)
 	} else {
@@ -47,7 +47,7 @@ func (a *CommLoggerAdapter) Warn(msg string, fields ...any) {
 }
 
 // Error 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) Error(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Error(msg string, fields ...any) {
 	err := fmt.Errorf("error: %s", msg)
 	if len(fields) == 0 {
 		a.Logger.Error(err).Msg(msg)
@@ -57,7 +57,7 @@ func (a *CommLoggerAdapter) Error(msg string, fields ...any) {
 }
 
 // Debug 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) Debug(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Debug(msg string, fields ...any) {
 	if len(fields) == 0 {
 		a.Logger.Debug().Msg(msg)
 	} else {
@@ -67,7 +67,7 @@ func (a *CommLoggerAdapter) Debug(msg string, fields ...any) {
 
 // Trace 实现 qgin.Logger 接口
 // phuslu/log 没有 Trace 级别，使用 Debug 代替
-func (a *CommLoggerAdapter) Trace(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Trace(msg string, fields ...any) {
 	if len(fields) == 0 {
 		a.Logger.Debug().Msg(msg)
 	} else {
@@ -76,7 +76,7 @@ func (a *CommLoggerAdapter) Trace(msg string, fields ...any) {
 }
 
 // Fatal 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) Fatal(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Fatal(msg string, fields ...any) {
 	if len(fields) == 0 {
 		a.Logger.Fatal().Msg(msg)
 	} else {
@@ -85,7 +85,7 @@ func (a *CommLoggerAdapter) Fatal(msg string, fields ...any) {
 }
 
 // Panic 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) Panic(msg string, fields ...any) {
+func (a *QlogLoggerAdapter) Panic(msg string, fields ...any) {
 	if len(fields) == 0 {
 		a.Logger.Panic().Msg(msg)
 	} else {
@@ -94,17 +94,17 @@ func (a *CommLoggerAdapter) Panic(msg string, fields ...any) {
 }
 
 // WithField 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) WithField(key string, value any) any {
+func (a *QlogLoggerAdapter) WithField(key string, value any) any {
 	return &fieldWrapper{adapter: a, fields: map[string]any{key: value}}
 }
 
 // WithFields 实现 qgin.Logger 接口
-func (a *CommLoggerAdapter) WithFields(fields map[string]any) any {
+func (a *QlogLoggerAdapter) WithFields(fields map[string]any) any {
 	return &fieldWrapper{adapter: a, fields: fields}
 }
 
 // fieldWrapper 用于 WithField/WithFields 返回值
 type fieldWrapper struct {
-	adapter *CommLoggerAdapter
+	adapter *QlogLoggerAdapter
 	fields  map[string]any
 }
