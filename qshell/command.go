@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -13,6 +14,7 @@ import (
 	"github.com/qiangyt/go-comm/v3/qjson"
 	"github.com/qiangyt/go-comm/v3/qlang"
 	"github.com/qiangyt/go-comm/v3/qsys"
+	"github.com/spf13/afero"
 	"github.com/spf13/cast"
 	"mvdan.cc/sh/v3/interp"
 )
@@ -256,4 +258,124 @@ func InstrumentSudoCommand(cmd string) string {
 
 	noSudoCmd := cmd[len("sudo "):]
 	return "sudo --stdin " + noSudoCmd
+}
+
+func LoadEnvScripts(fs afero.Fs, vars map[string]string, filenames ...string) (map[string]string, error) {
+	errs := qerr.NewErrorGroup(false)
+
+	if len(filenames) == 0 {
+		filenames = SysEnvFileNames(fs, "")
+	}
+
+	for _, filename := range filenames {
+		var err error
+		vars, err = LoadEnvScript(fs, vars, filename)
+		errs.Add(err)
+	}
+
+	return vars, errs.MayError()
+}
+
+func LoadEnvScript(fs afero.Fs, vars map[string]string, filename string) (map[string]string, error) {
+	if filename == "/etc/paths" {
+		paths, err := qio.ReadFileLines(fs, filename)
+		if err == nil {
+			if len(vars["PATH"]) >= 0 {
+				paths = append([]string{vars["PATH"]}, paths...)
+			}
+			vars["PATH"] = strings.Join(paths, ":")
+		}
+		return vars, err
+	}
+
+	output, err := RunGoshCommand(vars, "", filename, nil)
+	if err != nil {
+		return vars, err
+	}
+	return output.Vars, nil
+}
+
+func SysEnvFileNames(fs afero.Fs, shell string) []string {
+	r := []string{}
+
+	if len(shell) == 0 {
+		shell = os.Getenv("SHELL")
+	}
+
+	home, _ := qio.ExpandHomePath("~")
+	hasHome := (len(home) > 0)
+
+	pth := filepath.Join("/etc/profile")
+	if exists, _ := qio.FileExists(fs, pth); exists {
+		r = append(r, pth)
+	}
+
+	pth = filepath.Join("/etc/paths")
+	if exists, _ := qio.FileExists(fs, pth); exists {
+		r = append(r, pth)
+	}
+
+	if !strings.Contains(shell, "zsh") {
+		if exists, _ := qio.FileExists(fs, "/etc/bashrc"); exists {
+			r = append(r, pth)
+		}
+
+		if hasHome {
+			pth = filepath.Join(home, ".bashrc")
+			if exists, _ := qio.FileExists(fs, pth); exists {
+				r = append(r, pth)
+			}
+
+			pth = filepath.Join(home, ".bash_profile")
+			if exists, _ := qio.FileExists(fs, pth); exists {
+				r = append(r, pth)
+			} else {
+				pth = filepath.Join(home, ".bash_login")
+				if exists, _ := qio.FileExists(fs, pth); exists {
+					r = append(r, pth)
+				}
+				pth = filepath.Join(home, ".profile")
+				if exists, _ := qio.FileExists(fs, pth); exists {
+					r = append(r, pth)
+				}
+			}
+		}
+	} else {
+		if exists, _ := qio.FileExists(fs, "/etc/zshrc"); exists {
+			r = append(r, pth)
+		}
+
+		if hasHome {
+			pth = filepath.Join(home, ".zshrc")
+			if exists, _ := qio.FileExists(fs, pth); exists {
+				r = append(r, pth)
+			}
+
+			pth = filepath.Join(home, ".zshenv")
+			if exists, _ := qio.FileExists(fs, pth); exists {
+				r = append(r, pth)
+			}
+
+			pth = filepath.Join(home, ".zprofile")
+			if exists, _ := qio.FileExists(fs, pth); exists {
+				r = append(r, pth)
+			} else {
+				pth = filepath.Join(home, ".zsh_login")
+				if exists, _ := qio.FileExists(fs, pth); exists {
+					r = append(r, pth)
+				}
+				pth = filepath.Join(home, ".profile")
+				if exists, _ := qio.FileExists(fs, pth); exists {
+					r = append(r, pth)
+				}
+			}
+		}
+	}
+
+	pth = ".env"
+	if exists, _ := qio.FileExists(fs, pth); exists {
+		r = append(r, pth)
+	}
+
+	return r
 }
