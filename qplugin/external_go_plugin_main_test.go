@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/qiangyt/go-comm/v2/qio"
-	"github.com/qiangyt/go-comm/v2/qlog"
+	"github.com/qiangyt/go-comm/v2/qlang"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +56,7 @@ func TestExternalGoPluginContext_Init_invalidCode(t *testing.T) {
 	qio.WriteFileTextP(fs, "/test.go", "invalid go code !!!")
 
 	ctx := NewExternalGoPluginContext()
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -84,7 +84,7 @@ func PluginStop() string {
 	qio.WriteFileTextP(fs, "/test.go", code)
 
 	ctx := NewExternalGoPluginContext()
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 
 	// This should not panic
 	ctx.Init(logger, fs, "/test.go")

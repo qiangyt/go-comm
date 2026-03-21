@@ -3,7 +3,7 @@ package qplugin
 import (
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qlog"
+	"github.com/qiangyt/go-comm/v2/qlang"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,7 +50,7 @@ func TestPluginLoader_RegisterThenStart(t *testing.T) {
 	a := require.New(t)
 
 	plugin := &mockPlugin{name: "plugin1"}
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 
 	loader.RegisterThenStart(logger, plugin)
 
@@ -66,7 +66,7 @@ func TestPluginLoader_Start(t *testing.T) {
 	loader.Register(plugin1)
 	loader.Register(plugin2)
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := loader.Start(logger)
 	a.NoError(err)
 	a.True(plugin1.started)
@@ -80,7 +80,7 @@ func TestPluginLoader_Start_alreadyStarted(t *testing.T) {
 	plugin := &mockPlugin{name: "plugin1"}
 	loader.Register(plugin)
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := loader.Start(logger)
 	a.NoError(err)
 
@@ -98,7 +98,7 @@ func TestPluginLoader_Stop(t *testing.T) {
 	loader.Register(plugin1)
 	loader.Register(plugin2)
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := loader.Start(logger)
 	a.NoError(err)
 
@@ -115,7 +115,7 @@ func TestPluginLoader_Stop_notStarted(t *testing.T) {
 	plugin := &mockPlugin{name: "plugin1"}
 	loader.Register(plugin)
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := loader.Stop(logger)
 	a.NoError(err)
 }
@@ -139,11 +139,11 @@ func (m *mockPlugin) Version() (major int, minor int) {
 	return 1, 0
 }
 
-func (m *mockPlugin) Start(logger qlog.Logger) {
+func (m *mockPlugin) Start(logger qlang.Logger) {
 	m.started = true
 }
 
-func (m *mockPlugin) Stop(logger qlog.Logger) {
+func (m *mockPlugin) Stop(logger qlang.Logger) {
 	m.stopped = true
 }
 

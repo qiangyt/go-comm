@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/qiangyt/go-comm/v2/q18n"
-	"github.com/qiangyt/go-comm/v2/qlog"
+	"github.com/qiangyt/go-comm/v2/qlang"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,14 +32,14 @@ func (m *MockPlugin) Version() (major int, minor int) {
 	return m.major, m.minor
 }
 
-func (m *MockPlugin) Start(logger qlog.Logger) {
+func (m *MockPlugin) Start(logger qlang.Logger) {
 	if m.shouldPanic {
 		panic(m.panicMessage)
 	}
 	m.startCalled = true
 }
 
-func (m *MockPlugin) Stop(logger qlog.Logger) {
+func (m *MockPlugin) Stop(logger qlang.Logger) {
 	if m.shouldPanic {
 		panic(m.panicMessage)
 	}
@@ -63,7 +63,7 @@ func (m *MockPluginLoader) Plugins() map[string]Plugin {
 	return m.plugins
 }
 
-func (m *MockPluginLoader) Start(logger qlog.Logger) error {
+func (m *MockPluginLoader) Start(logger qlang.Logger) error {
 	m.startCalled = true
 	if m.shouldError {
 		return q18n.LocalizeError("error.plugin.start_failed", map[string]any{
@@ -75,7 +75,7 @@ func (m *MockPluginLoader) Start(logger qlog.Logger) error {
 	return nil
 }
 
-func (m *MockPluginLoader) Stop(logger qlog.Logger) error {
+func (m *MockPluginLoader) Stop(logger qlang.Logger) error {
 	m.stopCalled = true
 	if m.shouldError {
 		return q18n.LocalizeError("error.plugin.stop_failed", map[string]any{
@@ -104,7 +104,7 @@ func TestStartPlugin_Success(t *testing.T) {
 		minor: 0,
 	}
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := StartPlugin("test-namespace", plugin, logger)
 
 	a.NoError(err)
@@ -123,7 +123,7 @@ func TestStartPlugin_Panic(t *testing.T) {
 		panicMessage: "test panic",
 	}
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := StartPlugin("test-namespace", plugin, logger)
 
 	a.Error(err)
@@ -141,7 +141,7 @@ func TestStopPlugin_Success(t *testing.T) {
 		minor: 0,
 	}
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := StopPlugin("test-namespace", plugin, logger)
 
 	a.NoError(err)
@@ -160,7 +160,7 @@ func TestStopPlugin_Panic(t *testing.T) {
 		panicMessage: "test panic",
 	}
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	err := StopPlugin("test-namespace", plugin, logger)
 
 	a.Error(err)
@@ -373,7 +373,7 @@ func TestPluginRegistry_Init(t *testing.T) {
 
 	registry.Register(loader)
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	registry.Init(logger)
 
 	a.True(loader.startCalled)
@@ -391,7 +391,7 @@ func TestPluginRegistry_Destroy(t *testing.T) {
 
 	registry.Register(loader)
 
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 	registry.Destroy(logger)
 
 	a.True(loader.stopCalled)
@@ -412,7 +412,7 @@ func TestBasePlugin_StartAndStop(t *testing.T) {
 	a := require.New(t)
 
 	plugin := NewBasePlugin("test-plugin", "test-kind")
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 
 	// Initially not started
 	a.False(plugin.IsStarted())
@@ -448,7 +448,7 @@ func TestBasePlugin_ConcurrentAccess(t *testing.T) {
 	a := require.New(t)
 
 	plugin := NewBasePlugin("test-plugin", "test-kind")
-	logger := qlog.NewDiscardLogger()
+	logger := qlang.NewDiscardLogger()
 
 	// Test concurrent start/stop
 	done := make(chan bool, 10)

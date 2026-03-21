@@ -7,7 +7,6 @@ import (
 	"github.com/qiangyt/go-comm/v2/qerr"
 	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/qiangyt/go-comm/v2/qlang"
-	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
@@ -30,7 +29,7 @@ func NewExternalGoPluginContext() ExternalGoPluginContext {
 	}
 }
 
-func resolveExternalGoPluginFunc(logger qlog.Logger, Interpreter *interp.Interpreter, funcName string) *reflect.Value {
+func resolveExternalGoPluginFunc(logger qlang.Logger, Interpreter *interp.Interpreter, funcName string) *reflect.Value {
 	r, err := Interpreter.Eval(funcName)
 	if err != nil {
 		logger.Error(err).Msg("failed to eval " + funcName)
@@ -52,8 +51,8 @@ func resolveExternalGoPluginFunc(logger qlog.Logger, Interpreter *interp.Interpr
 	return &r
 }
 
-func (me ExternalGoPluginContext) Init(logger qlog.Logger, fs afero.Fs, codeFile string) {
-	logCtx := qlog.NewLogContext(false)
+func (me ExternalGoPluginContext) Init(logger qlang.Logger, fs afero.Fs, codeFile string) {
+	logCtx := qlang.NewLogContext(false)
 	logCtx.Str("codeFile", codeFile)
 	logger = logger.NewSubLogger(logCtx)
 

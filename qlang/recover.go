@@ -2,8 +2,6 @@ package qlang
 
 import (
 	"fmt"
-
-	"github.com/qiangyt/go-comm/v2/qlog"
 )
 
 // RecoverAsError 在 defer 中使用，将 panic 转换为 error
@@ -23,7 +21,7 @@ func RecoverAsError(r any) error {
 
 // RecoverAndLog 在 goroutine 的 defer 中使用，记录 panic 日志
 // 用法: defer func() { comm.RecoverAndLog(recover(), logger, "operation name") }()
-func RecoverAndLog(r any, logger qlog.Logger, operation string) {
+func RecoverAndLog(r any, logger Logger, operation string) {
 	if r != nil {
 		logger.Error(r).Str("operation", operation).Msg("goroutine panic recovered")
 	}

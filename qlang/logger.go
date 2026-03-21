@@ -1,4 +1,4 @@
-package qlog
+package qlang
 
 import (
 	"context"
@@ -207,7 +207,7 @@ func (me EventLogger) LogEventError(enm event.LogEnum, lsner string, evnt event.
 	entry.Msg(enm.String())
 }
 
-// SlogLoggerT 将 qlog.Logger 包装为 slog.Logger
+// SlogLoggerT 将 qlang.Logger 包装为 slog.Logger
 type SlogLoggerT struct {
 	logger Logger
 	attrs  []slog.Attr
@@ -304,7 +304,7 @@ func (me SlogLogger) WithGroup(name string) slog.Handler {
 	return newLogger
 }
 
-// ToSlogLogger 将 qlog.Logger 转换为 *slog.Logger
+// ToSlogLogger 将 qlang.Logger 转换为 *slog.Logger
 // 使用 phuslu/log 的 Slog() 方法创建
 func ToSlogLogger(logger Logger) *slog.Logger {
 	if logger == nil {

@@ -3,7 +3,7 @@ package qplugin
 import (
 	"sync"
 
-	"github.com/qiangyt/go-comm/v2/qlog"
+	"github.com/qiangyt/go-comm/v2/qlang"
 )
 
 type BasePluginT struct {
@@ -32,7 +32,7 @@ func (me BasePlugin) Kind() PluginKind {
 	return me.kind
 }
 
-func (me BasePlugin) Start(logger qlog.Logger) {
+func (me BasePlugin) Start(logger qlang.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
@@ -49,7 +49,7 @@ func (me BasePlugin) IsStarted() bool {
 	return me.started
 }
 
-func (me BasePlugin) Stop(logger qlog.Logger) {
+func (me BasePlugin) Stop(logger qlang.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 

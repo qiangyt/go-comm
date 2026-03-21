@@ -8,7 +8,7 @@ import (
 	"github.com/qiangyt/go-comm/v2/q18n"
 	"github.com/qiangyt/go-comm/v2/qcoll"
 	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qlog"
+	"github.com/qiangyt/go-comm/v2/qlang"
 )
 
 type PluginRegistryT struct {
@@ -74,12 +74,12 @@ func (me PluginRegistry) ByKind(kind PluginKind) map[string]Plugin {
 	return me.pluginsByKind[kind]
 }
 
-func (me PluginRegistry) Init(logger qlog.Logger) {
+func (me PluginRegistry) Init(logger qlang.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
 	for ns, loader := range me.loaders {
-		logCtx := qlog.NewLogContext(false)
+		logCtx := qlang.NewLogContext(false)
 		logCtx.Str("namespace", ns)
 		subLogger := logger.NewSubLogger(logCtx)
 
@@ -93,12 +93,12 @@ func (me PluginRegistry) Init(logger qlog.Logger) {
 	}
 }
 
-func (me PluginRegistry) Destroy(logger qlog.Logger) {
+func (me PluginRegistry) Destroy(logger qlang.Logger) {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
 	for ns, loader := range me.loaders {
-		logCtx := qlog.NewLogContext(false)
+		logCtx := qlang.NewLogContext(false)
 		logCtx.Str("namespace", ns)
 		subLogger := logger.NewSubLogger(logCtx)
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/qiangyt/go-comm/v2/q18n"
-	"github.com/qiangyt/go-comm/v2/qlog"
+	"github.com/qiangyt/go-comm/v2/qlang"
 )
 
 type PluginLang = string
@@ -21,23 +21,23 @@ type PluginKind = string
 type Plugin interface {
 	Name() string
 	Kind() PluginKind
-	Start(logger qlog.Logger)
-	Stop(logger qlog.Logger)
+	Start(logger qlang.Logger)
+	Stop(logger qlang.Logger)
 	Version() (major int, minor int)
 }
 
 type PluginLoader interface {
 	Namespace() string
 	Plugins() map[string]Plugin
-	Start(logger qlog.Logger) error
-	Stop(logger qlog.Logger) error
+	Start(logger qlang.Logger) error
+	Stop(logger qlang.Logger) error
 }
 
 func PluginId(namespace string, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
-func StartPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error) {
+func StartPlugin(namespace string, plugin Plugin, logger qlang.Logger) (err error) {
 	major, minor := plugin.Version()
 	ver := fmt.Sprintf("%d/%d", major, minor)
 	pluginId := PluginId(namespace, plugin.Name())
@@ -62,7 +62,7 @@ func StartPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error
 		}
 	}()
 
-	logCtx := qlog.NewLogContext(false)
+	logCtx := qlang.NewLogContext(false)
 	logCtx.Str("pluginId", pluginId).Str("version", ver)
 	subLogger := logger.NewSubLogger(logCtx)
 
@@ -73,7 +73,7 @@ func StartPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error
 	return err
 }
 
-func StopPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error) {
+func StopPlugin(namespace string, plugin Plugin, logger qlang.Logger) (err error) {
 	major, minor := plugin.Version()
 	ver := fmt.Sprintf("%d/%d", major, minor)
 	pluginId := PluginId(namespace, plugin.Name())
@@ -98,7 +98,7 @@ func StopPlugin(namespace string, plugin Plugin, logger qlog.Logger) (err error)
 		}
 	}()
 
-	logCtx := qlog.NewLogContext(false)
+	logCtx := qlang.NewLogContext(false)
 	logCtx.Str("pluginId", pluginId).Str("version", ver)
 	subLogger := logger.NewSubLogger(logCtx)
 

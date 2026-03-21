@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,21 +37,21 @@ func TestRecoverAsError_IntType(t *testing.T) {
 
 func TestRecoverAndLog_Nil(t *testing.T) {
 	// recover() 返回 nil 时，不应该记录日志
-	logger := qlog.NewDiscardLogger()
+	logger := NewDiscardLogger()
 	RecoverAndLog(nil, logger, "test-operation")
 	// 不应该 panic
 }
 
 func TestRecoverAndLog_WithError(t *testing.T) {
 	// panic 的值是 error 时，应该记录日志
-	logger := qlog.NewDiscardLogger()
+	logger := NewDiscardLogger()
 	RecoverAndLog(fmt.Errorf("test error"), logger, "test-operation")
 	// 不应该 panic
 }
 
 func TestRecoverAndLog_WithString(t *testing.T) {
 	// panic 的值是 string 时，应该记录日志
-	logger := qlog.NewDiscardLogger()
+	logger := NewDiscardLogger()
 	RecoverAndLog("string panic", logger, "test-operation")
 	// 不应该 panic
 }
