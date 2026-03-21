@@ -3,7 +3,7 @@ package qplugin
 import (
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -53,7 +53,7 @@ func TestExternalGoPluginContext_Stop_noFunc(t *testing.T) {
 
 func TestExternalGoPluginContext_Init_invalidCode(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	qfile.WriteFileTextP(fs, "/test.go", "invalid go code !!!")
+	qio.WriteFileTextP(fs, "/test.go", "invalid go code !!!")
 
 	ctx := NewExternalGoPluginContext()
 	logger := qlog.NewDiscardLogger()
@@ -81,7 +81,7 @@ func PluginStart() string {
 func PluginStop() string {
 	return "stopped"
 }`
-	qfile.WriteFileTextP(fs, "/test.go", code)
+	qio.WriteFileTextP(fs, "/test.go", code)
 
 	ctx := NewExternalGoPluginContext()
 	logger := qlog.NewDiscardLogger()

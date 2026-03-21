@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/qiangyt/go-comm/v2/qlang"
 	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
@@ -62,7 +62,7 @@ func (me ExternalGoPluginContext) Init(logger qlog.Logger, fs afero.Fs, codeFile
 		panic(qerr.NewSystemError(fmt.Sprintf("use stdlib failed: %s", codeFile), err))
 	}
 
-	code := qfile.ReadFileTextP(fs, codeFile)
+	code := qio.ReadFileTextP(fs, codeFile)
 	_, err := me.Interpreter.Eval(code)
 	if err != nil {
 		panic(qerr.NewSystemError(fmt.Sprintf("eval code: %s", codeFile), err))

@@ -3,7 +3,7 @@ package qplugin
 import (
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -160,7 +160,7 @@ func TestResolveExternalPlugin_noManifest(t *testing.T) {
 	a := require.New(t)
 
 	fs := afero.NewMemMapFs()
-	qfile.MkdirP(fs, "/plugins/test")
+	qio.MkdirP(fs, "/plugins/test")
 	logger := qlog.NewDiscardLogger()
 
 	result := ResolveExternalPlugin(logger, fs, "/plugins/test")
@@ -171,9 +171,9 @@ func TestResolveExternalPlugin_withYamlManifest(t *testing.T) {
 	a := require.New(t)
 
 	fs := afero.NewMemMapFs()
-	qfile.MkdirP(fs, "/plugins/test")
-	qfile.WriteFileTextP(fs, "/plugins/test/plugin.manifest.yml", "kind: go_external\nname: test\nversion_major: 1\nversion_minor: 0")
-	qfile.WriteFileTextP(fs, "/plugins/test/plugin.go", "package plugin\n\nfunc PluginStart() {}\nfunc PluginStop() {}")
+	qio.MkdirP(fs, "/plugins/test")
+	qio.WriteFileTextP(fs, "/plugins/test/plugin.manifest.yml", "kind: go_external\nname: test\nversion_major: 1\nversion_minor: 0")
+	qio.WriteFileTextP(fs, "/plugins/test/plugin.go", "package plugin\n\nfunc PluginStart() {}\nfunc PluginStop() {}")
 
 	logger := qlog.NewDiscardLogger()
 
@@ -189,8 +189,8 @@ func TestResolveExternalPlugin_noCodeFile(t *testing.T) {
 	a := require.New(t)
 
 	fs := afero.NewMemMapFs()
-	qfile.MkdirP(fs, "/plugins/test")
-	qfile.WriteFileTextP(fs, "/plugins/test/plugin.manifest.yml", "kind: go_external\nname: test\nversion_major: 1\nversion_minor: 0")
+	qio.MkdirP(fs, "/plugins/test")
+	qio.WriteFileTextP(fs, "/plugins/test/plugin.manifest.yml", "kind: go_external\nname: test\nversion_major: 1\nversion_minor: 0")
 	// Missing plugin.go
 
 	logger := qlog.NewDiscardLogger()
@@ -203,7 +203,7 @@ func TestListExternalPlugins_emptyDir(t *testing.T) {
 	a := require.New(t)
 
 	fs := afero.NewMemMapFs()
-	qfile.MkdirP(fs, "/plugins")
+	qio.MkdirP(fs, "/plugins")
 	logger := qlog.NewDiscardLogger()
 
 	result := ListExternalPlugins(logger, fs, "/plugins")
@@ -215,14 +215,14 @@ func TestListExternalPlugins_withValidPlugins(t *testing.T) {
 	a := require.New(t)
 
 	fs := afero.NewMemMapFs()
-	qfile.MkdirP(fs, "/plugins/test1")
-	qfile.MkdirP(fs, "/plugins/test2")
+	qio.MkdirP(fs, "/plugins/test1")
+	qio.MkdirP(fs, "/plugins/test2")
 
-	qfile.WriteFileTextP(fs, "/plugins/test1/plugin.manifest.yml", "kind: go_external\nname: plugin1\nversion_major: 1\nversion_minor: 0")
-	qfile.WriteFileTextP(fs, "/plugins/test1/plugin.go", "package plugin\n\nfunc PluginStart() {}\nfunc PluginStop() {}")
+	qio.WriteFileTextP(fs, "/plugins/test1/plugin.manifest.yml", "kind: go_external\nname: plugin1\nversion_major: 1\nversion_minor: 0")
+	qio.WriteFileTextP(fs, "/plugins/test1/plugin.go", "package plugin\n\nfunc PluginStart() {}\nfunc PluginStop() {}")
 
-	qfile.WriteFileTextP(fs, "/plugins/test2/plugin.manifest.yml", "kind: go_external\nname: plugin2\nversion_major: 1\nversion_minor: 0")
-	qfile.WriteFileTextP(fs, "/plugins/test2/plugin.go", "package plugin\n\nfunc PluginStart() {}\nfunc PluginStop() {}")
+	qio.WriteFileTextP(fs, "/plugins/test2/plugin.manifest.yml", "kind: go_external\nname: plugin2\nversion_major: 1\nversion_minor: 0")
+	qio.WriteFileTextP(fs, "/plugins/test2/plugin.go", "package plugin\n\nfunc PluginStart() {}\nfunc PluginStop() {}")
 
 	logger := qlog.NewDiscardLogger()
 

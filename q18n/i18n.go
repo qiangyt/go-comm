@@ -232,8 +232,8 @@ var DefaultLocalizeFunc LocalizeFunc = func(id string, args ...map[string]any) s
 }
 
 // NewLocalizedFileOps creates a FileOps with built-in i18n support
-/*func NewLocalizedFileOps(fs afero.Fs) qfile.FileOps {
-	ops := qfile.NewFileOps(fs)
+/*func NewLocalizedFileOps(fs afero.Fs) qio.FileOps {
+	ops := qio.NewFileOps(fs)
 	ops.SetLocalizeFunc(localize)
 	return ops
 }*/

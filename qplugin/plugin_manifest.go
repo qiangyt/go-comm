@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/qiangyt/go-comm/v2/qconfig"
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/spf13/afero"
 )
 
@@ -33,11 +33,11 @@ func PluginManifestWithMap(manifestMap map[string]any) PluginManifest {
 }
 
 func PluginManifestWithJsonFile(fs afero.Fs, manifestJsonFile string) PluginManifest {
-	manifestMap := qfile.MapFromJsonFileP(fs, manifestJsonFile, false)
+	manifestMap := qio.MapFromJsonFileP(fs, manifestJsonFile, false)
 	return PluginManifestWithMap(manifestMap)
 }
 
 func PluginManifestWithYamlFile(fs afero.Fs, manifestYamlFile string) PluginManifest {
-	manifestMap := qfile.MapFromYamlFileP(fs, manifestYamlFile, false)
+	manifestMap := qio.MapFromYamlFileP(fs, manifestYamlFile, false)
 	return PluginManifestWithMap(manifestMap)
 }

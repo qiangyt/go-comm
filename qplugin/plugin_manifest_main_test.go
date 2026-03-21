@@ -3,7 +3,7 @@ package qplugin
 import (
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +56,7 @@ func TestPluginManifestWithJsonFile_happy(t *testing.T) {
 
 	fs := afero.NewMemMapFs()
 	jsonContent := `{"kind": "go_external", "name": "TestPlugin", "version_major": 1, "version_minor": 0}`
-	qfile.WriteFileTextP(fs, "/manifest.json", jsonContent)
+	qio.WriteFileTextP(fs, "/manifest.json", jsonContent)
 
 	manifest := PluginManifestWithJsonFile(fs, "/manifest.json")
 	a.NotNil(manifest)
@@ -72,7 +72,7 @@ func TestPluginManifestWithYamlFile_happy(t *testing.T) {
 name: TestPlugin
 version_major: 1
 version_minor: 0`
-	qfile.WriteFileTextP(fs, "/manifest.yaml", yamlContent)
+	qio.WriteFileTextP(fs, "/manifest.yaml", yamlContent)
 
 	manifest := PluginManifestWithYamlFile(fs, "/manifest.yaml")
 	a.NotNil(manifest)

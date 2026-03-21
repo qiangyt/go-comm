@@ -7,7 +7,7 @@ import (
 
 	"github.com/qiangyt/go-comm/v2/qcoll"
 	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 )
@@ -105,15 +105,15 @@ func ResolveExternalPlugin(logger qlog.Logger, fs afero.Fs, pluginDir string) (r
 	var mf PluginManifest
 
 	yamlF := filepath.Join(pluginDir, "plugin.manifest.yml")
-	if qfile.FileExistsP(fs, yamlF) {
+	if qio.FileExistsP(fs, yamlF) {
 		mf = PluginManifestWithYamlFile(fs, yamlF)
 	} else {
 		yamlF = filepath.Join(pluginDir, "plugin.manifest.yaml")
-		if qfile.FileExistsP(fs, yamlF) {
+		if qio.FileExistsP(fs, yamlF) {
 			mf = PluginManifestWithYamlFile(fs, yamlF)
 		} else {
 			jsonF := filepath.Join(pluginDir, "plugin.manifest.json")
-			if qfile.FileExistsP(fs, jsonF) {
+			if qio.FileExistsP(fs, jsonF) {
 				mf = PluginManifestWithJsonFile(fs, jsonF)
 			}
 		}
@@ -126,7 +126,7 @@ func ResolveExternalPlugin(logger qlog.Logger, fs afero.Fs, pluginDir string) (r
 	language := PLUGIN_LANG_GO
 	context := NewExternalGoPluginContext()
 	codeFile := filepath.Join(pluginDir, "plugin.go")
-	if exists, err := qfile.FileExists(fs, codeFile); err != nil || !exists {
+	if exists, err := qio.FileExists(fs, codeFile); err != nil || !exists {
 		return nil
 	}
 

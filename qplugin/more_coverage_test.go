@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qfile"
+	"github.com/qiangyt/go-comm/v2/qio"
 	"github.com/qiangyt/go-comm/v2/qlog"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
@@ -21,7 +21,7 @@ func TestFsPluginLoader_Start_EmptyDir(t *testing.T) {
 	// NewFsPluginLoader sets dir = filepath.Join(dir, namespace)
 	// Then Start() calls filepath.Join(me.dir, me.namespace)
 	// So for "local" namespace, it expects: /plugins/local/local
-	qfile.MkdirP(fs, "/plugins/local/local")
+	qio.MkdirP(fs, "/plugins/local/local")
 	logger := qlog.NewDiscardLogger()
 	loader := NewLocalPluginLoader(logger, fs, "/plugins")
 
@@ -33,7 +33,7 @@ func TestFsPluginLoader_Start_AlreadyStarted(t *testing.T) {
 	a := require.New(t)
 
 	fs := afero.NewMemMapFs()
-	qfile.MkdirP(fs, "/plugins/local/local")
+	qio.MkdirP(fs, "/plugins/local/local")
 	logger := qlog.NewDiscardLogger()
 	loader := NewLocalPluginLoader(logger, fs, "/plugins")
 
