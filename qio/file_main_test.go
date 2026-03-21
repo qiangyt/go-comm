@@ -3,7 +3,7 @@ package qio
 import (
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qconfig"
+	"github.com/qiangyt/go-comm/v3/qconfig"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )

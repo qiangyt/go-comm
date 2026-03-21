@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qsys"
+	"github.com/qiangyt/go-comm/v3/qsys"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )

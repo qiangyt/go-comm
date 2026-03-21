@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/qiangyt/go-comm/v2/qio"
+	"github.com/qiangyt/go-comm/v3/qio"
 	"github.com/spf13/afero"
 )
 

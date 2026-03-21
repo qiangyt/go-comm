@@ -3,8 +3,8 @@ package qplugin
 import (
 	"sync"
 
-	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qlang"
+	"github.com/qiangyt/go-comm/v3/qerr"
+	"github.com/qiangyt/go-comm/v3/qlang"
 )
 
 type BasePluginLoaderT struct {

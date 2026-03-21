@@ -3,7 +3,7 @@ package qgin
 import (
 	"fmt"
 
-	"github.com/qiangyt/go-comm/v2/qlang"
+	"github.com/qiangyt/go-comm/v3/qlang"
 )
 
 // QlogLoggerAdapter 将 qlang.Logger 适配为 qgin.Logger 接口

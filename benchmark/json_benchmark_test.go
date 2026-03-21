@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/qiangyt/go-comm/v2/qjson"
-	"github.com/qiangyt/go-comm/v2/qshell"
+	"github.com/qiangyt/go-comm/v3/qjson"
+	"github.com/qiangyt/go-comm/v3/qshell"
 )
 
 // ==================== 测试数据 ====================

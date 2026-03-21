@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qerr"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )

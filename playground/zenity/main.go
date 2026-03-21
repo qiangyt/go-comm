@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/qiangyt/go-comm/v2/qshell"
+	"github.com/qiangyt/go-comm/v3/qshell"
 )
 
 func main() {

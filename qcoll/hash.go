@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qerr"
 )
 
 // HashCalculator 哈希计算器

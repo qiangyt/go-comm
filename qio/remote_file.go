@@ -7,7 +7,7 @@ import (
 	"github.com/goodsru/go-universal-network-adapter/models"
 	"github.com/goodsru/go-universal-network-adapter/services"
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qerr"
 )
 
 var _uniNwAdapter *services.UniversalNetworkAdapter

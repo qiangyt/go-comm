@@ -3,8 +3,8 @@ package qplugin
 import (
 	"strings"
 
-	"github.com/qiangyt/go-comm/v2/qconfig"
-	"github.com/qiangyt/go-comm/v2/qio"
+	"github.com/qiangyt/go-comm/v3/qconfig"
+	"github.com/qiangyt/go-comm/v3/qio"
 	"github.com/spf13/afero"
 )
 

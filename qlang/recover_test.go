@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qerr"
 	"github.com/stretchr/testify/assert"
 )
 

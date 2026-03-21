@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2/q18n"
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/q18n"
+	"github.com/qiangyt/go-comm/v3/qerr"
 )
 
 func HostnameP() string {

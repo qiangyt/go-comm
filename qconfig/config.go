@@ -4,9 +4,9 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2/qcoll"
-	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qsys"
+	"github.com/qiangyt/go-comm/v3/qcoll"
+	"github.com/qiangyt/go-comm/v3/qerr"
+	"github.com/qiangyt/go-comm/v3/qsys"
 
 	"github.com/go-playground/validator/v10"
 )

@@ -6,7 +6,7 @@ import (
 	"math/big"
 
 	uuid "github.com/google/uuid"
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qerr"
 )
 
 // Base62 字符集

@@ -11,11 +11,11 @@ require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-playground/validator/v10 v10.30.1
+	github.com/goccy/go-yaml v1.19.2
 	github.com/golang/mock v1.6.0
 	github.com/goodsru/go-universal-network-adapter v1.1.3-0.20221018065357-179acf84a4df
 	github.com/google/uuid v1.6.0
 	github.com/iancoleman/orderedmap v0.3.0
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/ncruces/zenity v0.10.14
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
@@ -50,7 +50,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josephspurrier/goversioninfo v1.5.0 // indirect

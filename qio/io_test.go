@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/qiangyt/go-comm/v2/qlang"
+	"github.com/qiangyt/go-comm/v3/qlang"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -2,8 +2,8 @@ package qio
 
 import (
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qjson"
+	"github.com/qiangyt/go-comm/v3/qerr"
+	"github.com/qiangyt/go-comm/v3/qjson"
 	"github.com/spf13/afero"
 )
 

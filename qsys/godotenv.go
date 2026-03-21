@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/qiangyt/go-comm/v2/q18n"
+	"github.com/qiangyt/go-comm/v3/q18n"
 	"github.com/spf13/afero"
 )
 

@@ -12,8 +12,8 @@ import (
 
 	plog "github.com/phuslu/log"
 	"github.com/pkg/errors"
-	"github.com/qiangyt/go-comm/v2/qcoll"
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qcoll"
+	"github.com/qiangyt/go-comm/v3/qerr"
 	"github.com/qiangyt/go-event"
 	eventloggers "github.com/qiangyt/go-event/loggers/phuslu"
 	"go.uber.org/atomic"

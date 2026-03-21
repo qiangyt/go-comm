@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/qiangyt/go-comm/v2/qerr"
+	"github.com/qiangyt/go-comm/v3/qerr"
 )
 
 // RunGoshCommandP 执行 shell 命令（失败时 panic）

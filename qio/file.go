@@ -8,8 +8,8 @@ import (
 
 	"github.com/goodsru/go-universal-network-adapter/models"
 	"github.com/goodsru/go-universal-network-adapter/services"
-	"github.com/qiangyt/go-comm/v2/qerr"
-	"github.com/qiangyt/go-comm/v2/qlang"
+	"github.com/qiangyt/go-comm/v3/qerr"
+	"github.com/qiangyt/go-comm/v3/qlang"
 	"github.com/spf13/afero"
 )
 
