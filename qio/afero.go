@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/qiangyt/go-comm/v3/q18n"
 	"github.com/qiangyt/go-comm/v3/qerr"
@@ -426,6 +427,41 @@ func WriteFileLinesP(fs afero.Fs, path string, lines ...string) {
 
 func WriteFileLines(fs afero.Fs, path string, lines ...string) error {
 	return WriteFileText(fs, path, qlang.JoinedLines(lines...))
+}
+
+func ExpandHomePathP(path string) string {
+	r, err := ExpandHomePath(path)
+	if err != nil {
+		panic(qerr.NewSystemError(err.Error(), err))
+	}
+	return r
+}
+
+// ExpandHomePath ...
+func ExpandHomePath(path string) (string, error) {
+	var r string
+	var err error
+
+	if r, err = homedir.Expand(path); err != nil {
+		return "", errors.Wrapf(err, "expand path: %s", path)
+	}
+	return r, nil
+}
+
+func UserHomeDirP() string {
+	r, err := UserHomeDir()
+	if err != nil {
+		panic(qerr.NewSystemError(err.Error(), err))
+	}
+	return r
+}
+
+func UserHomeDir() (string, error) {
+	r, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.Wrap(err, "get home path")
+	}
+	return r, nil
 }
 
 func MkdirP(fs afero.Fs, path string) {

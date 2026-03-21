@@ -16,6 +16,7 @@ require (
 	github.com/goodsru/go-universal-network-adapter v1.1.3-0.20221018065357-179acf84a4df
 	github.com/google/uuid v1.6.0
 	github.com/iancoleman/orderedmap v0.3.0
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/ncruces/zenity v0.10.14
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
