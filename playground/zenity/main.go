@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	// comm.RunGoshCommand(map[string]any{}, "", "zenity --info Hello", nil)
+	// qshell.RunGoshCommand(map[string]any{}, "", "zenity --info Hello", nil)
 	defer func() {
 		if x := recover(); x != nil {
 			fmt.Printf("%+v", x)

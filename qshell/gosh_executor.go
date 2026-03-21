@@ -51,19 +51,19 @@ import (
 // 使用示例
 //
 // 简单黑名单
-// config := comm.DefaultGoshConfig().
+// config := qshell.DefaultGoshConfig().
 //     WithBlacklistSimple("rm", "dd")
 //
 // 参数级别拦截（只阻止 rm -rf）
-// config := comm.DefaultGoshConfig().
-//     WithBlacklist(comm.NewCommandRule("rm", "-rf", "-r"))
+// config := qshell.DefaultGoshConfig().
+//     WithBlacklist(qshell.NewCommandRule("rm", "-rf", "-r"))
 //
 // Go 处理器替代 curl
-// config := comm.DefaultGoshConfig().
+// config := qshell.DefaultGoshConfig().
 //     WithGoHandler("curl", myCurlHandler)
 //
 // /白名单模式
-// config := comm.DefaultGoshConfig().
+// config := qshell.DefaultGoshConfig().
 //     WithWhitelistMode(true).
 //     WithWhitelistSimple("git", "npm", "go", "echo")
 
