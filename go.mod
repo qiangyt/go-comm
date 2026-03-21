@@ -1,4 +1,4 @@
-module github.com/qiangyt/go-comm/v2
+module github.com/qiangyt/go-comm/v3
 
 go 1.25.0
 
