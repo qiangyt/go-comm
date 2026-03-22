@@ -155,6 +155,185 @@ func NewDiscardLogger() Logger {
 	}
 }
 
+// NewLoggerWithConsoleFilterP is the panic version of NewLoggerWithConsoleFilter
+func NewLoggerWithConsoleFilterP(console io.Writer, config LoggerConfig, fileName string, consoleExcludeKeys []string) Logger {
+	r, err := NewLoggerWithConsoleFilter(console, config, fileName, consoleExcludeKeys)
+	if err != nil {
+		panic(qerr.NewSystemError("create logger", err))
+	}
+	return r
+}
+
+// NewLoggerWithConsoleFilter 创建 logger，支持控制台过滤特定字段
+// consoleExcludeKeys: 控制台输出时要排除的字段名列表（如 ["nodeID", "orgID"]）
+// 文件输出保持完整 JSON（包含所有字段），控制台输出过滤掉指定字段
+func NewLoggerWithConsoleFilter(console io.Writer, config LoggerConfig, fileName string, consoleExcludeKeys []string) (Logger, error) {
+	logD := filepath.Dir(fileName)
+	if err := os.MkdirAll(logD, os.ModePerm); err != nil {
+		return nil, errors.Wrapf(err, "create directory: %s", logD)
+	}
+
+	lumberjackLogger := &lumberjack.Logger{
+		Filename:   fileName,
+		MaxSize:    config.MaxSize,
+		MaxBackups: config.MaxBackups,
+		MaxAge:     config.MaxAge,
+		LocalTime:  config.LocalTime,
+		Compress:   config.Compress,
+	}
+	fileW := &plog.IOWriter{Writer: lumberjackLogger}
+
+	writers := plog.MultiEntryWriter{fileW}
+
+	if console != nil {
+		consoleW := &plog.ConsoleWriter{
+			ColorOutput:    true,
+			QuoteString:    false,
+			EndWithMessage: true,
+			Writer:         console,
+			Formatter:      createConsoleFilterFormatter(consoleExcludeKeys),
+		}
+		writers = append(writers, consoleW)
+	}
+
+	return &LoggerT{
+		Logger: plog.Logger{
+			Level:  plog.InfoLevel,
+			Caller: 3,
+			Writer: &writers,
+		},
+		parent:           nil,
+		lumberjackLogger: lumberjackLogger,
+	}, nil
+}
+
+// createConsoleFilterFormatter 创建过滤指定字段的控制台格式化器
+func createConsoleFilterFormatter(excludeKeys []string) func(w io.Writer, args *plog.FormatterArgs) (int, error) {
+	return func(w io.Writer, args *plog.FormatterArgs) (int, error) {
+		// 过滤掉 excludeKeys 中的字段
+		var filteredKVs []struct {
+			Key       string
+			Value     string
+			ValueType byte
+		}
+		for _, kv := range args.KeyValues {
+			excluded := false
+			for _, key := range excludeKeys {
+				if kv.Key == key {
+					excluded = true
+					break
+				}
+			}
+			if !excluded {
+				filteredKVs = append(filteredKVs, kv)
+			}
+		}
+		args.KeyValues = filteredKVs
+
+		// 使用默认格式化
+		return formatConsoleOutput(w, args, true, false, true)
+	}
+}
+
+// formatConsoleOutput 控制台格式化输出（复制自 plog.ConsoleWriter.format）
+func formatConsoleOutput(out io.Writer, args *plog.FormatterArgs, colorOutput, quoteString, endWithMessage bool) (n int, err error) {
+	const (
+		Reset   = "\x1b[0m"
+		Black   = "\x1b[30m"
+		Red     = "\x1b[31m"
+		Green   = "\x1b[32m"
+		Yellow  = "\x1b[33m"
+		Blue    = "\x1b[34m"
+		Magenta = "\x1b[35m"
+		Cyan    = "\x1b[36m"
+		White   = "\x1b[37m"
+		Gray    = "\x1b[90m"
+	)
+
+	// colorful level string
+	var color, three string
+	switch args.Level {
+	case "trace":
+		color, three = Magenta, "TRC"
+	case "debug":
+		color, three = Yellow, "DBG"
+	case "info":
+		color, three = Green, "INF"
+	case "warn":
+		color, three = Red, "WRN"
+	case "error":
+		color, three = Red, "ERR"
+	case "fatal":
+		color, three = Red, "FTL"
+	case "panic":
+		color, three = Red, "PNC"
+	default:
+		color, three = Gray, "???"
+	}
+
+	// 使用 fmt.Sprintf 构建输出
+	var output string
+
+	if colorOutput {
+		// header
+		output = fmt.Sprintf("%s%s%s %s%s%s ", Gray, args.Time, Reset, color, three, Reset)
+		if args.Caller != "" {
+			output += fmt.Sprintf("%s %s %s>%s", args.Goid, args.Caller, Cyan, Reset)
+		} else {
+			output += fmt.Sprintf("%s>%s", Cyan, Reset)
+		}
+		if !endWithMessage {
+			output += fmt.Sprintf(" %s", args.Message)
+		}
+		// key and values
+		for _, kv := range args.KeyValues {
+			if kv.Key == "error" && kv.Value != "null" {
+				output += fmt.Sprintf(" %s%s=%s%s", Red, kv.Key, kv.Value, Reset)
+			} else {
+				output += fmt.Sprintf(" %s%s=%s%s%s", Cyan, kv.Key, Gray, kv.Value, Reset)
+			}
+		}
+		// message
+		if endWithMessage {
+			output += fmt.Sprintf("%s %s", Reset, args.Message)
+		}
+	} else {
+		// header
+		output = fmt.Sprintf("%s %s ", args.Time, three)
+		if args.Caller != "" {
+			output += fmt.Sprintf("%s %s >", args.Goid, args.Caller)
+		} else {
+			output += ">"
+		}
+		if !endWithMessage {
+			output += fmt.Sprintf(" %s", args.Message)
+		}
+		// key and values
+		for _, kv := range args.KeyValues {
+			output += fmt.Sprintf(" %s=%s", kv.Key, kv.Value)
+		}
+		// message
+		if endWithMessage {
+			output += fmt.Sprintf(" %s", args.Message)
+		}
+	}
+
+	// add line break if needed
+	if output[len(output)-1] != '\n' {
+		output += "\n"
+	}
+
+	// stack
+	if args.Stack != "" {
+		output += args.Stack
+		if args.Stack[len(args.Stack)-1] != '\n' {
+			output += "\n"
+		}
+	}
+
+	return out.Write([]byte(output))
+}
+
 // IsDiscardLogger 检查是否为 discard logger
 func IsDiscardLogger(logger Logger) bool {
 	if logger == nil {
