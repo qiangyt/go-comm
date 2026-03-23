@@ -11,6 +11,7 @@ func RecoverAsError(r any) error {
 	if r == nil {
 		return nil
 	}
+
 	switch v := r.(type) {
 	case error:
 		return v
@@ -22,7 +23,8 @@ func RecoverAsError(r any) error {
 // RecoverAndLog 在 goroutine 的 defer 中使用，记录 panic 日志
 // 用法: defer func() { qlang.RecoverAndLog(recover(), logger, "operation name") }()
 func RecoverAndLog(r any, logger Logger, operation string) {
-	if r != nil {
+	err := RecoverAsError(r)
+	if err != nil {
 		logger.Error(r).Str("operation", operation).Msg("goroutine panic recovered")
 	}
 }
