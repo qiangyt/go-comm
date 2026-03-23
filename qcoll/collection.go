@@ -68,3 +68,11 @@ func MergeMap[T any](bases ...map[string]T) map[string]T {
 func DeepCopyMap[T any](that map[string]T) map[string]T {
 	return merge.Merge(map[string]T{}, that).(map[string]T)
 }
+
+func CopySlice[T any](slice []T) []T {
+	result := make([]T, 0, len(slice))
+	for _, element := range slice {
+		result = append(result, element)
+	}
+	return result
+}
