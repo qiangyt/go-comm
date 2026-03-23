@@ -134,3 +134,19 @@ func MapArray(hint string, v any) ([]map[string]any, error) {
 	}
 	return r, nil
 }
+
+func MapKeys[V any](m map[string]V) []string {
+	r := make([]string, 0, len(m))
+	for key := range m {
+		r = append(r, key)
+	}
+	return r
+}
+
+func MapValues[V any](m map[string]V) []V {
+	r := make([]V, 0, len(m))
+	for _, v := range m {
+		r = append(r, v)
+	}
+	return r
+}
