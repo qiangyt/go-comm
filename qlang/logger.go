@@ -482,12 +482,3 @@ func (me SlogLogger) WithGroup(name string) slog.Handler {
 	}
 	return newLogger
 }
-
-// ToSlogLogger 将 qlang.Logger 转换为 *slog.Logger
-// 使用 phuslu/log 的 Slog() 方法创建
-func ToSlogLogger(logger Logger) *slog.Logger {
-	if logger == nil {
-		return nil
-	}
-	return logger.Logger.Slog()
-}

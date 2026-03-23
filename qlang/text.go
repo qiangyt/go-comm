@@ -240,6 +240,68 @@ func JoinLines(lines []string) string {
 	return strings.Join(lines, "\n")
 }
 
+// SliceLines 从文本中按行号和限制切分行
+// 参数:
+//   - text: 要切分的文本
+//   - line: 起始行号（1-based），nil 表示从第一行开始
+//   - limit: 最大行数，nil 表示不限制
+//
+// 返回: 切分后的文本
+//
+// 示例:
+//
+//	SliceLines("a\nb\nc", intPtr(2), nil) // 返回 "b\nc"
+//	SliceLines("a\nb\nc", nil, intPtr(2)) // 返回 "a\nb"
+func SliceLines(text string, line *int, limit *int) string {
+	if line == nil && limit == nil {
+		return text
+	}
+
+	lines := Text2Lines(text)
+
+	start := 0
+	if line != nil {
+		start = *line - 1 // line 是 1-based
+		if start < 0 {
+			start = 0
+		}
+	}
+
+	end := len(lines)
+	if limit != nil {
+		if start+*limit < end {
+			end = start + *limit
+		}
+	}
+
+	if start > len(lines) {
+		start = len(lines)
+	}
+
+	return JoinLines(lines[start:end])
+}
+
+// SliceLinesP 是 SliceLines 的 panic 版本，使用整数而非指针
+// 参数:
+//   - text: 要切分的文本
+//   - line: 起始行号（1-based），0 或负数表示从第一行开始
+//   - limit: 最大行数，0 或负数表示不限制
+//
+// 返回: 切分后的文本
+func SliceLinesP(text string, line int, limit int) string {
+	var linePtr *int
+	if line > 0 {
+		linePtr = &line
+	}
+
+	var limitPtr *int
+	if limit > 0 {
+		limitPtr = &limit
+	}
+
+	return SliceLines(text, linePtr, limitPtr)
+}
+
 // BlockedCommands 定义被阻止的命令列表
 var BlockedCommands = map[string]bool{
 	"rm":         true, // 删除文件
@@ -275,4 +337,46 @@ func CheckTerminalCommand(command string, args []string) {
 			}
 		}
 	}
+}
+
+// Shorten 截断字符串到指定长度，如果超过则在末尾添加省略号
+// 用于日志输出等场景，避免输出过长内容
+//
+// 参数:
+//   - s: 要截断的字符串
+//   - maxLen: 最大长度（包含省略号的长度）
+//
+// 返回: 截断后的字符串
+//
+// 示例:
+//
+//	Shorten("hello world", 8) // 返回 "hello..."
+//	Shorten("hi", 10)         // 返回 "hi" (不超过长度，原样返回)
+func Shorten(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen <= 3 {
+		return "..."
+	}
+	return s[:maxLen-3] + "..."
+}
+
+// ShortenWithSuffix 截断字符串到指定长度，使用自定义后缀
+//
+// 参数:
+//   - s: 要截断的字符串
+//   - maxLen: 最大长度
+//   - suffix: 截断后添加的后缀（如 "..." 或 "[truncated]"）
+//
+// 返回: 截断后的字符串
+func ShortenWithSuffix(s string, maxLen int, suffix string) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	suffixLen := len(suffix)
+	if maxLen <= suffixLen {
+		return suffix
+	}
+	return s[:maxLen-suffixLen] + suffix
 }

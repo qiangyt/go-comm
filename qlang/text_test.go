@@ -393,3 +393,145 @@ func TestText2Lines_happy(t *testing.T) {
 	result := Text2Lines("line1\nline2\nline3")
 	a.Equal([]string{"line1", "line2", "line3"}, result)
 }
+
+func TestSliceLines(t *testing.T) {
+	t.Run("无 line 和 limit 参数返回原文", func(t *testing.T) {
+		a := require.New(t)
+		result := SliceLines("line1\nline2\nline3", nil, nil)
+		a.Equal("line1\nline2\nline3", result)
+	})
+
+	t.Run("从指定行开始", func(t *testing.T) {
+		a := require.New(t)
+		line := 2
+		result := SliceLines("line1\nline2\nline3", &line, nil)
+		a.Equal("line2\nline3", result)
+	})
+
+	t.Run("限制行数", func(t *testing.T) {
+		a := require.New(t)
+		limit := 2
+		result := SliceLines("line1\nline2\nline3", nil, &limit)
+		a.Equal("line1\nline2", result)
+	})
+
+	t.Run("从指定行开始并限制行数", func(t *testing.T) {
+		a := require.New(t)
+		line := 2
+		limit := 1
+		result := SliceLines("line1\nline2\nline3", &line, &limit)
+		a.Equal("line2", result)
+	})
+
+	t.Run("limit 超过剩余行数", func(t *testing.T) {
+		a := require.New(t)
+		line := 2
+		limit := 10
+		result := SliceLines("line1\nline2\nline3", &line, &limit)
+		a.Equal("line2\nline3", result)
+	})
+
+	t.Run("line 超过总行数返回空", func(t *testing.T) {
+		a := require.New(t)
+		line := 10
+		result := SliceLines("line1\nline2\nline3", &line, nil)
+		a.Equal("", result)
+	})
+
+	t.Run("负数 line 从第一行开始", func(t *testing.T) {
+		a := require.New(t)
+		line := 0
+		limit := 2
+		result := SliceLines("line1\nline2\nline3", &line, &limit)
+		a.Equal("line1\nline2", result)
+	})
+
+	t.Run("空文本返回空", func(t *testing.T) {
+		a := require.New(t)
+		line := 1
+		limit := 2
+		result := SliceLines("", &line, &limit)
+		a.Equal("", result)
+	})
+}
+
+func TestSliceLinesP(t *testing.T) {
+	t.Run("基本切分", func(t *testing.T) {
+		a := require.New(t)
+		result := SliceLinesP("line1\nline2\nline3", 1, 2)
+		a.Equal("line1\nline2", result)
+	})
+
+	t.Run("从中间开始", func(t *testing.T) {
+		a := require.New(t)
+		result := SliceLinesP("line1\nline2\nline3", 2, 2)
+		a.Equal("line2\nline3", result)
+	})
+
+	t.Run("负数 line 表示从头开始", func(t *testing.T) {
+		a := require.New(t)
+		result := SliceLinesP("line1\nline2\nline3", 0, 2)
+		a.Equal("line1\nline2", result)
+	})
+
+	t.Run("负数 limit 表示不限制", func(t *testing.T) {
+		a := require.New(t)
+		result := SliceLinesP("line1\nline2\nline3", 2, 0)
+		a.Equal("line2\nline3", result)
+	})
+
+	t.Run("都为负数返回全文", func(t *testing.T) {
+		a := require.New(t)
+		result := SliceLinesP("line1\nline2\nline3", -1, -1)
+		a.Equal("line1\nline2\nline3", result)
+	})
+}
+
+func TestShorten(t *testing.T) {
+	t.Run("字符串不超过长度返回原文", func(t *testing.T) {
+		a := require.New(t)
+		result := Shorten("hello", 10)
+		a.Equal("hello", result)
+	})
+
+	t.Run("字符串超过长度时截断", func(t *testing.T) {
+		a := require.New(t)
+		result := Shorten("hello world", 8)
+		a.Equal("hello...", result)
+	})
+
+	t.Run("空字符串", func(t *testing.T) {
+		a := require.New(t)
+		result := Shorten("", 10)
+		a.Equal("", result)
+	})
+
+	t.Run("maxLen 小于等于 3", func(t *testing.T) {
+		a := require.New(t)
+		result := Shorten("hello", 3)
+		a.Equal("...", result)
+		result = Shorten("hello", 2)
+		a.Equal("...", result)
+	})
+}
+
+func TestShortenWithSuffix(t *testing.T) {
+	t.Run("使用自定义后缀截断", func(t *testing.T) {
+		a := require.New(t)
+		result := ShortenWithSuffix("hello world, this is a long text", 20, "[truncated]")
+		a.Equal("hello wor[truncated]", result)
+		a.Equal(20, len(result))
+	})
+
+	t.Run("字符串不超过长度返回原文", func(t *testing.T) {
+		a := require.New(t)
+		result := ShortenWithSuffix("hi", 10, "...")
+		a.Equal("hi", result)
+	})
+
+	t.Run("maxLen 小于后缀长度", func(t *testing.T) {
+		a := require.New(t)
+		result := ShortenWithSuffix("hello", 3, "[truncated]")
+		a.Equal("[truncated]", result)
+	})
+}
