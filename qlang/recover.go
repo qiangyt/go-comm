@@ -22,9 +22,19 @@ func RecoverAsError(r any) error {
 
 // RecoverAndLog 在 goroutine 的 defer 中使用，记录 panic 日志
 // 用法: defer func() { qlang.RecoverAndLog(recover(), logger, "operation name") }()
-func RecoverAndLog(r any, logger Logger, operation string) {
+func RecoverAndLog(r any, logger Logger, operation string) error {
 	err := RecoverAsError(r)
-	if err != nil {
-		logger.Error(r).Str("operation", operation).Msg("goroutine panic recovered")
+	if logger != nil {
+		var log LogEntry
+		if err != nil {
+			log = logger.Error(err)
+		} else {
+			log = logger.Warn()
+		}
+		if operation != "" {
+			log = log.Str("operation", operation)
+		}
+		log.Msg("panic recovered")
 	}
+	return err
 }
