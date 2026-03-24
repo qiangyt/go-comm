@@ -20,7 +20,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/ncruces/zenity v0.10.14
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
-	github.com/phuslu/log v1.0.121
+	github.com/phuslu/log v1.0.123
 	github.com/pkg/errors v0.9.1
 	github.com/qiangyt/go-event v1.1.1
 	github.com/spf13/afero v1.15.0
