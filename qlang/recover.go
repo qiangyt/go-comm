@@ -2,6 +2,7 @@ package qlang
 
 import (
 	"fmt"
+	"runtime/debug"
 )
 
 // RecoverAsError 在 defer 中使用，将 panic 转换为 error
@@ -34,7 +35,7 @@ func RecoverAndLog(r any, logger Logger, operation string) error {
 		if operation != "" {
 			log = log.Str("operation", operation)
 		}
-		log.Msg("panic recovered")
+		log.Str("stack", string(debug.Stack())).Msg("panic recovered")
 	}
 	return err
 }
