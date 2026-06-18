@@ -57,7 +57,7 @@ def main():
 
     # 路径 - 排除测试文件
     go_files = [f for f in go_comm_dir.glob("*.go") if not f.name.endswith("_test.go")]
-    locales_dir = go_comm_dir / "locales"
+    locales_dir = go_comm_dir / "q18n/locales"
 
     if not locales_dir.exists():
         print(f"Error: Locales directory not found: {locales_dir}", file=sys.stderr)

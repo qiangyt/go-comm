@@ -1,0 +1,43 @@
+package qplugin
+
+import (
+	"strings"
+
+	"github.com/qiangyt/go-comm/v3/qconfig"
+	"github.com/qiangyt/go-comm/v3/qio"
+	"github.com/spf13/afero"
+)
+
+type PluginManifestT struct {
+	Kind         PluginKind `mapstructure:"kind" yaml:"kind"`
+	Name         string     `mapstructure:"name" yaml:"name"`
+	VersionMajor int        `mapstructure:"version_major" yaml:"version_major"`
+	VersionMinor int        `mapstructure:"version_minor" yaml:"version_minor"`
+}
+
+type PluginManifest = *PluginManifestT
+
+func PluginManifestWithMap(manifestMap map[string]any) PluginManifest {
+	r, _ := qconfig.DecodeWithMapP(manifestMap, &qconfig.ConfigConfig{
+		ErrorUnused:          true,
+		ErrorUnset:           false,
+		ZeroFields:           false,
+		WeaklyTypedInput:     true,
+		Squash:               true,
+		IgnoreUntaggedFields: true,
+	}, &PluginManifestT{}, nil)
+
+	r.Name = strings.ToLower(r.Name)
+
+	return r
+}
+
+func PluginManifestWithJsonFile(fs afero.Fs, manifestJsonFile string) PluginManifest {
+	manifestMap := qio.MapFromJsonFileP(fs, manifestJsonFile, false)
+	return PluginManifestWithMap(manifestMap)
+}
+
+func PluginManifestWithYamlFile(fs afero.Fs, manifestYamlFile string) PluginManifest {
+	manifestMap := qio.MapFromYamlFileP(fs, manifestYamlFile, false)
+	return PluginManifestWithMap(manifestMap)
+}
